@@ -41,4 +41,4 @@ data_target$y <- map_dbl(data_target$y, function(x) ifelse(x > 0, 1, 0))
 #merge two data with methord inner_join.
 data <- inner_join(data_with_day, data_target, by = "ID")
 #convert all character data into facotr datatype.
-final_data <- data %>% mutate_if(is.character, as.factor)
+final_data <- data %>% mutate_if(is.character, as.factor) %>% mutate(y = as.factor(y))
