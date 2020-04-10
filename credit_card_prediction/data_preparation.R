@@ -1,9 +1,9 @@
 library(tidyverse)
 
-setwd("/Users/hebailan/R Programm/i2ml programm/final project/i2ml_final_project/credit_card_prediction")
+#setwd("/Users/hebailan/R Programm/i2ml programm/final project/i2ml_final_project/credit_card_prediction")
 
-application_data <- read_csv("application_record.csv")
-record <- read_csv("credit_record.csv")
+application_data <- read_csv("credit_card_prediction/application_record.csv")
+record <- read_csv("credit_card_prediction/credit_record.csv")
 
 # features engineering
 
