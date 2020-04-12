@@ -2,11 +2,19 @@ rm(list=ls()) # clear all workspace
 # import data
 source("/Users/echo/Desktop/Echo/data_prep_one_hot_encoding.R")
 
-install.packages("ranger")
+# install.packages("ranger")
+# install.packages("mmpf")
+# install.packages("mlr3viz")
+# install.packages("precrec")
+# install.packages("mlr")
 
 library(mlr3)
 library(mlr3learners)
 library(ranger)
+library(mmpf)
+library(mlr3viz)
+library(precrec)
+library(mlr)
 
 # omit NA data
 data_onehot <- na.omit(data_onehot)
@@ -38,3 +46,12 @@ prediction <- learner$predict(task_approval, row_ids = test_set)
 
 # calculate performance
 prediction$confusion
+
+## ROC curve
+task = task_approval
+learner = lrn("classif.ranger", predict_type = "prob")
+object = learner$train(task_approval)$predict(task_approval)
+head(fortify(object))
+autoplot(object)
+autoplot(object, type = "roc")
+# autoplot(object, type = "prc")
