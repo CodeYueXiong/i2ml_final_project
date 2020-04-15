@@ -4,7 +4,7 @@ library(checkmate)
 library(dummies)
 library(missForest)
 library(mice)
-
+set.seed(2020)
 setwd("./i2ml programm/final project/i2ml_final_project/credit_card_prediction")
 
 application_data <- read_csv("application_record.csv")
@@ -61,9 +61,11 @@ final_data <- missForest(to_imp_data)[[1]]
 summary(final_data)
 #mice
 mice_data <- mice(to_imp_data,m=1,method="polyreg",seed = 2020)
+#check imputation
 imp_data <- mice_data$imp$OCCUPATION_TYPE
+#get data
 final_data <- mice::complete(mice_data,1)
-?complete
+
 
 # calc_iv function compute the "information value" of a variable.
 calc_iv <- function(feature) {
@@ -226,3 +228,5 @@ write_csv2(rf_iv_data,"../rf_iv_data.csv")
 #save mice_iv_data
 mice_iv_data <- converted_data
 write_csv2(mice_iv_data,"../mice_iv_data.csv")
+
+
