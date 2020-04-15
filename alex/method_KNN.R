@@ -1,33 +1,48 @@
 # KNN
 
-# simple model
-#model <- glm(y~.-ID, data=data_dummy)
-#summary(model)
+" 
+Performs k-nearest neighbor classification of a test set using a training set. 
+For each row of the test set, the k nearest training set vectors are found. Make supervised classification for training functional data via k-nearest neighbors method. 
+The method classifies the functional data to the group with the highest number of nearest neighbors. 
+In case of tie the data is classified in the group with a shorter distance.
+"
 
-# install.packages("mlr3learners", dependencies = TRUE)
+# glmnet::cv.glmnet()
+"
+<LearnerClassifKKNN:classif.kknn>
+* Model: -
+* Parameters: list()
+* Packages: kknn
+* Predict Type: response
+* Feature types: logical, integer, numeric, factor, ordered
+* Properties: multiclass, twoclass
+"
+# > learner$param_set$ids()
+# [1] "k"        "distance" "kernel"   "scale" 
+
+
 library(mlr3)
-library("mlr3learners")
-
-# create task, learn and cross validation
-creditTask <- TaskClassif$new(id = "data_dummy", backend = data_dummy, target = "y")
-learner <- lrn("classif.kknn", id = "dummy", predict_type = "prob")
-resampling = rsmp("cv", folds = 3)
-
-# train -> CV
-rr = resample(creditTask, learner, resampling, store_models = TRUE)
-print(rr)
-
-# evaluate error rate
-rr$score(msr("classif.ce"))
-rr$aggregate(msr("classif.ce")) # average
-
-# plot resampling result
 library("mlr3viz")
 library("precrec")
+library("mlr3learners")
 
-autoplot(rr)
-autoplot(rr, type = "roc")
+setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
+source("alex/read_data.R")
+source("alex/train.R")
 
-# AUC
-rr$score(msr("classif.auc"))
-rr$aggregate(msr("classif.auc"))
+# tasks[["<type>"]][["<code>"]]
+
+
+# define knn learn with cross validation (resampling)
+learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=2)
+
+
+resampling = rsmp("cv", folds = 3)
+
+model <- train_model(tasks[["dl"]][["dummy"]], learner, resampling)
+evaluate_result(model)
+
+# train_all(tasks, learner, resampling)
+
+
+

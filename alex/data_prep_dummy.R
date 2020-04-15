@@ -60,6 +60,10 @@ mice_dummy_data <- mice::complete(mice_dummy_data, 1)
 mice_dummy_data <- dummy_var(mice_dummy_data)
 
 
+# --------------------------------------------
+# --------------------- output data into file
+# --------------------------------------------
+
 write_csv2(dl_dummy_data,"credit_card_prediction/dummy_data/dl_dummy_data.csv")
 write_csv2(mf_dummy_data,"credit_card_prediction/dummy_data/mf_dummy_data.csv")
 write_csv2(mice_dummy_data,"credit_card_prediction/dummy_data/mice_dummy_data.csv")
