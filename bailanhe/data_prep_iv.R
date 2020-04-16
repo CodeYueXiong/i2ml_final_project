@@ -65,11 +65,11 @@ write_csv2(dl_data, "./dl_na_data.csv")
 #missing data imputation:
 to_imp_data <- final_data %>% as.data.frame()
 #missforest
-ms_data <- missForest(to_imp_data)[[1]]
+mf_data <- missForest(to_imp_data)[[1]]
 #check ms_data
-glimpse(ms_data)
+glimpse(mf_data)
 #save ms_data
-write_csv2(ms_data, "./ms_na_data.csv")
+write_csv2(mf_data, "./ms_na_data.csv")
 #mice
 mice_data <- mice(to_imp_data,m=1,method="polyreg",seed = 2020)
 #check imputation
@@ -77,10 +77,12 @@ imp_data <- mice_data$imp$OCCUPATION_TYPE
 #get data and save mice_data
 mice_data <- mice::complete(mice_data,1)
 write_csv2(mice_data, "./mice_na_data.csv")
+mf_data <- ms_data
 
 
 
-# calc_iv function compute the "information value" of a variable.
+
+## calc_iv function compute the "information value" of a variable.
 calc_iv <- function(feature) {
   # how many rows we need.
   number_row <- length(unique(final_data[[feature]]))
@@ -138,6 +140,10 @@ convert_binary_variable <- function(feature) {
     return(feature)
   }
 }
+#whole process of dl_iv_data
+#########
+##change final_data
+final_data <- dl_data
 # convert all binary variable into binary number
 converted_data <- final_data %>% mutate_if(is.factor, convert_binary_variable)
 
@@ -223,6 +229,7 @@ final_data["less_factor_work"] <- final_data %>%
 calc_iv(dif_variable[5])
 calc_iv("less_factor_work")
 
+########
 #encode multi-factors variables into one-hot 
 factor_data <- final_data %>% select(starts_with("less")) %>% as.data.table()
 oh_data <- one_hot(factor_data,dropCols = T)
@@ -232,12 +239,216 @@ converted_data <- converted_data %>% add_column(oh_data)
 #save dl_iv_data
 dl_iv_data <- converted_data
 dl_iv_data$y <- as.factor(dl_iv_data$y)
+colnames(dl_iv_data) <- make.names(colnames(dl_iv_data),unique=T)
 write_csv2(dl_iv_data,"../dl_iv_data.csv")
 
-#save rf_iv_data
-rf_iv_data <- converted_data
-write_csv2(rf_iv_data,"../rf_iv_data.csv")
+#########
+#whole process of mf_iv_data
+##########
+
+#save mf_iv_data
+final_data <- mf_data
+
+
+# convert all binary variable into binary number
+converted_data <- final_data %>% mutate_if(is.factor, convert_binary_variable)
+
+# find which variables have several values
+dif_variable <- setdiff(names(final_data), names(converted_data))
+
+####################### analyse the details of first multi-factors variable
+calc_iv(dif_variable[1])
+# found the variable "NAME_INCOME_TYPE" has 5 types of values, we integrate
+# "student" , "pensioner" with "state servant"
+final_data["less_factor_income"] <- final_data %>%
+  pull(dif_variable[[1]]) %>%
+  recode("Student" = "State servant", "Pensioner" = "State servant")
+
+# analyse how the IV of the variable has been changed.
+calc_iv(dif_variable[1])
+calc_iv("less_factor_income")
+
+# integrate "student" , "pensioner" with "state servant" seems not good.
+# try integrate "student" "pensioner" with "Commercial associate"
+final_data["less_factor_income"] <- final_data %>%
+  pull(dif_variable[[1]]) %>%
+  recode("Student" = "Commercial associate", "Pensioner" = "Commercial associate")
+
+
+# Iv increases from 0.01 to 0.013, seems better.
+calc_iv(dif_variable[1])
+calc_iv("less_factor_income")
+
+####################### analyse the details of second multi-factors variable
+calc_iv(dif_variable[2])
+# found the variable "NAME_EDUCSTION_TYPE" has 5 types of values. we integrate
+# "Academic degree" with "Higher education"
+final_data["less_factor_edu"] <- final_data %>%
+  pull(dif_variable[[2]]) %>%
+  recode("Academic degree" = "Higher education")
+# analyse how the IV of the variable has been changed.
+calc_iv(dif_variable[2])
+calc_iv("less_factor_edu")
+
+####################### analyse the details of third multi-factors variable
+calc_iv(dif_variable[3])
+final_data["less_factor_status"] <- final_data %>% pull(dif_variable[3])
+# found this variable seems relatively balanced, no need to change.
+
+
+####################### analyse the details of fourth multi-factors variable
+calc_iv(dif_variable[4])
+# found the variable "NAME_HOUSING_TYPE" has 6 types of values. we integrate
+# "Co-op apartment" with "Office apartment"
+final_data["less_factor_house"] <- final_data %>%
+  pull(dif_variable[[4]]) %>%
+  recode("Co-op apartment" = "Office apartment")
+# analyse how the IV of the variable has been changed.
+calc_iv(dif_variable[4])
+calc_iv("less_factor_house")
+
+####################### analyse the details of fifth multi-factors variable
+calc_iv(dif_variable[5])
+# found the variable "NAME_HOUSING_TYPE" has too manny types of values. we integrate
+
+final_data["less_factor_work"] <- final_data %>%
+  pull(dif_variable[[5]]) %>%
+  recode("Cleaning staff" = "Labor",
+         "Cooking staff" = "Labor",
+         "Drivers" = "Labor",
+         "Laborers" = "Labor",
+         "Low-skill Laborers" = "Labor",
+         "Security staff" = "Labor",
+         "Waiters/barmen staff" = "Labor") %>% 
+  recode("Accountants" = "Office",
+         "Core staff" = "Office",
+         "HR staff" = "Office",
+         "Medicine staff" = "Office",
+         "Private service staff" = "Office",
+         "Realty agents" = "Office",
+         "Sales staff" = "Office",
+         "Secretaries" = "Office") %>% 
+  recode("Managers" = "higher",
+         "High skill tech staff" = "higher",
+         "IT staff" = "higher")
+# analyse how the IV of the variable has been changed.
+calc_iv(dif_variable[5])
+calc_iv("less_factor_work")
+#########
+#encode multi-factors variables into one-hot 
+factor_data <- final_data %>% select(starts_with("less")) %>% as.data.table()
+oh_data <- one_hot(factor_data,dropCols = T)
+#cbind oh_data with converted_data
+converted_data <- final_data %>% mutate_if(is.factor, convert_binary_variable)
+converted_data <- converted_data %>% add_column(oh_data)
+
+mf_iv_data <- converted_data
+mf_iv_data$y <- as.factor(mf_iv_data$y)
+colnames(mf_iv_data) <- make.names(colnames(mf_iv_data),unique=T)
+write_csv2(mf_iv_data,"../mf_iv_data.csv")
+#########
+#whole process of mice_iv_data
+#########
+#change final_data
+final_data <- mice_data
+# convert all binary variable into binary number
+converted_data <- final_data %>% mutate_if(is.factor, convert_binary_variable)
+
+# find which variables have several values
+dif_variable <- setdiff(names(final_data), names(converted_data))
+
+####################### analyse the details of first multi-factors variable
+calc_iv(dif_variable[1])
+# found the variable "NAME_INCOME_TYPE" has 5 types of values, we integrate
+# "student" , "pensioner" with "state servant"
+final_data["less_factor_income"] <- final_data %>%
+  pull(dif_variable[[1]]) %>%
+  recode("Student" = "State servant", "Pensioner" = "State servant")
+
+# analyse how the IV of the variable has been changed.
+calc_iv(dif_variable[1])
+calc_iv("less_factor_income")
+
+# integrate "student" , "pensioner" with "state servant" seems not good.
+# try integrate "student" "pensioner" with "Commercial associate"
+final_data["less_factor_income"] <- final_data %>%
+  pull(dif_variable[[1]]) %>%
+  recode("Student" = "Commercial associate", "Pensioner" = "Commercial associate")
+
+
+# Iv increases from 0.01 to 0.013, seems better.
+calc_iv(dif_variable[1])
+calc_iv("less_factor_income")
+
+####################### analyse the details of second multi-factors variable
+calc_iv(dif_variable[2])
+# found the variable "NAME_EDUCSTION_TYPE" has 5 types of values. we integrate
+# "Academic degree" with "Higher education"
+final_data["less_factor_edu"] <- final_data %>%
+  pull(dif_variable[[2]]) %>%
+  recode("Academic degree" = "Higher education")
+# analyse how the IV of the variable has been changed.
+calc_iv(dif_variable[2])
+calc_iv("less_factor_edu")
+
+####################### analyse the details of third multi-factors variable
+calc_iv(dif_variable[3])
+final_data["less_factor_status"] <- final_data %>% pull(dif_variable[3])
+# found this variable seems relatively balanced, no need to change.
+
+
+####################### analyse the details of fourth multi-factors variable
+calc_iv(dif_variable[4])
+# found the variable "NAME_HOUSING_TYPE" has 6 types of values. we integrate
+# "Co-op apartment" with "Office apartment"
+final_data["less_factor_house"] <- final_data %>%
+  pull(dif_variable[[4]]) %>%
+  recode("Co-op apartment" = "Office apartment")
+# analyse how the IV of the variable has been changed.
+calc_iv(dif_variable[4])
+calc_iv("less_factor_house")
+
+####################### analyse the details of fifth multi-factors variable
+calc_iv(dif_variable[5])
+# found the variable "NAME_HOUSING_TYPE" has too manny types of values. we integrate
+
+final_data["less_factor_work"] <- final_data %>%
+  pull(dif_variable[[5]]) %>%
+  recode("Cleaning staff" = "Labor",
+         "Cooking staff" = "Labor",
+         "Drivers" = "Labor",
+         "Laborers" = "Labor",
+         "Low-skill Laborers" = "Labor",
+         "Security staff" = "Labor",
+         "Waiters/barmen staff" = "Labor") %>% 
+  recode("Accountants" = "Office",
+         "Core staff" = "Office",
+         "HR staff" = "Office",
+         "Medicine staff" = "Office",
+         "Private service staff" = "Office",
+         "Realty agents" = "Office",
+         "Sales staff" = "Office",
+         "Secretaries" = "Office") %>% 
+  recode("Managers" = "higher",
+         "High skill tech staff" = "higher",
+         "IT staff" = "higher")
+# analyse how the IV of the variable has been changed.
+calc_iv(dif_variable[5])
+calc_iv("less_factor_work")
+#########
+#encode multi-factors variables into one-hot 
+factor_data <- final_data %>% select(starts_with("less")) %>% as.data.table()
+oh_data <- one_hot(factor_data,dropCols = T)
+#cbind oh_data with converted_data
+converted_data <- final_data %>% mutate_if(is.factor, convert_binary_variable)
+converted_data <- converted_data %>% add_column(oh_data)
 
 #save mice_iv_data
 mice_iv_data <- converted_data
+mice_iv_data$y <- as.factor(mice_iv_data$y)
+colnames(mice_iv_data) <- make.names(colnames(mice_iv_data),unique=T) 
 write_csv2(mice_iv_data,"../mice_iv_data.csv")
+
+
+
+
