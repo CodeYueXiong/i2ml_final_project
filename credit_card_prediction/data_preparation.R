@@ -65,11 +65,11 @@ write_csv2(dl_data, "./dl_na_data.csv")
 #missing data imputation:
 to_imp_data <- final_data %>% as.data.frame()
 #missforest
-ms_data <- missForest(to_imp_data)[[1]]
+mf_data <- missForest(to_imp_data)[[1]]
 #check ms_data
-glimpse(ms_data)
+glimpse(mf_data)
 #save ms_data
-write_csv2(ms_data, "./ms_na_data.csv")
+write_csv2(mf_data, "./mf_na_data.csv")
 #mice
 mice_data <- mice(to_imp_data,m=1,method="polyreg",seed = 2020)
 #check imputation
