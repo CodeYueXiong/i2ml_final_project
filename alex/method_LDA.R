@@ -13,6 +13,7 @@
 "
 # learner$param_set$ids()
 # [1] "prior"          "tol"            "method"         "nu"             "predict.method"
+# https://rdrr.io/github/mlr-org/mlr3learners/src/R/LearnerClassifLDA.R
 
 library(mlr3)
 library("mlr3viz")
@@ -31,7 +32,22 @@ learner <- lrn("classif.lda", id = "lda")
 
 resampling = rsmp("cv", folds = 3)
 
-model <- train_model(tasks[["dl"]][["dummy"]], learner, resampling)
+# dummy
+#  Error in lda.default(x, grouping, ...) : 
+# variable 9 appears to be constant within groups 
+
+# oh
+#  Error in lda.default(x, grouping, ...) : 
+# variable 13 appears to be constant within groups 
+
+
+# iv
+#  Error in lda.default(x, grouping, ...) : 
+# variable 8 appears to be constant within groups 
+
+#  FLAG_MOBIL
+
+model <- train_model(tasks[["dl"]][["oh"]], learner, resampling)
 evaluate_result(model)
 
 # train_all(tasks, learner, resampling)

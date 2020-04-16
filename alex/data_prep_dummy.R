@@ -44,20 +44,12 @@ dummy_var <- function(data){
 # ----------------------- OCCUPATION_TYPE
 # --------------------------------------------
 
-# remove na
-dl_dummy_data <- na.omit(data)
-dl_dummy_data <- dummy_var(dl_dummy_data)
 
-# miss forest
-mf_dummy_data <- as.data.frame(data)
-mf_dummy_data <- missForest(mf_dummy_data)[[1]]
-mf_dummy_data <- dummy_var(mf_dummy_data)
+dl_dummy_data <- read.csv2("credit_card_prediction/dl_na_data.csv", header = TRUE)
+mf_dummy_data <- read.csv2("credit_card_prediction/mf_na_data.csv", header = TRUE)
+mice_dummy_data <- read.csv2("credit_card_prediction/mice_na_data.csv", header = TRUE)
 
-# MICE
-mice_dummy_data <- data
-mice_dummy_data <- mice(mice_dummy_data, m=1, method="polyreg", seed = 2020)
-mice_dummy_data <- mice::complete(mice_dummy_data, 1)
-mice_dummy_data <- dummy_var(mice_dummy_data)
+
 
 
 # --------------------------------------------

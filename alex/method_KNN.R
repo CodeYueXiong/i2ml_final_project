@@ -19,7 +19,13 @@ In case of tie the data is classified in the group with a shorter distance.
 "
 # > learner$param_set$ids()
 # [1] "k"        "distance" "kernel"   "scale" 
+# https://rdrr.io/github/mlr-org/mlr3learners/src/R/LearnerClassifKKNN.R
+# https://www.rdocumentation.org/packages/kknn/versions/1.3.1/topics/kknn
 
+# k Number of neighbors considered.
+# distance Parameter of Minkowski distance.
+# kernel Kernel to use. Possible choices are "rectangular" (which is standard unweighted knn), "triangular", "epanechnikov" (or beta(2,2)), "biweight" (or beta(3,3)), "triweight" (or beta(4,4)), "cos", "inv", "gaussian", "rank" and "optimal".
+# scale logical, scale variable to have equal sd.
 
 library(mlr3)
 library("mlr3viz")
@@ -37,7 +43,7 @@ source("alex/train.R")
 learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=2)
 
 
-resampling = rsmp("cv", folds = 3)
+resampling = rsmp("cv", folds = 5)
 
 model <- train_model(tasks[["dl"]][["dummy"]], learner, resampling)
 evaluate_result(model)
