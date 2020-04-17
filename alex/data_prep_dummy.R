@@ -49,8 +49,8 @@ mice_dummy_data <- dummy_var(mice_dummy_data)
 # --------------------- output data into file
 # --------------------------------------------
 
-write.csv2(dl_dummy_data,"credit_card_prediction/dummy_data/dl_dummy_data.csv")
-write.csv2(mf_dummy_data,"credit_card_prediction/dummy_data/mf_dummy_data.csv")
-write.csv2(mice_dummy_data,"credit_card_prediction/dummy_data/mice_dummy_data.csv")
+write.csv2(dl_dummy_data,"credit_card_prediction/dummy_data/dl_dummy_data.csv", row.names=FALSE)
+write.csv2(mf_dummy_data,"credit_card_prediction/dummy_data/mf_dummy_data.csv", row.names=FALSE)
+write.csv2(mice_dummy_data,"credit_card_prediction/dummy_data/mice_dummy_data.csv", row.names=FALSE)
 
 
