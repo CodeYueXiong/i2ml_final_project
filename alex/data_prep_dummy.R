@@ -1,18 +1,8 @@
 library(fastDummies)
 library(janitor)
-library(missForest)
-library(mice)
 
-# import data
 
 setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
-source("credit_card_prediction/data_preparation.R")
-data <- final_data
-
-# check type and distribution of all columns
-str(data)
-summary(data)
-
 
 # A dummy variable is a numeric variable that represents nominal variable by only taking the value 0 or 1,
 # indicating presence or absence of the category.
@@ -46,10 +36,13 @@ dummy_var <- function(data){
 
 
 dl_dummy_data <- read.csv2("credit_card_prediction/dl_na_data.csv", header = TRUE)
+dl_dummy_data <- dummy_var(dl_dummy_data)
+
 mf_dummy_data <- read.csv2("credit_card_prediction/mf_na_data.csv", header = TRUE)
+mf_dummy_data <- dummy_var(mf_dummy_data)
+
 mice_dummy_data <- read.csv2("credit_card_prediction/mice_na_data.csv", header = TRUE)
-
-
+mice_dummy_data <- dummy_var(mice_dummy_data)
 
 
 # --------------------------------------------

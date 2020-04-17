@@ -30,24 +30,10 @@ source("alex/train.R")
 # define lda learner with cross validation (resampling)
 learner <- lrn("classif.lda", id = "lda")
 
-resampling = rsmp("cv", folds = 3)
+resampling = rsmp("cv", folds = 5)
 
-# dummy
-#  Error in lda.default(x, grouping, ...) : 
-# variable 9 appears to be constant within groups 
-
-# oh
-#  Error in lda.default(x, grouping, ...) : 
-# variable 13 appears to be constant within groups 
-
-
-# iv
-#  Error in lda.default(x, grouping, ...) : 
-# variable 8 appears to be constant within groups 
-
-#  FLAG_MOBIL
-
-model <- train_model(tasks[["dl"]][["oh"]], learner, resampling)
-evaluate_result(model)
+model <- train_model(tasks[["dl"]][["dummy"]], learner, resampling)
+model$prediction()$score(msr("classif.ce"))
+#evaluate_result(model)
 
 # train_all(tasks, learner, resampling)
