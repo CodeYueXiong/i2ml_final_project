@@ -55,11 +55,13 @@ for(k in kernal_type){
   cat(k, model$aggregate(msr("classif.auc")), "\n")
 }
 
-learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance=2, kernel=kernal_type[1], scale=FALSE)
-model <- train_model(tasks[["dl"]][["dummy"]], learner, resampling)
-evaluate_result(model)
+#learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance=2, kernel=kernal_type[1], scale=FALSE)
+learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance=3, scale=FALSE)
+#model <- train_model(tasks[["dl"]][["dummy"]], learner, resampling)
+#evaluate_result(model)
 
-# train_all(tasks, learner, resampling)
+models <- train_all(tasks, learner, resampling)
+evalutate_models(models)
 
 
 

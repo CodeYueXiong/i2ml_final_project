@@ -1,5 +1,6 @@
 # read data
 library(mlr3)
+library(janitor)
 
 setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
 
@@ -7,6 +8,7 @@ dataToTask <- function(path, id, sep=';', header=TRUE){
   dt <- read.csv2(path, sep = sep, header = header)
   dt <- as.data.frame(sapply(dt, as.numeric))
   dt$y <- as.factor(dt$y)
+  dt <- clean_names(dt)
   dataToTask <- TaskClassif$new(id = id, backend = dt, target = "y")
 }
 
