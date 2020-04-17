@@ -17,15 +17,18 @@ train_model <- function(task, learner, resampling){
 # ----------------------------------------
 
 train_all <- function(tasks, learner, resampling){
+  models <- list()
   miss_name <- c('dl', 'mf', 'mice')
   code_name <- c('dummy', 'oh', 'iv')
   
   for(missing in miss_name){
     for(coding in code_name){
+      name <- paste0(missing, "_", coding)
       task <- tasks[[missing]][[coding]]
-      train_task(task, learner, resampling)
+      models[[name]] <- train_model(task, learner, resampling)
     }
   }
+  train_all <- models
 }
 
 # ----------------------------------------
