@@ -61,7 +61,7 @@ learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance
 #evaluate_result(model)
 
 models <- train_all(tasks, learner, resampling)
-evalutate_models(models)
+evaluate_models(models)
 
 
 

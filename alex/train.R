@@ -70,7 +70,7 @@ evaluate_result <- function(model){
 }
 
 
-evalutate_models <- function(models){
+evaluate_models <- function(models){
   for(m in models){
     name <- m$task$id
     auc <- m$aggregate(msr("classif.auc"))[[1]]

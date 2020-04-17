@@ -44,15 +44,14 @@ dummy_var <- function(data){
 # ----------------------- OCCUPATION_TYPE
 # -------------------------------------------
 
-setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
 
-dl_dummy_data <- read.csv2("credit_card_prediction/dl_na_data.csv", header = TRUE)
+dl_dummy_data <- read.csv2("../../credit_card_prediction/dl_na_data.csv", header = TRUE)
 dl_dummy_data <- dummy_var(dl_dummy_data)
 
-mf_dummy_data <- read.csv2("credit_card_prediction/mf_na_data.csv", header = TRUE)
+mf_dummy_data <- read.csv2("../../credit_card_prediction/mf_na_data.csv", header = TRUE)
 mf_dummy_data <- dummy_var(mf_dummy_data)
 
-mice_dummy_data <- read.csv2("credit_card_prediction/mice_na_data.csv", header = TRUE)
+mice_dummy_data <- read.csv2("../../credit_card_prediction/mice_na_data.csv", header = TRUE)
 mice_dummy_data <- dummy_var(mice_dummy_data)
 
 # row, column, NA
@@ -71,7 +70,6 @@ cat("mice_dummy_data\t", dim(mice_dummy_data), any(is.na(mice_dummy_data)), "\n"
 ## Load all data for training (one-hot, dummy, IV)
 
 ```{r,warning=FALSE,message=FALSE}
-setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
 library(mlr3)
 
 # function to load data into task and define target
@@ -83,25 +81,25 @@ dataToTask <- function(path, id, sep=';', header=TRUE){
 }
 
 dl_dummy_task <- 
-  dataToTask("credit_card_prediction/dummy_data/dl_dummy_data.csv", "dl_dummy")
+  dataToTask("../../credit_card_prediction/dummy_data/dl_dummy_data.csv", "dl_dummy")
 dl_oh_task <- 
-  dataToTask("credit_card_prediction/oh_data/dl_oh_data.csv", "dl_oh", sep = ',')
+  dataToTask("../../credit_card_prediction/oh_data/dl_oh_data.csv", "dl_oh")
 dl_iv_task <- 
-  dataToTask("credit_card_prediction/iv_data/dl_iv_data.csv", "dl_iv")
+  dataToTask("../../credit_card_prediction/iv_data/dl_iv_data.csv", "dl_iv")
 
 mf_dummy_task <- 
-  dataToTask("credit_card_prediction/dummy_data/mf_dummy_data.csv", "mf_dummy")
+  dataToTask("../../credit_card_prediction/dummy_data/mf_dummy_data.csv", "mf_dummy")
 mf_oh_task <- 
-  dataToTask("credit_card_prediction/oh_data/mf_oh_data.csv", "mf_oh", sep = ',')
+  dataToTask("../../credit_card_prediction/oh_data/mf_oh_data.csv", "mf_oh")
 mf_iv_task <- 
-  dataToTask("credit_card_prediction/iv_data/mf_iv_data.csv", "mf_iv")
+  dataToTask("../../credit_card_prediction/iv_data/mf_iv_data.csv", "mf_iv")
 
 mice_dummy_task <- 
-  dataToTask("credit_card_prediction/dummy_data/mice_dummy_data.csv", "mice_dummy")
+  dataToTask("../../credit_card_prediction/dummy_data/mice_dummy_data.csv", "mice_dummy")
 mice_oh_task <- 
-  dataToTask("credit_card_prediction/oh_data/mice_oh_data.csv", "mice_oh", sep = ',')
+  dataToTask("../../credit_card_prediction/oh_data/mice_oh_data.csv", "mice_oh")
 mice_iv_task <- 
-  dataToTask("credit_card_prediction/iv_data/mice_iv_data.csv", "mice_iv")
+  dataToTask("../../credit_card_prediction/iv_data/mice_iv_data.csv", "mice_iv")
 
 # combine all tasks into one list
 dl <- list(dummy=dl_dummy_task, oh=dl_oh_task, iv=dl_iv_task)
@@ -133,6 +131,50 @@ for(t in tasks){
 
 
 ```{r,warning=FALSE,message=FALSE}
+
+library(mlr3)
+library("mlr3learners")
+
+# train one model with fixed seed
+train_model <- function(task, learner, resampling){
+  set.seed(2020)
+  print(task$id)
+  train_model <- resample(task, learner, resampling, store_models = TRUE)
+  print(train_model)
+}
+
+# train all task with one learner
+train_all <- function(tasks, learner, resampling){
+  
+  models <- list()
+  miss_name <- c('dl', 'mf', 'mice')
+  code_name <- c('dummy', 'oh', 'iv')
+  
+  for(missing in miss_name){
+    for(coding in code_name){
+      name <- paste0(missing, "_", coding)
+      task <- tasks[[missing]][[coding]]
+      models[[name]] <- train_model(task, learner, resampling)
+    }
+  }
+  train_all <- models
+}
+
+# evaluate multiple models with AUC
+evaluate_models <- function(models){
+  for(m in models){
+    name <- m$task$id
+    auc <- m$aggregate(msr("classif.auc"))[[1]]
+    max_auc <- max(m$score(msr("classif.auc"))[,9])
+    print(sprintf("%10s: %.4f (max: %.4f)", name, auc, max_auc))
+    #cat(paste0(name, ": ", auc, "\t(max: ", max_auc, ")\n"))
+  }
+}
+
+resampling = rsmp("cv", folds = 5)
+learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance=2, scale=FALSE)
+models <- train_all(tasks, learner, resampling)
+evaluate_models(models)
 
 ```
 
