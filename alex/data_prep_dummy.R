@@ -16,7 +16,7 @@ dummy_var <- function(data){
   data$y <- as.numeric(as.character(data$y)) 
   
   # transform all factor variables to dummy variables, and removes the original variables that were used to generate the dummy variables.
-  data_dummy <- fastDummies::dummy_cols(data, remove_selected_columns=TRUE) 
+  data_dummy <- fastDummies::dummy_cols(data, remove_selected_columns=TRUE, remove_first_dummy=TRUE) 
   
   # column name convention fix (mlr3 name convention - space to underscore)
   data_dummy <- clean_names(data_dummy)
@@ -49,8 +49,8 @@ mice_dummy_data <- dummy_var(mice_dummy_data)
 # --------------------- output data into file
 # --------------------------------------------
 
-write_csv2(dl_dummy_data,"credit_card_prediction/dummy_data/dl_dummy_data.csv")
-write_csv2(mf_dummy_data,"credit_card_prediction/dummy_data/mf_dummy_data.csv")
-write_csv2(mice_dummy_data,"credit_card_prediction/dummy_data/mice_dummy_data.csv")
+write.csv2(dl_dummy_data,"credit_card_prediction/dummy_data/dl_dummy_data.csv")
+write.csv2(mf_dummy_data,"credit_card_prediction/dummy_data/mf_dummy_data.csv")
+write.csv2(mice_dummy_data,"credit_card_prediction/dummy_data/mice_dummy_data.csv")
 
 
