@@ -59,11 +59,12 @@ cat("dl_dummy_data\t", dim(dl_dummy_data), any(is.na(dl_dummy_data)), "\n")
 cat("mf_dummy_data\t", dim(mf_dummy_data), any(is.na(mf_dummy_data)), "\n")
 cat("mice_dummy_data\t", dim(mice_dummy_data), any(is.na(mice_dummy_data)), "\n")
 
+rm(dl_dummy_data, mf_dummy_data, mice_dummy_data)
+
 # store data with dummy variable 
 # write_csv2(dl_dummy_data,"credit_card_prediction/dummy_data/dl_dummy_data.csv")
 # write_csv2(mf_dummy_data,"credit_card_prediction/dummy_data/mf_dummy_data.csv")
 # write_csv2(mice_dummy_data,"credit_card_prediction/dummy_data/mice_dummy_data.csv")
-
 
 ```
 
@@ -124,16 +125,23 @@ for(t in tasks){
   }
 }
 
+rm(t, c)
+
 ```
 
 ## KNN
 
 
-
 ```{r,warning=FALSE,message=FALSE}
-
+warnings()
 library(mlr3)
-library("mlr3learners")
+library(mlr3learners)
+library(mlr3viz)
+library(ggplot2)
+library(gridExtra)
+
+# turn info log off, only show warnings
+lgr::get_logger("mlr3")$set_threshold("warn")
 
 # train one model with fixed seed
 train_model <- function(task, learner, resampling){
@@ -171,10 +179,25 @@ evaluate_models <- function(models){
   }
 }
 
+multiplot_roc <- function(models){
+  plots <- list()
+  k <- 1
+  for(m in models){
+    name <- m$task$id
+    plots[[k]] <- autoplot(m, type = "roc") + xlab("") + ylab("") + ggtitle(name)
+    k <- k+1
+  }
+  do.call("grid.arrange", plots)
+  # grid.arrange(plots[[1]], plots[[2]], plots[[3]], 
+  #              plots[[4]], plots[[5]], plots[[6]],
+  #              plots[[7]], plots[[8]], plots[[9]])
+}
+
 resampling = rsmp("cv", folds = 5)
 learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance=2, scale=FALSE)
 models <- train_all(tasks, learner, resampling)
 evaluate_models(models)
-
+multiplot_roc(models)
 ```
+
 

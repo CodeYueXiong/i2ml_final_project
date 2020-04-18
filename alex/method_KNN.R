@@ -32,9 +32,9 @@ In case of tie the data is classified in the group with a shorter distance.
 # distance  small improvement in AUC (significant increase in runtime)
 
 library(mlr3)
-library("mlr3viz")
-library("precrec")
-library("mlr3learners")
+library(mlr3viz)
+library(precrec)
+library(mlr3learners)
 
 setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
 source("alex/read_data.R")
@@ -48,20 +48,24 @@ resampling = rsmp("cv", folds = 5)
 
 # feature selection is important
 
-for(k in kernal_type){
-  task <- tasks$dl$dummy$select(c("amt_income_total", "days_employed", "flag_own_car_y", "flag_own_realty_y"))
-  learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance=2, kernel=k, scale=TRUE)
-  model <- train_model(task, learner, resampling)
-  cat(k, model$aggregate(msr("classif.auc")), "\n")
-}
+# for(k in kernal_type){
+#   task <- tasks$dl$dummy$select(c("amt_income_total", "days_employed", "flag_own_car_y", "flag_own_realty_y"))
+#   learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance=2, kernel=k, scale=TRUE)
+#   model <- train_model(task, learner, resampling)
+#   cat(k, model$aggregate(msr("classif.auc")), "\n")
+# }
 
 #learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance=2, kernel=kernal_type[1], scale=FALSE)
-learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance=3, scale=FALSE)
-#model <- train_model(tasks[["dl"]][["dummy"]], learner, resampling)
+learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance=1, scale=FALSE)
+
+model <- train_model(tasks[["dl"]][["dummy"]], learner, resampling)
+model$score(msr("classif.acc"))
+model$prediction()$confusion
 #evaluate_result(model)
 
 models <- train_all(tasks, learner, resampling)
 evaluate_models(models)
+
 
 
 

@@ -1,5 +1,5 @@
 library(mlr3)
-library("mlr3learners")
+library(mlr3learners)
 
 # ----------------------------------------
 # ------- train one task with one learner
@@ -71,6 +71,7 @@ evaluate_result <- function(model){
 
 
 evaluate_models <- function(models){
+  par(mfrow=c(3,3))
   for(m in models){
     name <- m$task$id
     auc <- m$aggregate(msr("classif.auc"))[[1]]
@@ -79,3 +80,16 @@ evaluate_models <- function(models){
     #cat(paste0(name, ": ", auc, "\t(max: ", max_auc, ")\n"))
   }
 }
+
+multiplot_roc <- function(models){
+  plots <- list()
+  k <- 1
+  for(m in models){
+    name <- m$task$id
+    plots[[k]] <- autoplot(m, type = "roc") + xlab("") + ylab("") + ggtitle(name)
+    k <- k+1
+  }
+  do.call("grid.arrange", c(plots))  
+}
+
+

@@ -1,7 +1,11 @@
 # set.seed(2020) before training
 # the bigger k is, the larger the difference in AUC
+
+# Minkowski distance is typically used with p being 1 or 2 (1: Manhattan distance, 2: Euclidean distance)
 # distance increase runtime, but not significent better
 # scale=TRUR, longer runtime, but not significent better (also make difference more noticeable)
+
+# TODO: try distance = 1
 
 # mf best in general
 # encoding no big difference
