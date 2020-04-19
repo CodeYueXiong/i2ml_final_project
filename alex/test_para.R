@@ -6,6 +6,7 @@
 # scale=TRUR, longer runtime, but not significent better (also make difference more noticeable)
 
 # TODO: try distance = 1
+# KNN not suitabe for categorical data -> 0/1 (dummy) while numeric data has larger diff.
 
 # mf best in general
 # encoding no big difference
