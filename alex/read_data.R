@@ -13,15 +13,15 @@ dataToTask <- function(path, id, sep=';', header=TRUE){
 }
 
 dl_dummy_task <- dataToTask("credit_card_prediction/dummy_data/dl_dummy_data.csv", "dl_dummy")
-dl_oh_task <- dataToTask("credit_card_prediction/oh_data/dl_oh_data.csv", "dl_oh")
+dl_oh_task <- dataToTask("credit_card_prediction/oh_data/dl_oh_data.csv", "dl_oh", sep=',')
 dl_iv_task <- dataToTask("credit_card_prediction/iv_data/dl_iv_data.csv", "dl_iv")
 
 mf_dummy_task <- dataToTask("credit_card_prediction/dummy_data/mf_dummy_data.csv", "mf_dummy")
-mf_oh_task <- dataToTask("credit_card_prediction/oh_data/mf_oh_data.csv", "mf_oh")
+mf_oh_task <- dataToTask("credit_card_prediction/oh_data/mf_oh_data.csv", "mf_oh", sep=',')
 mf_iv_task <- dataToTask("credit_card_prediction/iv_data/mf_iv_data.csv", "mf_iv")
 
 mice_dummy_task <- dataToTask("credit_card_prediction/dummy_data/mice_dummy_data.csv", "mice_dummy")
-mice_oh_task <- dataToTask("credit_card_prediction/oh_data/mice_oh_data.csv", "mice_oh")
+mice_oh_task <- dataToTask("credit_card_prediction/oh_data/mice_oh_data.csv", "mice_oh", sep=',')
 mice_iv_task <- dataToTask("credit_card_prediction/iv_data/mice_iv_data.csv", "mice_iv")
 
 

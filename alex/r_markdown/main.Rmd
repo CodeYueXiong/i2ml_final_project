@@ -84,21 +84,21 @@ dataToTask <- function(path, id, sep=';', header=TRUE){
 dl_dummy_task <- 
   dataToTask("../../credit_card_prediction/dummy_data/dl_dummy_data.csv", "dl_dummy")
 dl_oh_task <- 
-  dataToTask("../../credit_card_prediction/oh_data/dl_oh_data.csv", "dl_oh")
+  dataToTask("../../credit_card_prediction/oh_data/dl_oh_data.csv", "dl_oh", sep=',')
 dl_iv_task <- 
   dataToTask("../../credit_card_prediction/iv_data/dl_iv_data.csv", "dl_iv")
 
 mf_dummy_task <- 
   dataToTask("../../credit_card_prediction/dummy_data/mf_dummy_data.csv", "mf_dummy")
 mf_oh_task <- 
-  dataToTask("../../credit_card_prediction/oh_data/mf_oh_data.csv", "mf_oh")
+  dataToTask("../../credit_card_prediction/oh_data/mf_oh_data.csv", "mf_oh", sep=',')
 mf_iv_task <- 
   dataToTask("../../credit_card_prediction/iv_data/mf_iv_data.csv", "mf_iv")
 
 mice_dummy_task <- 
   dataToTask("../../credit_card_prediction/dummy_data/mice_dummy_data.csv", "mice_dummy")
 mice_oh_task <- 
-  dataToTask("../../credit_card_prediction/oh_data/mice_oh_data.csv", "mice_oh")
+  dataToTask("../../credit_card_prediction/oh_data/mice_oh_data.csv", "mice_oh", sep=',')
 mice_iv_task <- 
   dataToTask("../../credit_card_prediction/iv_data/mice_iv_data.csv", "mice_iv")
 
@@ -133,7 +133,9 @@ rm(t, c)
 
 
 ```{r,warning=FALSE,message=FALSE}
-warnings()
+#warnings()
+#
+
 library(mlr3)
 library(mlr3learners)
 library(mlr3viz)
@@ -147,8 +149,13 @@ lgr::get_logger("mlr3")$set_threshold("warn")
 train_model <- function(task, learner, resampling){
   set.seed(2020)
   print(task$id)
-  train_model <- resample(task, learner, resampling, store_models = TRUE)
-  print(train_model)
+  start_time <- Sys.time()
+  model <- resample(task, learner, resampling, store_models = TRUE)
+  end_time <- Sys.time()
+  duration <- (end_time-start_time)[[1]]
+  print(model)
+  print(paste0("training time (5 fold CV): ", duration))
+  train_model <- model
 }
 
 # train all task with one learner
@@ -198,6 +205,7 @@ learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance
 models <- train_all(tasks, learner, resampling)
 evaluate_models(models)
 multiplot_roc(models)
+
 ```
 
 
