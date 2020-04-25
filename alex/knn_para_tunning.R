@@ -47,7 +47,7 @@ knn_learner <- lrn("classif.kknn", predict_type = "prob")
 
 # setting the tunning for parameters, and terminator
 knn_param_set <- ParamSet$new(params = list(ParamInt$new("k", lower = 1, upper = 50)))
-terms <- term("combo", list(term("model_time", secs = 3600),
+terms <- term("combo", list(term("model_time", secs = 360),
                            term("evals", n_evals = 100),
                            term("stagnation", iters = 5, threshold = 1e-4)))
 
@@ -72,6 +72,7 @@ set.seed(2020)
 knn_bmr <- benchmark(design)
 knn_results <- knn_bmr$aggregate(measures = msr("classif.auc"))
 
+# --------- old iv
 # nr  resample_result task_id         learner_id resampling_id iters classif.auc
 # 1:  1 <ResampleResult>   dl_iv classif.kknn.tuned            cv     3   0.6919682
 # 2:  2 <ResampleResult>   mf_iv classif.kknn.tuned            cv     3   0.6760526
@@ -80,12 +81,19 @@ knn_results <- knn_bmr$aggregate(measures = msr("classif.auc"))
 # 5:  5 <ResampleResult>   mf_oh classif.kknn.tuned            cv     3   0.6749367
 # 6:  6 <ResampleResult> mice_oh classif.kknn.tuned            cv     3   0.6818601
 
+# --------- new iv: n_evals
+
+
 
 # extract confusion matrix for each task
 cf_matrix <- function(x) x$prediction()$confusion
 knn_result_matrix <- knn_results %>%
   pull(resample_result) %>%
   map(pluck(cf_matrix))
+
+para_results <- knn_bmr$score() %>% 
+  pull(learner) %>% 
+  map(pluck(c(function(x) x$tuning_result)))
 
 # auto plot results
 #autoplot(knn_bmr, measure = msr("classif.auc"))
