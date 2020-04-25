@@ -38,8 +38,8 @@ library(mlr3learners)
 library(mlr3tuning)
 
 setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
-source("alex/read_data.R")
-source("alex/train.R")
+source("alex/old/read_data.R")
+source("alex/old/train.R")
 
 ## ----------- nested TEST
 
@@ -79,7 +79,7 @@ resampling = rsmp("cv", folds = 5)
 # }
 
 #learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance=2, kernel=kernal_type[1], scale=FALSE)
-learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance=1, scale=FALSE)
+learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance=2, scale=FALSE)
 
 model <- train_model(tasks[["dl"]][["dummy"]], learner, resampling)
 model$score(msr("classif.acc"))

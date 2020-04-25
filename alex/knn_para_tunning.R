@@ -69,7 +69,7 @@ design = benchmark_grid(
 # set seed before traing, then run the benchmark
 # save the results afterwards
 set.seed(2020)
-knn_bmr <- benchmark(design)
+knn_bmr <- benchmark(design, store_models = TRUE)
 knn_results <- knn_bmr$aggregate(measures = msr("classif.auc"))
 
 # --------- old iv
