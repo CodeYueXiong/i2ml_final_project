@@ -54,7 +54,7 @@ final_data <- data %>%
 #check data
 summary(final_data)
 #remove useless variable
-final_data <- final_data %>% select(-ID,-FLAG_MOBIL)
+final_data <- final_data %>% select(-ID,-FLAG_MOBIL,-)
 
 
 ##### deal with na (delect, mf, mice)
