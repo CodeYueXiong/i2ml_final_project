@@ -35,10 +35,33 @@ library(mlr3)
 library(mlr3viz)
 library(precrec)
 library(mlr3learners)
+library(mlr3tuning)
 
 setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
 source("alex/read_data.R")
 source("alex/train.R")
+
+## ----------- nested TEST
+
+task = tasks$dl$dummy
+resampling = rsmp("holdout")
+learner = lrn("classif.kknn", id = "knn", predict_type = "prob", k=15, distance=1, scale=FALSE)
+measures = msr("classif.auc")
+
+param_set = paradox::ParamSet$new(
+  params = list(paradox::ParamInt$new("k", lower = 10, upper = 20)))
+
+terminator = term("evals", n_evals = 5)
+tuner = tnr("grid_search", resolution = 10)
+
+at = AutoTuner$new(learner, resampling, measures = measures,
+                   param_set, terminator, tuner = tuner)
+
+resampling_outer = rsmp("cv", folds = 3)
+rr = resample(task = task, learner = at, resampling = resampling_outer)
+
+## -----------------------
+
 
 # tasks[["<type>"]][["<code>"]]
 kernal_type <- c("rectangular", "triangular", "epanechnikov", "biweight", "triweight", "cos", "inv", "gaussian", "rank", "optimal")

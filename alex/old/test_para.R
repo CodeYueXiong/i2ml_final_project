@@ -11,6 +11,12 @@
 # mf best in general
 # encoding no big difference
 
+# standardize? normalize?
+# scale? standardize or not?
+# standardize before learner
+# dummy variable standardize reasonable?
+# binary variable -> one hot reasonable?
+
 #learner <- lrn("classif.kknn", id = "knn", predict_type = "prob", k=5, distance=2, scale=FALSE)
 # > evalutate_models(models)
 # [1] "  dl_dummy: 0.7447 (max: 0.7921)"
