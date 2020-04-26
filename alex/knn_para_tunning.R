@@ -21,9 +21,14 @@ setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
 suppressPackageStartupMessages(library(kknn))
 
 # read data with different encoding
+old_dl_iv <- read.csv2("credit_card_prediction/iv_data/old_dl_iv.csv") %>% mutate(y = as.factor(y))
+old_mf_iv <- read.csv2("credit_card_prediction/iv_data/old_mf_iv.csv") %>% mutate(y = as.factor(y))
+old_mice_iv <- read.csv2("credit_card_prediction/iv_data/old_mice_iv.csv") %>% mutate(y = as.factor(y))
+
 dl_iv_data <- read.csv2("credit_card_prediction/iv_data/dl_iv_data.csv") %>% mutate(y = as.factor(y))
 mf_iv_data <- read.csv2("credit_card_prediction/iv_data/mf_iv_data.csv") %>% mutate(y = as.factor(y))
 mice_iv_data <- read.csv2("credit_card_prediction/iv_data/mice_iv_data.csv") %>% mutate(y = as.factor(y))
+
 dl_oh_data <- read.csv("credit_card_prediction/oh_data/dl_oh_data.csv") %>% mutate(y = as.factor(y))
 mf_oh_data <- read.csv("credit_card_prediction/oh_data/mf_oh_data.csv") %>% mutate(y = as.factor(y))
 mice_oh_data <- read.csv("credit_card_prediction/oh_data/mice_oh_data.csv") %>% mutate(y = as.factor(y))
@@ -31,6 +36,9 @@ mice_oh_data <- read.csv("credit_card_prediction/oh_data/mice_oh_data.csv") %>% 
 
 # load data directly into tasks for further training
 tasks <- list(
+  TaskClassif$new("old_dl_iv", backend = old_dl_iv, target = "y"),
+  TaskClassif$new("old_mf_iv", backend = old_mf_iv, target = "y"),
+  TaskClassif$new("old_mice_iv", backend = old_mice_iv, target = "y"),
   TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y"),
   TaskClassif$new("mf_iv", backend = mf_iv_data, target = "y"),
   TaskClassif$new("mice_iv", backend = mice_iv_data, target = "y"),
@@ -40,13 +48,13 @@ tasks <- list(
 )
 
 # remove raw data to save memory
-rm(dl_iv_data, mf_iv_data, mice_iv_data, dl_oh_data, mf_oh_data, mice_oh_data)
+rm(dl_iv_data, mf_iv_data, mice_iv_data, dl_oh_data, mf_oh_data, mice_oh_data, old_dl_iv, old_mf_iv, old_mice_iv)
 
 # knn learner
 knn_learner <- lrn("classif.kknn", predict_type = "prob")
 
 # setting the tunning for parameters, and terminator
-knn_param_set <- ParamSet$new(params = list(ParamInt$new("k", lower = 1, upper = 50)))
+knn_param_set <- ParamSet$new(params = list(ParamInt$new("k", lower = 5, upper = 40)))
 terms <- term("combo", list(term("model_time", secs = 360),
                            term("evals", n_evals = 100),
                            term("stagnation", iters = 5, threshold = 1e-4)))
@@ -102,12 +110,41 @@ para_results <- knn_bmr$score() %>%
 # autoplot auc for all tasks (merged in one plot)
 multiplot_roc <- function(models, type="roc", xlab="", ylab=""){
   plots <- list()
-  plots[[1]] <- autoplot(models$clone()$filter(task_id = "dl_iv"), type = type) + xlab(xlab) + ylab(ylab) + ggtitle("dl_iv")
-  plots[[2]] <- autoplot(models$clone()$filter(task_id = "mf_iv"), type = type) + xlab(xlab) + ylab(ylab) + ggtitle("mf_iv")
-  plots[[3]] <- autoplot(models$clone()$filter(task_id = "mice_iv"), type = type) + xlab(xlab) + ylab(ylab) + ggtitle("mice_iv")
-  plots[[4]] <- autoplot(models$clone()$filter(task_id = "dl_oh"), type = type) + xlab(xlab) + ylab(ylab) + ggtitle("dl_oh")
-  plots[[5]] <- autoplot(models$clone()$filter(task_id = "mf_oh"), type = type) + xlab(xlab) + ylab(ylab) + ggtitle("mf_oh")
-  plots[[6]] <- autoplot(models$clone()$filter(task_id = "mice_oh"), type = type) + xlab(xlab) + ylab(ylab) + ggtitle("mice_oh")
+  model <- models$clone()$filter(task_id = "old_dl_iv")
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  plots[[1]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("old_dl_iv:", auc))
+  
+  model <- models$clone()$filter(task_id = "old_mf_iv")
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  plots[[2]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("old_mf_iv:", auc))
+  
+  model <- models$clone()$filter(task_id = "old_mice_iv")
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  plots[[3]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("old_mice_iv:", auc))
+  
+  model <- models$clone()$filter(task_id = "dl_iv")
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  plots[[4]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("dl_iv:", auc))
+  
+  model <- models$clone()$filter(task_id = "mf_iv")
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  plots[[5]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("mf_iv:", auc))
+  
+  model <- models$clone()$filter(task_id = "mice_iv")
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  plots[[6]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("mice_iv:", auc))
+  
+  model <- models$clone()$filter(task_id = "dl_oh")
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  plots[[7]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("dl_oh:", auc))
+  
+  model <- models$clone()$filter(task_id = "mf_oh")
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  plots[[8]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("mf_oh:", auc))
+  
+  model <- models$clone()$filter(task_id = "mice_oh")
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  plots[[9]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("mice_oh", auc))
   do.call("grid.arrange", plots)
 }
 
