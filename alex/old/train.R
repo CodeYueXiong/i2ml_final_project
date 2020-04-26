@@ -86,7 +86,8 @@ multiplot_roc <- function(models){
   k <- 1
   for(m in models){
     name <- m$task$id
-    plots[[k]] <- autoplot(m, type = "roc") + xlab("") + ylab("") + ggtitle(name)
+    auc <- round(m$aggregate(msr("classif.auc"))[[7]], 4)
+    plots[[k]] <- autoplot(m, type = "roc") + xlab("") + ylab("") + ggtitle(paste(name, ":", auc))
     k <- k+1
   }
   do.call("grid.arrange", c(plots))  

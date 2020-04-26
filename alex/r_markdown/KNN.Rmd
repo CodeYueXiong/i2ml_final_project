@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 KNN (k-nearest neighbors) is a method used for classification. It takes k neighbors and based on how the neighbors are classified, and we will assign the new input to the most popular category in the k neighbors. Here the number of k and the method of calculating the distances between data point are crucial.
 
-```{r,warning=FALSE,message=FALSE}
+```{r message=FALSE, warning=FALSE}
 
 library(mlr3)
 library(tidyverse)
@@ -61,6 +61,39 @@ rm(dl_iv_data, mf_iv_data, mice_iv_data, dl_oh_data, mf_oh_data, mice_oh_data)
 # knn learner
 knn_learner <- lrn("classif.kknn", predict_type = "prob")
 
+# remove info log
+lgr::get_logger("mlr3")$set_threshold("warn")
+
+train_model <- function(task, learner, resampling){
+  set.seed(2020)
+  train_model <- resample(task, learner, resampling, store_models = TRUE)
+}
+
+
+r <- rsmp("cv", folds = 3)
+models <- list()
+for(t in tasks){
+  models <- append(models, list(train_model(t, knn_learner, r)))
+}
+
+multiplot_roc <- function(models){
+  plots <- list()
+  for(m in models){
+    name <- m$task$id
+    auc <- round(m$aggregate(msr("classif.auc")), 4)
+    plt <- autoplot(m, type = "roc") + xlab("") + ylab("") + ggtitle(paste(name, ":", auc))
+    plots <- append(plots, list(plt))
+  }
+  do.call("grid.arrange", c(plots))  
+}
+
+multiplot_roc(models)
+
+```
+
+# KNN only with dl_vi
+
+``` {r}
 # setting the tunning for parameters, and terminator
 knn_param_set <- ParamSet$new(params = list(ParamInt$new("k", lower = 5, upper = 40),
                                             ParamInt$new("distance", lower = 1, upper = 2)))
@@ -99,36 +132,6 @@ knn_result_matrix <- knn_results %>%
 para_results <- knn_bmr$score() %>% 
   pull(learner) %>% 
   map(pluck(c(function(x) x$tuning_result)))
-
-
-# autoplot auc for all tasks (merged in one plot)
-multiplot_roc <- function(models, type="roc", xlab="", ylab=""){
-  plots <- list()
-  model <- models$clone()$filter(task_id = "dl_iv")
-  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[1]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("dl_iv:", auc))
-  
-  model <- models$clone()$filter(task_id = "mf_iv")
-  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[2]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("mf_iv:", auc))
-  
-  model <- models$clone()$filter(task_id = "mice_iv")
-  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[3]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("mice_iv:", auc))
-  
-  model <- models$clone()$filter(task_id = "dl_oh")
-  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[4]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("dl_oh:", auc))
-  
-  model <- models$clone()$filter(task_id = "mf_oh")
-  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[5]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("mf_oh:", auc))
-  
-  model <- models$clone()$filter(task_id = "mice_oh")
-  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[6]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("mice_oh", auc))
-  do.call("grid.arrange", plots)
-}
 
 
 # plot all auc curves at once

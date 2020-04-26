@@ -21,24 +21,17 @@ setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
 suppressPackageStartupMessages(library(kknn))
 
 # read data with different encoding
-old_dl_iv <- read.csv2("credit_card_prediction/iv_data/old_dl_iv.csv") %>% mutate(y = as.factor(y))
-old_mf_iv <- read.csv2("credit_card_prediction/iv_data/old_mf_iv.csv") %>% mutate(y = as.factor(y))
-old_mice_iv <- read.csv2("credit_card_prediction/iv_data/old_mice_iv.csv") %>% mutate(y = as.factor(y))
+dl_iv_data <- read.csv2("credit_card_prediction/iv_data/dl_iv_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
+mf_iv_data <- read.csv2("credit_card_prediction/iv_data/mf_iv_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
+mice_iv_data <- read.csv2("credit_card_prediction/iv_data/mice_iv_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
 
-dl_iv_data <- read.csv2("credit_card_prediction/iv_data/dl_iv_data.csv") %>% mutate(y = as.factor(y))
-mf_iv_data <- read.csv2("credit_card_prediction/iv_data/mf_iv_data.csv") %>% mutate(y = as.factor(y))
-mice_iv_data <- read.csv2("credit_card_prediction/iv_data/mice_iv_data.csv") %>% mutate(y = as.factor(y))
-
-dl_oh_data <- read.csv("credit_card_prediction/oh_data/dl_oh_data.csv") %>% mutate(y = as.factor(y))
-mf_oh_data <- read.csv("credit_card_prediction/oh_data/mf_oh_data.csv") %>% mutate(y = as.factor(y))
-mice_oh_data <- read.csv("credit_card_prediction/oh_data/mice_oh_data.csv") %>% mutate(y = as.factor(y))
+dl_oh_data <- read.csv("credit_card_prediction/oh_data/dl_oh_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
+mf_oh_data <- read.csv("credit_card_prediction/oh_data/mf_oh_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
+mice_oh_data <- read.csv("credit_card_prediction/oh_data/mice_oh_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
 
 
 # load data directly into tasks for further training
 tasks <- list(
-  TaskClassif$new("old_dl_iv", backend = old_dl_iv, target = "y"),
-  TaskClassif$new("old_mf_iv", backend = old_mf_iv, target = "y"),
-  TaskClassif$new("old_mice_iv", backend = old_mice_iv, target = "y"),
   TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y"),
   TaskClassif$new("mf_iv", backend = mf_iv_data, target = "y"),
   TaskClassif$new("mice_iv", backend = mice_iv_data, target = "y"),
@@ -47,29 +40,44 @@ tasks <- list(
   TaskClassif$new("mice_oh", backend = mice_oh_data, target = "y")
 )
 
+task <- tasks[[1]]
+
 # remove raw data to save memory
-rm(dl_iv_data, mf_iv_data, mice_iv_data, dl_oh_data, mf_oh_data, mice_oh_data, old_dl_iv, old_mf_iv, old_mice_iv)
+rm(dl_iv_data, mf_iv_data, mice_iv_data, dl_oh_data, mf_oh_data, mice_oh_data)
 
 # knn learner
 knn_learner <- lrn("classif.kknn", predict_type = "prob")
+po_smote = po("smote", dup_size = 6)
+lrn_smote <- GraphLearner$new(po_smote %>>% knn_learner, predict_type = "prob")
 
 # setting the tunning for parameters, and terminator
-knn_param_set <- ParamSet$new(params = list(ParamInt$new("k", lower = 5, upper = 40)))
-terms <- term("combo", list(term("model_time", secs = 360),
-                           term("evals", n_evals = 100),
-                           term("stagnation", iters = 5, threshold = 1e-4)))
+knn_param_set <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 5, upper = 25),
+                                            ParamInt$new("smote.dup_size", lower = 1, upper = 6),
+                                            ParamInt$new("smote.K", lower = 1, upper = 6)
+                                            ))
+
+# knn_param_set$trafo <- function(x, para_set){
+#   x$...
+# }
+
+# terms <- term("combo", list(term("model_time", secs = 360),
+#                            term("evals", n_evals = 10),
+#                            term("stagnation", iters = 5, threshold = 1e-4)))
+
+terms <- term("none")
 
 
 # creat autotuner, using the inner sampling and tuning parameter with random search
 inner_rsmp <- rsmp("cv",folds = 5L)
-knn_auto <- AutoTuner$new(learner = knn_learner, resampling = inner_rsmp, 
+knn_auto <- AutoTuner$new(learner = lrn_smote, resampling = inner_rsmp, 
                                measures = msr("classif.auc"), tune_ps = knn_param_set,
-                               terminator = terms, tuner = tnr("random_search"))
+                               terminator = terms, tuner = tnr("grid_search", resolution = 6))
+                               #terminator = terms, tuner = tnr("random_search"))
 
 # set outer_resampling, and creat a design with it
 outer_rsmp <- rsmp("cv", folds = 3L)
 design = benchmark_grid(
-  tasks = tasks,
+  tasks = task,
   learners = knn_auto,
   resamplings = outer_rsmp
 )
@@ -79,6 +87,29 @@ design = benchmark_grid(
 set.seed(2020)
 knn_bmr <- benchmark(design, store_models = TRUE)
 knn_results <- knn_bmr$aggregate(measures = msr("classif.auc"))
+
+# ---------------------------------------------------------------------
+
+# plot color ggplot
+library(ggplot2)
+
+stune_path = knn_bmr$data$learner[[1]]$archive("params")
+stune_gg1 = ggplot(stune_path, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = factor(smote.K))) +
+  geom_point(size = 3) +
+  geom_line()
+
+stune_gg2 = ggplot(stune_path, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = factor(smote.dup_size))) +
+  geom_point(size = 3) +
+  geom_line()
+
+grid.arrange(stune_gg1, stune_gg2, nrow=1)
+
+# ---------------------------------------------------------------------
+
 
 # --------- old iv
 # nr  resample_result task_id         learner_id resampling_id iters classif.auc
