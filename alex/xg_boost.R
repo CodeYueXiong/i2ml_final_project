@@ -49,11 +49,11 @@ xg_learner <- lrn("classif.xgboost", predict_type = "prob")
 
 # setting the tunning for parameters, and terminator
 xg_smote_param_set <- ParamSet$new(
-  params = list(ParamInt$new("max_depth", lower = 3, upper = 15),
+  params = list(ParamInt$new("max_depth", lower = 5, upper = 15),
                 ParamDbl$new("min_child_weight", lower = 5, upper = 10),
-                ParamDbl$new("eta", low=0.01, upper=0.3), # learning rate
+                ParamDbl$new("eta", low=0.01, upper=0.3) # learning rate
                 #ParamInt$new("gamma", low=0, upper=10),
-                ParamDbl$new("subsample", low=0.5, upper=0.8)
+                # ParamDbl$new("subsample", low=0.5, upper=0.8)
                 # ParamInt$new("lambda", lower=0, upper=2)
                 # ParamInt$new("max_bin", lower = 500, upper = 1000, default = 900),
                 # ParamDbl$new("max_delta_step", lower = 1, upper = 6)
@@ -87,6 +87,10 @@ set.seed(2020)
 xg_bmr <- benchmark(design, store_models = TRUE)
 xg_results <- xg_bmr$aggregate(measures = msr("classif.auc"))
 
+model <- xg_bmr$clone()$filter(task_id = "dl_iv")
+auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+autoplot(model, type = 'roc') + xlab("") + ylab("") + ggtitle(paste("dl_iv:", auc))
+
 
 
 # extract confusion matrix for each task
@@ -101,9 +105,6 @@ para_results <- xg_bmr$score() %>%
 
 # auto plot results
 #autoplot(knn_bmr, measure = msr("classif.auc"))
-
-model <- xg_bmr$clone()$filter(task_id = "dl_iv")
-autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("dl_iv:", auc))
 
 
 # autoplot auc for all tasks (merged in one plot)
