@@ -5,45 +5,29 @@ library(mlr3)
 library(tidyverse)
 library(ggplot2)
 library(mlr3learners)
-library(data.table)
-library(mlr3viz)
+#library(data.table)
+#library(mlr3viz)
 library(mlr3tuning)
 library(mlr3pipelines)
-library(paradox)
-library(skimr)
+#library(paradox)
+#library(skimr)
 library(smotefamily)
 library(gridExtra)
 
-setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
+#setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
+setwd("/home/alex/Desktop/i2ml_final_project/")
 
 # suppress package making warning by start up in train 
-# Warning: "package ¡¥kknn¡¦ was built under R version 3.6.3"
+# Warning: "package ??kknn?? was built under R version 3.6.3"
 suppressPackageStartupMessages(library(kknn))
 
 # read data with different encoding
-dl_iv_data <- read.csv2("credit_card_prediction/iv_data/dl_iv_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
-mf_iv_data <- read.csv2("credit_card_prediction/iv_data/mf_iv_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
-mice_iv_data <- read.csv2("credit_card_prediction/iv_data/mice_iv_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
-
-dl_oh_data <- read.csv("credit_card_prediction/oh_data/dl_oh_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
-mf_oh_data <- read.csv("credit_card_prediction/oh_data/mf_oh_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
-mice_oh_data <- read.csv("credit_card_prediction/oh_data/mice_oh_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
-
-
 # load data directly into tasks for further training
-tasks <- list(
-  TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y"),
-  TaskClassif$new("mf_iv", backend = mf_iv_data, target = "y"),
-  TaskClassif$new("mice_iv", backend = mice_iv_data, target = "y"),
-  TaskClassif$new("dl_oh", backend = dl_oh_data, target = "y"),
-  TaskClassif$new("mf_oh", backend = mf_oh_data, target = "y"),
-  TaskClassif$new("mice_oh", backend = mice_oh_data, target = "y")
-)
+dl_iv_data <- read.csv2("credit_card_prediction/iv_data/dl_iv_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
+task <- TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y")
 
-task <- tasks[[1]]
-
-# remove raw data to save memory
-rm(dl_iv_data, mf_iv_data, mice_iv_data, dl_oh_data, mf_oh_data, mice_oh_data)
+# check original class balance
+# table(task$truth())
 
 # knn learner
 knn_learner <- lrn("classif.kknn", predict_type = "prob")
@@ -51,18 +35,16 @@ po_smote = po("smote", dup_size = 6)
 lrn_smote <- GraphLearner$new(po_smote %>>% knn_learner, predict_type = "prob")
 
 # setting the tunning for parameters, and terminator
-knn_param_set <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 5, upper = 25),
-                                            ParamInt$new("smote.dup_size", lower = 1, upper = 6),
-                                            ParamInt$new("smote.K", lower = 1, upper = 6)
+knn_param_set <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 5, upper = 45),
+                                            ParamInt$new("smote.dup_size", lower = 1, upper = 3),
+                                            ParamInt$new("smote.K", lower = 1, upper = 5)
                                             ))
 
-# knn_param_set$trafo <- function(x, para_set){
-#   x$...
-# }
 
-# terms <- term("combo", list(term("model_time", secs = 360),
-#                            term("evals", n_evals = 10),
-#                            term("stagnation", iters = 5, threshold = 1e-4)))
+knn_param_set$trafo = function(x, param_set) {
+  x$smote.K = round(2^(x$smote.K))
+  x
+}
 
 terms <- term("none")
 
@@ -72,7 +54,6 @@ inner_rsmp <- rsmp("cv",folds = 5L)
 knn_auto <- AutoTuner$new(learner = lrn_smote, resampling = inner_rsmp, 
                                measures = msr("classif.auc"), tune_ps = knn_param_set,
                                terminator = terms, tuner = tnr("grid_search", resolution = 6))
-                               #terminator = terms, tuner = tnr("random_search"))
 
 # set outer_resampling, and creat a design with it
 outer_rsmp <- rsmp("cv", folds = 3L)
@@ -82,31 +63,48 @@ design = benchmark_grid(
   resamplings = outer_rsmp
 )
 
+# 14:08 -> 14:28, 14:34 ->
 # set seed before traing, then run the benchmark
 # save the results afterwards
 set.seed(2020)
 knn_bmr <- benchmark(design, store_models = TRUE)
 knn_results <- knn_bmr$aggregate(measures = msr("classif.auc"))
 
+extract_auc <- function(bmr, outer_cv, n_data){
+  for (m in vector) {
+    
+  }
+}
+
 # ---------------------------------------------------------------------
 
 # plot color ggplot
 library(ggplot2)
 
-stune_path = knn_bmr$data$learner[[1]]$archive("params")
-stune_gg1 = ggplot(stune_path, aes(
+stune_path1 = knn_bmr$data$learner[[1]]$archive("params")
+stune_gg1 = ggplot(stune_path1, aes(
   x = classif.kknn.k,
-  y = classif.auc, col = factor(smote.K))) +
+  y = classif.auc, col = factor(smote.K), linetype = factor(smote.dup_size))) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+
+stune_path2 = knn_bmr$data$learner[[2]]$archive("params")
+stune_gg2 = ggplot(stune_path2, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = factor(smote.K), linetype = factor(smote.dup_size))) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+
+stune_path3 = knn_bmr$data$learner[[3]]$archive("params")
+stune_gg3 = ggplot(stune_path3, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = factor(smote.K), linetype = factor(smote.dup_size))) +
   geom_point(size = 3) +
   geom_line()
 
-stune_gg2 = ggplot(stune_path, aes(
-  x = classif.kknn.k,
-  y = classif.auc, col = factor(smote.dup_size))) +
-  geom_point(size = 3) +
-  geom_line()
-
-grid.arrange(stune_gg1, stune_gg2, nrow=1)
+library(ggpubr)
+ggarrange(stune_gg1, stune_gg2, stune_gg3, common.legend = TRUE, legend="bottom")
+#grid.arrange(stune_gg1, stune_gg2, stune_gg3, nrow=1)
 
 # ---------------------------------------------------------------------
 
@@ -139,43 +137,31 @@ para_results <- knn_bmr$score() %>%
 
 
 # autoplot auc for all tasks (merged in one plot)
-multiplot_roc <- function(models, type="roc", xlab="", ylab=""){
+multiplot_roc <- function(models, type="roc"){
   plots <- list()
-  model <- models$clone()$filter(task_id = "old_dl_iv")
-  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[1]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("old_dl_iv:", auc))
-  
-  model <- models$clone()$filter(task_id = "old_mf_iv")
-  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[2]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("old_mf_iv:", auc))
-  
-  model <- models$clone()$filter(task_id = "old_mice_iv")
-  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[3]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("old_mice_iv:", auc))
-  
   model <- models$clone()$filter(task_id = "dl_iv")
   auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[4]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("dl_iv:", auc))
+  plots[[1]] <- autoplot(model, type = type) + ggtitle(paste("dl_iv:", auc))
   
   model <- models$clone()$filter(task_id = "mf_iv")
   auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[5]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("mf_iv:", auc))
+  plots[[2]] <- autoplot(model, type = type) + ggtitle(paste("mf_iv:", auc))
   
   model <- models$clone()$filter(task_id = "mice_iv")
   auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[6]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("mice_iv:", auc))
+  plots[[3]] <- autoplot(model, type = type) + ggtitle(paste("mice_iv:", auc))
   
   model <- models$clone()$filter(task_id = "dl_oh")
   auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[7]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("dl_oh:", auc))
+  plots[[4]] <- autoplot(model, type = type) + ggtitle(paste("dl_oh:", auc))
   
   model <- models$clone()$filter(task_id = "mf_oh")
   auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[8]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("mf_oh:", auc))
+  plots[[5]] <- autoplot(model, type = type) + ggtitle(paste("mf_oh:", auc))
   
   model <- models$clone()$filter(task_id = "mice_oh")
   auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  plots[[9]] <- autoplot(model, type = type) + xlab(xlab) + ylab(ylab) + ggtitle(paste("mice_oh", auc))
+  plots[[6]] <- autoplot(model, type = type) + ggtitle(paste("mice_oh", auc))
   do.call("grid.arrange", plots)
 }
 

@@ -1,41 +1,33 @@
----
-title: "KNN"
-author: "Jan Alexander Jensen"
-date: "2020/4/26"
-output: pdf_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-## KNN
-
-KNN (k-nearest neighbors) is a method used for classification. It takes k neighbors and based on how the neighbors are classified, and we will assign the new input to the most popular category in the k neighbors. Here the number of k and the method of calculating the distances between data point are crucial.
-
-```{r eval=FALSE, message=FALSE, warning=FALSE}
+# clear all workspace
+rm(list = ls())
 
 library(mlr3)
 library(tidyverse)
 library(ggplot2)
 library(mlr3learners)
+library(data.table)
+library(mlr3viz)
 library(mlr3tuning)
 library(mlr3pipelines)
-library(gridExtra) # for merging plots in one
+library(paradox)
+library(skimr)
+library(smotefamily)
+library(gridExtra)
+
+setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
 
 # suppress package making warning by start up in train 
-# Warning: "package ‘kknn’ was built under R version 3.6.3"
+# Warning: "package ??kknn?? was built under R version 3.6.3"
 suppressPackageStartupMessages(library(kknn))
 
 # read data with different encoding
+dl_iv_data <- read.csv2("credit_card_prediction/iv_data/dl_iv_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
+mf_iv_data <- read.csv2("credit_card_prediction/iv_data/mf_iv_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
+mice_iv_data <- read.csv2("credit_card_prediction/iv_data/mice_iv_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
 
-dl_iv_data <- read.csv2("credit_card_prediction/iv_data/dl_iv_data.csv") %>% mutate(y = as.factor(y))
-mf_iv_data <- read.csv2("credit_card_prediction/iv_data/mf_iv_data.csv") %>% mutate(y = as.factor(y))
-mice_iv_data <- read.csv2("credit_card_prediction/iv_data/mice_iv_data.csv") %>% mutate(y = as.factor(y))
-
-dl_oh_data <- read.csv("credit_card_prediction/oh_data/dl_oh_data.csv") %>% mutate(y = as.factor(y))
-mf_oh_data <- read.csv("credit_card_prediction/oh_data/mf_oh_data.csv") %>% mutate(y = as.factor(y))
-mice_oh_data <- read.csv("credit_card_prediction/oh_data/mice_oh_data.csv") %>% mutate(y = as.factor(y))
+dl_oh_data <- read.csv("credit_card_prediction/oh_data/dl_oh_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
+mf_oh_data <- read.csv("credit_card_prediction/oh_data/mf_oh_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
+mice_oh_data <- read.csv("credit_card_prediction/oh_data/mice_oh_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
 
 
 # load data directly into tasks for further training
@@ -48,7 +40,6 @@ tasks <- list(
   TaskClassif$new("mice_oh", backend = mice_oh_data, target = "y")
 )
 
-# remove raw data to save memory
 rm(dl_iv_data, mf_iv_data, mice_iv_data, dl_oh_data, mf_oh_data, mice_oh_data)
 
 # knn learner
@@ -106,24 +97,8 @@ multiplot_roc <- function(models, type="roc"){
   do.call("grid.arrange", plots)
 }
 
+# roc: x= 1-Specificity, y= Sensitivity
+# prc: x= Recall, y= Precision
+
 multiplot_roc(knn_bmr)
 
-```
-
-```{r echo=FALSE}
-knitr::include_graphics("images/1_dataComp_auc.png")
-#print("hello")
-```
-
-# KNN only with dl_vi
-
-KNN performs with no significant difference between different encoding and missing data handling methods. Since we used a binary variable to indicate whether a category is present or not, the max distance can only be 1 or 0. Moreover, other numeric variables have a more significant distance, meaning that they have a more substantial impact on the distance than the categorical data without having a significant correlation with our target variable. To get better results, it would be necessary to either use other ways to handle categorical data better for distance calculation or using other training methods to perform classification instead of KNN.
-
-```{r eval=FALSE, message=FALSE, warning=FALSE}
-
-```
-
-```{r echo=FALSE}
-knitr::include_graphics("images/2...png")
-#print("hello")
-```
