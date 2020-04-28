@@ -152,14 +152,11 @@ lg_smote_bmr = benchmark(smote_design, store_models = TRUE)
 lg_smote_results <- lg_smote_bmr$aggregate(measures = all_measures)
 
 
-perform <- lg_smote_bmr$score()
-
+a <- xg_bmr$score() %>% pull(learner) %>% map(pluck(c(function(x) x$tuning_result)))
 
 para_results <- lg_smote_bmr$score() %>% 
   pull(learner) %>% 
   map(pluck(c(function(x) x$tuning_result)))
-
-
 
 
 # function to extract confusion matrix for each task

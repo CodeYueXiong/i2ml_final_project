@@ -79,13 +79,10 @@ converted_data <- final_data %>% mutate_if(is.factor, convert_binary_variable)
 # find which variables have several values
 dif_variable <- setdiff(names(final_data), names(converted_data))
 
-####################### analyse the details of first multi-factors variable
-calc_iv(dif_variable[1])
-# found the variable "NAME_INCOME_TYPE" has 5 types of values, we integrate
-# "student" , "pensioner" with "state servant"
+# analyse the details of first multi-factors variable
+# found the variable "NAME_INCOME_TYPE" has 5 types of values
 final_data["less_factor_income"] <- final_data %>%
-  pull(dif_variable[[1]]) %>%
-  recode("Student" = "State servant", "Pensioner" = "State servant")
+  pull(dif_variable[[1]])
 
 # analyse how the IV of the variable has been changed.
 calc_iv(dif_variable[1])
@@ -102,24 +99,23 @@ final_data["less_factor_income"] <- final_data %>%
 calc_iv(dif_variable[1])
 calc_iv("less_factor_income")
 
-####################### analyse the details of second multi-factors variable
+#analyse the details of second multi-factors variable
 calc_iv(dif_variable[2])
 # found the variable "NAME_EDUCSTION_TYPE" has 5 types of values. we integrate
-# "Academic degree" with "Higher education"
+# "Incomplete higher" with "Higher education"
 final_data["less_factor_edu"] <- final_data %>%
   pull(dif_variable[[2]]) %>%
-  recode("Academic degree" = "Higher education")
+  recode("Higher education" = "Incomplete higher")
 # analyse how the IV of the variable has been changed.
 calc_iv(dif_variable[2])
 calc_iv("less_factor_edu")
-
-####################### analyse the details of third multi-factors variable
+# analyse the details of third multi-factors variable
 calc_iv(dif_variable[3])
 final_data["less_factor_status"] <- final_data %>% pull(dif_variable[3])
 # found this variable seems relatively balanced, no need to change.
 
 
-####################### analyse the details of fourth multi-factors variable
+# analyse the details of fourth multi-factors variable
 calc_iv(dif_variable[4])
 # found the variable "NAME_HOUSING_TYPE" has 6 types of values. we integrate
 # "Co-op apartment" with "Office apartment"
@@ -127,10 +123,9 @@ final_data["less_factor_house"] <- final_data %>%
   pull(dif_variable[[4]]) %>%
   recode("Co-op apartment" = "Office apartment")
 # analyse how the IV of the variable has been changed.
-calc_iv(dif_variable[4])
 calc_iv("less_factor_house")
 
-####################### analyse the details of fifth multi-factors variable
+# analyse the details of fifth multi-factors variable
 calc_iv(dif_variable[5])
 # found the variable "NAME_HOUSING_TYPE" has too manny types of values. we integrate
 
@@ -168,7 +163,9 @@ converted_data <- converted_data %>% add_column(oh_data)
 
 
 #Binning continuous variable to improve performance.
-dl_bin <- woebin(converted_data,y= "y",x=c("CNT_CHILDREN","AMT_INCOME_TOTAL","DAYS_BIRTH","DAYS_EMPLOYED","CNT_FAM_MEMBERS"), method = "chimerge")
+dl_bin <- woebin(converted_data,y= "y",
+                 x=c("CNT_CHILDREN","AMT_INCOME_TOTAL","DAYS_BIRTH","DAYS_EMPLOYED","CNT_FAM_MEMBERS"), 
+                 method = "chimerge")
 #plot binning variable
 plotlist = woebin_plot(dl_bin)
 #cbind dl_bin with dl_iv_data
@@ -193,13 +190,10 @@ converted_data <- final_data %>% mutate_if(is.factor, convert_binary_variable)
 # find which variables have several values
 dif_variable <- setdiff(names(final_data), names(converted_data))
 
-####################### analyse the details of first multi-factors variable
-calc_iv(dif_variable[1])
-# found the variable "NAME_INCOME_TYPE" has 5 types of values, we integrate
-# "student" , "pensioner" with "state servant"
+# analyse the details of first multi-factors variable
+# found the variable "NAME_INCOME_TYPE" has 5 types of values
 final_data["less_factor_income"] <- final_data %>%
-  pull(dif_variable[[1]]) %>%
-  recode("Student" = "State servant", "Pensioner" = "State servant")
+  pull(dif_variable[[1]])
 
 # analyse how the IV of the variable has been changed.
 calc_iv(dif_variable[1])
@@ -216,24 +210,23 @@ final_data["less_factor_income"] <- final_data %>%
 calc_iv(dif_variable[1])
 calc_iv("less_factor_income")
 
-####################### analyse the details of second multi-factors variable
+#analyse the details of second multi-factors variable
 calc_iv(dif_variable[2])
 # found the variable "NAME_EDUCSTION_TYPE" has 5 types of values. we integrate
-# "Academic degree" with "Higher education"
+# "Incomplete higher" with "Higher education"
 final_data["less_factor_edu"] <- final_data %>%
   pull(dif_variable[[2]]) %>%
-  recode("Academic degree" = "Higher education")
+  recode("Higher education" = "Incomplete higher")
 # analyse how the IV of the variable has been changed.
 calc_iv(dif_variable[2])
 calc_iv("less_factor_edu")
-
-####################### analyse the details of third multi-factors variable
+# analyse the details of third multi-factors variable
 calc_iv(dif_variable[3])
 final_data["less_factor_status"] <- final_data %>% pull(dif_variable[3])
 # found this variable seems relatively balanced, no need to change.
 
 
-####################### analyse the details of fourth multi-factors variable
+# analyse the details of fourth multi-factors variable
 calc_iv(dif_variable[4])
 # found the variable "NAME_HOUSING_TYPE" has 6 types of values. we integrate
 # "Co-op apartment" with "Office apartment"
@@ -241,10 +234,9 @@ final_data["less_factor_house"] <- final_data %>%
   pull(dif_variable[[4]]) %>%
   recode("Co-op apartment" = "Office apartment")
 # analyse how the IV of the variable has been changed.
-calc_iv(dif_variable[4])
 calc_iv("less_factor_house")
 
-####################### analyse the details of fifth multi-factors variable
+# analyse the details of fifth multi-factors variable
 calc_iv(dif_variable[5])
 # found the variable "NAME_HOUSING_TYPE" has too manny types of values. we integrate
 
@@ -279,7 +271,9 @@ oh_data <- one_hot(factor_data,dropCols = T)
 converted_data <- final_data %>% mutate_if(is.factor, convert_binary_variable)
 converted_data <- converted_data %>% add_column(oh_data)
 #Binning continuous variable to improve performance.
-dl_bin <- woebin(converted_data,y= "y",x=c("CNT_CHILDREN","AMT_INCOME_TOTAL","DAYS_BIRTH","DAYS_EMPLOYED","CNT_FAM_MEMBERS"), method = "chimerge")
+dl_bin <- woebin(converted_data,y= "y",
+                 x=c("CNT_CHILDREN","AMT_INCOME_TOTAL","DAYS_BIRTH","DAYS_EMPLOYED","CNT_FAM_MEMBERS"), 
+                 method = "chimerge")
 #plot binning variable
 plotlist = woebin_plot(dl_bin)
 #cbind dl_bin with dl_iv_data
@@ -300,13 +294,10 @@ converted_data <- final_data %>% mutate_if(is.factor, convert_binary_variable)
 # find which variables have several values
 dif_variable <- setdiff(names(final_data), names(converted_data))
 
-####################### analyse the details of first multi-factors variable
-calc_iv(dif_variable[1])
-# found the variable "NAME_INCOME_TYPE" has 5 types of values, we integrate
-# "student" , "pensioner" with "state servant"
+# analyse the details of first multi-factors variable
+# found the variable "NAME_INCOME_TYPE" has 5 types of values
 final_data["less_factor_income"] <- final_data %>%
-  pull(dif_variable[[1]]) %>%
-  recode("Student" = "State servant", "Pensioner" = "State servant")
+  pull(dif_variable[[1]])
 
 # analyse how the IV of the variable has been changed.
 calc_iv(dif_variable[1])
@@ -323,24 +314,23 @@ final_data["less_factor_income"] <- final_data %>%
 calc_iv(dif_variable[1])
 calc_iv("less_factor_income")
 
-####################### analyse the details of second multi-factors variable
+#analyse the details of second multi-factors variable
 calc_iv(dif_variable[2])
 # found the variable "NAME_EDUCSTION_TYPE" has 5 types of values. we integrate
-# "Academic degree" with "Higher education"
+# "Incomplete higher" with "Higher education"
 final_data["less_factor_edu"] <- final_data %>%
   pull(dif_variable[[2]]) %>%
-  recode("Academic degree" = "Higher education")
+  recode("Higher education" = "Incomplete higher")
 # analyse how the IV of the variable has been changed.
 calc_iv(dif_variable[2])
 calc_iv("less_factor_edu")
-
-####################### analyse the details of third multi-factors variable
+# analyse the details of third multi-factors variable
 calc_iv(dif_variable[3])
 final_data["less_factor_status"] <- final_data %>% pull(dif_variable[3])
 # found this variable seems relatively balanced, no need to change.
 
 
-####################### analyse the details of fourth multi-factors variable
+# analyse the details of fourth multi-factors variable
 calc_iv(dif_variable[4])
 # found the variable "NAME_HOUSING_TYPE" has 6 types of values. we integrate
 # "Co-op apartment" with "Office apartment"
@@ -348,10 +338,9 @@ final_data["less_factor_house"] <- final_data %>%
   pull(dif_variable[[4]]) %>%
   recode("Co-op apartment" = "Office apartment")
 # analyse how the IV of the variable has been changed.
-calc_iv(dif_variable[4])
 calc_iv("less_factor_house")
 
-####################### analyse the details of fifth multi-factors variable
+# analyse the details of fifth multi-factors variable
 calc_iv(dif_variable[5])
 # found the variable "NAME_HOUSING_TYPE" has too manny types of values. we integrate
 
@@ -386,7 +375,9 @@ oh_data <- one_hot(factor_data,dropCols = T)
 converted_data <- final_data %>% mutate_if(is.factor, convert_binary_variable)
 converted_data <- converted_data %>% add_column(oh_data)
 #Binning continuous variable to improve performance.
-dl_bin <- woebin(converted_data,y= "y",x=c("CNT_CHILDREN","AMT_INCOME_TOTAL","DAYS_BIRTH","DAYS_EMPLOYED","CNT_FAM_MEMBERS"), method = "chimerge")
+dl_bin <- woebin(converted_data,y= "y",
+                 x=c("CNT_CHILDREN","AMT_INCOME_TOTAL","DAYS_BIRTH","DAYS_EMPLOYED","CNT_FAM_MEMBERS"), 
+                 method = "chimerge")
 #plot binning variable
 plotlist = woebin_plot(dl_bin)
 #cbind dl_bin with dl_iv_data
