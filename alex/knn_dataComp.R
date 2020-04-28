@@ -15,6 +15,7 @@ library(smotefamily)
 library(gridExtra)
 
 setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
+setwd("/home/alex/Desktop/i2ml_final_project/")
 
 # suppress package making warning by start up in train 
 # Warning: "package ??kknn?? was built under R version 3.6.3"
@@ -28,6 +29,7 @@ mice_iv_data <- read.csv2("credit_card_prediction/iv_data/mice_iv_data.csv") %>%
 dl_oh_data <- read.csv("credit_card_prediction/oh_data/dl_oh_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
 mf_oh_data <- read.csv("credit_card_prediction/oh_data/mf_oh_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
 mice_oh_data <- read.csv("credit_card_prediction/oh_data/mice_oh_data.csv") %>% mutate(y = as.factor(y)) %>% mutate_if(is.integer,as.numeric)
+
 
 
 # load data directly into tasks for further training
@@ -46,16 +48,18 @@ rm(dl_iv_data, mf_iv_data, mice_iv_data, dl_oh_data, mf_oh_data, mice_oh_data)
 knn_learner <- lrn("classif.kknn", predict_type = "prob")
 
 # setting the tunning for parameters, and terminator
-knn_param_set <- ParamSet$new(params = list(ParamInt$new("k", lower = 20, upper = 20)))
+knn_param_set <- ParamSet$new(params = list(ParamInt$new("k", lower = 50, upper = 50)))
 terms <- term("none")
+measure <- msr("classif.fbeta")
 
 # creat autotuner, using the inner sampling and tuning parameter with random search
 inner_rsmp <- rsmp("cv", folds = 5L)
 knn_auto <- AutoTuner$new(learner = knn_learner, resampling = inner_rsmp, 
-                          measures = msr("classif.auc"), tune_ps = knn_param_set,
+                          measures = measure, tune_ps = knn_param_set,
                           terminator = terms, tuner = tnr("grid_search"))
 
-outer_rsmp <- rsmp("cv", folds = 3L)
+# outer_rsmp <- rsmp("cv", folds = 3L)
+outer_rsmp <- rsmp("holdout")
 design = benchmark_grid(
   tasks = tasks,
   learners = knn_auto,
@@ -95,6 +99,44 @@ multiplot_roc <- function(models, type="roc"){
   auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
   plots[[6]] <- autoplot(model, type = type) + ggtitle(paste("mice_oh", auc)) + thm
   do.call("grid.arrange", plots)
+}
+
+multiplot_fbeta <- function(models){
+  plots <- list()
+  thm <- theme(axis.text.x = element_blank(), axis.text.y = element_blank())
+  msr_f <- msr("classif.fbeta")
+  
+  model <- models$clone()$filter(task_id = "dl_iv")
+  fbeta <- round(model$aggregate(msr_f)[[7]], 4)
+  print(paste("dl_iv: ", fbeta))
+  #plots[[1]] <- autoplot(model, type = type) + ggtitle(paste("dl_iv:", auc)) + thm
+  
+  model <- models$clone()$filter(task_id = "mf_iv")
+  fbeta <- round(model$aggregate(msr_f)[[7]], 4)
+  print(paste("mf_iv: ", fbeta))
+  #plots[[2]] <- autoplot(model, type = type) + ggtitle(paste("mf_iv:", auc)) + thm
+  
+  model <- models$clone()$filter(task_id = "mice_iv")
+  fbeta <- round(model$aggregate(msr_f)[[7]], 4)
+  print(paste("mice_iv: ", fbeta))
+  #plots[[3]] <- autoplot(model, type = type) + ggtitle(paste("mice_iv:", auc)) + thm
+  
+  model <- models$clone()$filter(task_id = "dl_oh")
+  fbeta <- round(model$aggregate(msr_f)[[7]], 4)
+  print(paste("dl_oh: ", fbeta))
+  #plots[[4]] <- autoplot(model, type = type) + ggtitle(paste("dl_oh:", auc)) + thm
+  
+  model <- models$clone()$filter(task_id = "mf_oh")
+  fbeta <- round(model$aggregate(msr_f)[[7]], 4)
+  print(paste("mf_oh: ", fbeta))
+  #plots[[5]] <- autoplot(model, type = type) + ggtitle(paste("mf_oh:", auc)) + thm
+  
+  model <- models$clone()$filter(task_id = "mice_oh")
+  fbeta <- round(model$aggregate(msr_f)[[7]], 4)
+  print(paste("mice_oh: ", fbeta))
+  #plots[[6]] <- autoplot(model, type = type) + ggtitle(paste("mice_oh", auc)) + thm
+  #do.call("grid.arrange", plots)
+  
 }
 
 # roc: x= 1-Specificity, y= Sensitivity
