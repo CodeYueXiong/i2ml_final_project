@@ -84,26 +84,26 @@ library(ggplot2)
 stune_path1 = knn_bmr$data$learner[[1]]$archive("params")
 stune_gg1 = ggplot(stune_path1, aes(
   x = classif.kknn.k,
-  y = classif.auc, col = factor(smote.K), linetype = factor(smote.dup_size))) +
-  geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  y = classif.auc, col = factor(smote.K), shape = factor(smote.dup_size))) +
+  geom_point(size = 4) + ylim(0.66, 0.72) +
+  geom_line(size=1) #+ theme(legend.position = "none")
 
 stune_path2 = knn_bmr$data$learner[[2]]$archive("params")
 stune_gg2 = ggplot(stune_path2, aes(
   x = classif.kknn.k,
-  y = classif.auc, col = factor(smote.K), linetype = factor(smote.dup_size))) +
-  geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  y = classif.auc, col = factor(smote.K), shape = factor(smote.dup_size))) +
+  geom_point(size = 4) + ylim(0.66, 0.72) +
+  geom_line(size=1) #+ theme(legend.position = "none")
 
 stune_path3 = knn_bmr$data$learner[[3]]$archive("params")
 stune_gg3 = ggplot(stune_path3, aes(
   x = classif.kknn.k,
-  y = classif.auc, col = factor(smote.K), linetype = factor(smote.dup_size))) +
-  geom_point(size = 3) +
-  geom_line()
+  y = classif.auc, col = factor(smote.K), shape = factor(smote.dup_size))) +
+  geom_point(size = 4) + ylim(0.66, 0.72) +
+  geom_line(size=1)
 
 library(ggpubr)
-ggarrange(stune_gg1, stune_gg2, stune_gg3, common.legend = TRUE, legend="bottom")
+ggarrange(stune_gg1, stune_gg2, stune_gg3, common.legend = TRUE, legend="bottom", nrow=1)
 #grid.arrange(stune_gg1, stune_gg2, stune_gg3, nrow=1)
 
 # ---------------------------------------------------------------------

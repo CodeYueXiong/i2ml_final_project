@@ -83,14 +83,14 @@ knn_results <- knn_bmr$aggregate(measures = msr("classif.auc"))
 library(ggplot2)
 
 under_path1 = knn_bmr$data$learner[[1]]$archive("params")
-under_gg1 = ggplot(over_path1, aes(
+under_gg1 = ggplot(under_path1, aes(
   x = classif.kknn.k,
   y = classif.auc, col = factor(undersample.ratio))) +
   geom_point(size = 3) +
   geom_line() #+ theme(legend.position = "none")
 
 under_path2 = knn_bmr$data$learner[[2]]$archive("params")
-under_gg2 = ggplot(over_path2, aes(
+under_gg2 = ggplot(under_path2, aes(
   x = classif.kknn.k,
   y = classif.auc, col = factor(undersample.ratio))) +
   geom_point(size = 3) +
@@ -104,7 +104,7 @@ under_gg3 = ggplot(under_path3, aes(
   geom_line() #+ theme(legend.position = "none")
 
 library(ggpubr)
-ggarrange(under_gg1, under_gg2, under_gg3, common.legend = TRUE, legend="bottom")
+ggarrange(under_gg1, under_gg2, under_gg3, common.legend = TRUE, legend="bottom", nrow=1)
 #grid.arrange(stune_gg1, stune_gg2, stune_gg3, nrow=1)
 
 # ---------------------------------------------------------------------

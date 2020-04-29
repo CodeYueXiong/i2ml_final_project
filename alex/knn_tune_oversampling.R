@@ -110,7 +110,7 @@ over_gg3 = ggplot(over_path3, aes(
   geom_line() #+ theme(legend.position = "none")
 
 library(ggpubr)
-ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend="bottom")
+ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend="bottom", nrow=1)
 #grid.arrange(stune_gg1, stune_gg2, stune_gg3, nrow=1)
 
 # ---------------------------------------------------------------------

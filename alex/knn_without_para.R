@@ -27,6 +27,7 @@ suppressPackageStartupMessages(library(kknn))
 # load data directly into tasks for further training
 dl_iv_data <- read.csv2("credit_card_prediction/iv_data/dl_iv_data.csv") # %>% mutate(y = as.factor(y))
 dl_iv_data$y <- as.factor(dl_iv_data$y)
+
 task <- TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y")
 
 # knn with 3 different paramSets, to analysis how to do further tuning
