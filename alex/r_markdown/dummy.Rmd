@@ -13,24 +13,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Handling nominal variable with dummy variable
 
-Since we have several nominal (categorical) variables in our data, we need to convert them into a numeric format, to be able to use it for training. Here we will try the dummy encoding approach, where it takes only the value 1 or 0 to indicate whether the category is present or not. For each category, there will be an independent column. Here, we use the function **dummy_cols** from package **fastDummies** to transform our nominal variables into dummy variables.
+Since we have several nominal and binary variables in our data, we need to convert them into a numeric format, to be able to use it for training. We will try using dummy encoding, where it takes only the value 1 or 0 to indicate whether the category is present or not. For example, the variable **occupations** in our dataset contains various values. For each type of value (occupation), we want to create a single column, specifying whether the data point belongs to this category.
 
--> binary, categorical
--> approach?
--> example dummy
-  -> 0/1 present or not
-  -> male female cannot be present or not (in raw dataset)
-  -> for each category
--> m: 1 or f:1 -> m:0/1, f:0/1
+Here, we use the function **dummy_cols** from package **fastDummies** to transform our nominal variables into dummy variables.
 
 ```{r,warning=FALSE,message=FALSE, results = 'hold'}
 library(fastDummies)
 
-# clean_names
-library(janitor)
-
-
-# function explaination
+# **dummy_var** is used to 
 dummy_var <- function(data){
   
   # Since the library 'fastDummies' tansforms all factor variable into dummy variables,
@@ -44,7 +34,8 @@ dummy_var <- function(data){
   data_dummy <- fastDummies::dummy_cols(data, remove_selected_columns=TRUE) 
   
   # column name convention fix (mlr3 name convention - space to underscore)
-  # why????
+  # this is needed because the function **dummy_cols** doesn't remove white spaces
+  library(janitor)
   data_dummy <- clean_names(data_dummy)
   
   
@@ -54,12 +45,8 @@ dummy_var <- function(data){
   dummy_var <- data_dummy
 }
 
-# --------------------------------------------
-# ----------------------- handle 
-# ----------------------- OCCUPATION_TYPE
-# -------------------------------------------
 
-
+## read data, and perform dummy encoding
 dl_dummy_data <- read.csv2("../../credit_card_prediction/dl_na_data.csv", header = TRUE)
 dl_dummy_data <- dummy_var(dl_dummy_data)
 
@@ -69,18 +56,12 @@ mf_dummy_data <- dummy_var(mf_dummy_data)
 mice_dummy_data <- read.csv2("../../credit_card_prediction/mice_na_data.csv", header = TRUE)
 mice_dummy_data <- dummy_var(mice_dummy_data)
 
-# row, column, NA
-# why? what?
-cat("dl_dummy_data\t", dim(dl_dummy_data), any(is.na(dl_dummy_data)), "\n")
-cat("mf_dummy_data\t", dim(mf_dummy_data), any(is.na(mf_dummy_data)), "\n")
-cat("mice_dummy_data\t", dim(mice_dummy_data), any(is.na(mice_dummy_data)), "\n")
+# row, column
+# The output shows that transformed all non-numeric variables into dummy variables,
+# and now have 55 columns.
+cat("dl_dummy_data\t", dim(dl_dummy_data), "\n")
+cat("mf_dummy_data\t", dim(mf_dummy_data), "\n")
+cat("mice_dummy_data\t", dim(mice_dummy_data), "\n")
 
 
 ```
-
-## dummy VS. one-hot encoding
-
-As dummy encoding is very similar to one-hot, we decided to leave out dummy encoding to reduce our training data size to speed up the tunning parameter process.
-
-# dummy: pros and cons
-# one-hot: pros and cons
