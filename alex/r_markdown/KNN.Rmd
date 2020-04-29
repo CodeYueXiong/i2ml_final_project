@@ -22,22 +22,24 @@ library(mlr3pipelines)
 library(paradox)
 library(tidyverse)
 library(ggplot2)
-library(gridExtra) # for merging plots in one
 
 # suppress package making warning by start up in train 
 # Warning: "package ‘kknn’ was built under R version 3.6.3"
 suppressPackageStartupMessages(library(kknn))
 
-setwd("C:/Users/user/Documents/R-projects/i2ml_final_project")
-
 # read data with different encoding
-dl_iv_data <- read.csv2("credit_card_prediction/iv_data/dl_iv_data.csv") %>% mutate(y = as.factor(y))
-mf_iv_data <- read.csv2("credit_card_prediction/iv_data/mf_iv_data.csv") %>% mutate(y = as.factor(y))
-mice_iv_data <- read.csv2("credit_card_prediction/iv_data/mice_iv_data.csv") %>% mutate(y = as.factor(y))
-
-dl_oh_data <- read.csv("credit_card_prediction/oh_data/dl_oh_data.csv") %>% mutate(y = as.factor(y))
-mf_oh_data <- read.csv("credit_card_prediction/oh_data/mf_oh_data.csv") %>% mutate(y = as.factor(y))
-mice_oh_data <- read.csv("credit_card_prediction/oh_data/mice_oh_data.csv") %>% mutate(y = as.factor(y))
+dl_iv_data <- read.csv2("credit_card_prediction/iv_data/dl_iv_data.csv") 
+  %>% mutate(y = as.factor(y))
+mf_iv_data <- read.csv2("credit_card_prediction/iv_data/mf_iv_data.csv") 
+  %>% mutate(y = as.factor(y))
+mice_iv_data <- read.csv2("credit_card_prediction/iv_data/mice_iv_data.csv") 
+  %>% mutate(y = as.factor(y))
+dl_oh_data <- read.csv("credit_card_prediction/oh_data/dl_oh_data.csv") 
+  %>% mutate(y = as.factor(y))
+mf_oh_data <- read.csv("credit_card_prediction/oh_data/mf_oh_data.csv") 
+  %>% mutate(y = as.factor(y))
+mice_oh_data <- read.csv("credit_card_prediction/oh_data/mice_oh_data.csv") 
+  %>% mutate(y = as.factor(y))
 
 # load data directly into tasks for further training
 tasks <- list(
@@ -125,19 +127,16 @@ knitr::include_graphics("images/1_dataComp_auc.png")
 #print("hello")
 ```
 
-
 From the ROC plots above, we can see that KNN performs with no significant difference between different encoding and missing data handling methods. Moreover, To reduce our computation cost, we decided to take the task with the highest AUC value in the step, being **dl_iv**. In the following sections, we will focus on the task **dl_iv**, and fine-tune the parameters.
 
-The KNN package included in mlr3 has the following parameters: k (the number of neighbors considered), distance (Parameter of Minkowski distance), 
-kernel (kernel functions used to weight the neighbors). In the following section we will first explore them separately, and then combine the knowledge to perform further fine tuning to improve the model.
+The KNN package included in **mlr3** has the following parameters: ``k`` (the number of neighbors considered), ``distance`` (Parameter of Minkowski distance), ``kernel`` (kernel functions used to weight the neighbors). In the following section, we will first explore them separately, and then combine the knowledge to perform further fine-tuning to improve the model.
 
 ```{r eval=FALSE}
 
-#task <- TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y")
+# take only the first task "dl_iv"
 task <- tasks[1]
 
 # knn with 3 different paramSets, to analysis how to do further tuning
-#knn_lrn <- lrn("classif.kknn", predict_type = "prob")
 
 # only k
 param_k <- ParamSet$new(params = list(ParamInt$new("k", lower = 5, upper = 100)))
@@ -147,37 +146,33 @@ param_k_dist <- ParamSet$new(params = list(ParamInt$new("k", lower = 20, upper =
                                             ParamInt$new("distance", lower = 1, upper = 3)))
 
 # k vs. kernel
-kernel_type = c("rectangular", "triangular", "epanechnikov", "biweight", "triweight", "cos", "inv", "gaussian", "rank", "optimal")
+knn_learner2 = lrn("classif.kknn", predict_type = "prob", distance = 1)
+kernel_type = c("rectangular", "triangular", "epanechnikov", "biweight"
+                , "triweight", "cos", "inv", "gaussian", "rank", "optimal")
 param_k_kernel <- ParamSet$new(params = list(ParamInt$new("k", lower = 40, upper = 100),
                                              ParamFct$new("kernel", levels = kernel_type)))
-
-param_k_kernel_dist <- ParamSet$new(params = list(ParamInt$new("k", lower = 40, upper = 100),
-                                             ParamFct$new("kernel", levels = kernel_type),
-                                             ParamInt$new("distance", lower = 1, upper = 3)))
-
 # Autotuner
-inner_rsmp <- rsmp("holdout")
+inner_rsmp <- rsmp("cv", folds = 5L)
 measure = msr("classif.auc")
 
 knn_auto_k <- AutoTuner$new(learner = knn_learner, resampling = inner_rsmp, 
                            measures = measure, tune_ps = param_k,
-                           terminator = term("none"), tuner = tnr("grid_search", resolution = 30))
+                           terminator = term("none"), 
+                           tuner = tnr("grid_search", resolution = 30))
 
 knn_auto_dist <- AutoTuner$new(learner = knn_learner, resampling = inner_rsmp, 
                           measures = measure, tune_ps = param_k_dist,
-                          terminator = term("none"), tuner = tnr("grid_search", resolution = 10))
+                          terminator = term("none"), 
+                          tuner = tnr("grid_search", resolution = 10))
 
-knn_auto_kern <- AutoTuner$new(learner = knn_learner, resampling = inner_rsmp, 
+knn_auto_kern <- AutoTuner$new(learner = knn_learner2, resampling = inner_rsmp, 
                            measures = measure, tune_ps = param_k_kernel,
-                           terminator = term("none"), tuner = tnr("grid_search", resolution = 10))
-
-knn_auto_kern_dist <- AutoTuner$new(learner = knn_learner, resampling = inner_rsmp, 
-                           measures = measure, tune_ps = param_k_kernel_dist,
-                           terminator = term("none"), tuner = tnr("grid_search", resolution = 10))
+                           terminator = term("none"), 
+                           tuner = tnr("grid_search", resolution = 10))
 
 
 # benchmark
-outer_rsmp <- rsmp("holdout")
+outer_rsmp <- rsmp("cv", folds = 3L)
 
 design_k <- benchmark_grid(
   tasks = task,
@@ -197,27 +192,15 @@ design_kern <- benchmark_grid(
   resampling = outer_rsmp
 )
 
-design_kern_dist <- benchmark_grid(
-  tasks = task,
-  learners = knn_auto_kern_dist,
-  resampling = outer_rsmp
-)
-
-library(tictoc)
 run_benchmark <- function(design){
   set.seed(2020)
-  tic()
   bmr <- benchmark(design, store_models = TRUE)
-  toc()
   run_benchmark <- bmr
 }
 
 bmr_k <- run_benchmark(design_k)
 bmr_dist <- run_benchmark(design_dist)
-bmr_kern <- run_benchmark(design_kern) # 424.65 sec elapsed
-bmr_kern_dist <- run_benchmark(design_kern_dist)
-
-library(ggplot2)
+bmr_kern <- run_benchmark(design_kern) 
 
 k_path = bmr_k$data$learner[[1]]$archive("params")
 knn_ggp1 = ggplot(k_path, aes(
@@ -229,21 +212,14 @@ knn_ggp1 = ggplot(k_path, aes(
 dist_path = bmr_dist$data$learner[[1]]$archive("params")
 knn_ggp2 = ggplot(dist_path, aes(
   x = k,
-  y = classif.auc, col = factor(distance))) +
-  geom_point(size = 3) +
+  y = classif.auc, col = factor(distance))) + labs(col="distance") +
+  geom_point(size = 3) + 
   geom_line()
 
 kern_path = bmr_kern$data$learner[[1]]$archive("params")
 knn_ggp3 = ggplot(kern_path, aes(
   x = k,
-  y = classif.auc, col = factor(kernel))) +
-  geom_point(size = 3) +
-  geom_line()
-
-k_dist_kern_path = bmr_kern_dist$data$learner[[1]]$archive("params")
-knn_ggp4 = ggplot(k_dist_kern_path, aes(
-  x = k,
-  y = classif.auc, col = factor(kernel), linetype = factor(distance))) +
+  y = classif.auc, col = factor(kernel))) + labs(col="kernel") +
   geom_point(size = 3) +
   geom_line()
 
@@ -261,104 +237,15 @@ knitr::include_graphics("images/2_3_k_kern_auc.png")
 #print("hello")
 ```
 
-In the first plot, we see that AUC is the highest in the range of 50 to 80. We decided to focus our tunning for k between 40 to 100. Moreover, in the second plot, it is shown that distance=1 performs the best. This is understandable since we have categorical variables encoded into 0 and 1, the distance is at most 1. If we set the power of Minkowski distance higher, all other variables with more considerable distances would be magnified, while the encoded variable stays with maximum 1. ($1^1 = 1^2 = 1^3 = .. = 1^n$) The plot shows that these variables have a reasonable amount of saying. We should keep there influence to the model, by fixing our distance parameter to 1. In the third plot, we see that again the distance set as 1, performs the best in terms of using each kernel.
-
-The kernel function is a additional weighted distance....
-
-# based on all info
-
-```{r}
-knn_learn_all <- lrn("classif.kknn", predict_type = "prob", distance=1, kernel = "inv")
-
-```
-
-# Using smote to balance data
-
-
-```{r eval=FALSE, message=FALSE, warning=FALSE}
-
-sel_kernel = c("gaussian", "inv")
-task <- TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y")
-
-# knn learner
-knn_learner <- lrn("classif.kknn", predict_type = "prob", distance=1, kernel=sel_kernel[1])
-po_smote = po("smote", dup_size = 6)
-lrn_smote <- GraphLearner$new(po_smote %>>% knn_learner, predict_type = "prob")
-
-# setting the tunning for parameters, and terminator
-knn_param_set <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 25, upper = 65),
-                                            ParamInt$new("smote.dup_size", lower = 1, upper = 3),
-                                            ParamInt$new("smote.K", lower = 1, upper = 5)
-                                            ))
-
-
-# jump in squre
-knn_param_set$trafo = function(x, param_set) {
-  x$smote.K = round(2^(x$smote.K))
-  x
-}
-
-# run all
-terms <- term("none")
-
-
-# creat autotuner, using the inner sampling and tuning parameter with random search
-inner_rsmp <- rsmp("cv",folds = 5L)
-knn_auto <- AutoTuner$new(learner = lrn_smote, resampling = inner_rsmp, 
-                               measures = msr("classif.auc"), tune_ps = knn_param_set,
-                               terminator = terms, tuner = tnr("grid_search", resolution = 6))
-
-# set outer_resampling, and creat a design with it
-outer_rsmp <- rsmp("cv", folds = 3L)
-design = benchmark_grid(
-  tasks = task,
-  learners = knn_auto,
-  resamplings = outer_rsmp
-)
-
-# set seed before traing, then run the benchmark
-# save the results afterwards
-set.seed(2020)
-knn_bmr <- benchmark(design, store_models = TRUE)
-
-library(ggplot2)
-stune_path1 = knn_bmr$data$learner[[1]]$archive("params")
-stune_gg1 = ggplot(stune_path1, aes(
-  x = classif.kknn.k,
-  y = classif.auc, col = factor(smote.K), shape = factor(smote.dup_size))) +
-  geom_point(size = 4) +
-  geom_line(size=1) #+ theme(legend.position = "none")
-
-stune_path2 = knn_bmr$data$learner[[2]]$archive("params")
-stune_gg2 = ggplot(stune_path2, aes(
-  x = classif.kknn.k,
-  y = classif.auc, col = factor(smote.K), shape = factor(smote.dup_size))) +
-  geom_point(size = 4) + 
-  geom_line(size=1) #+ theme(legend.position = "none")
-
-stune_path3 = knn_bmr$data$learner[[3]]$archive("params")
-stune_gg3 = ggplot(stune_path3, aes(
-  x = classif.kknn.k,
-  y = classif.auc, col = factor(smote.K), shape = factor(smote.dup_size))) +
-  geom_point(size = 4) + 
-  geom_line(size=1)
-
-library(ggpubr)
-ggarrange(stune_gg1, stune_gg2, stune_gg3, common.legend = TRUE, legend="bottom", nrow=1)
-
-```
-
-```{r echo=FALSE}
-knitr::include_graphics("images/3_smote_auc.png")
-#print("hello")
-```
+In the first plot, we see that AUC is the highest in the range of 50 to 80. We decided to focus our tunning for k between 40 to 100. Moreover, in the second plot, it is shown that distance=1 performs the best. This is understandable since we have categorical variables encoded into 0 and 1, the distance is at most 1. If we set the power of Minkowski distance higher, all other variables with more considerable distances would be magnified, while the encoded variable stays with maximum 1. ($1^1 = 1^2 = 1^3 = .. = 1^n$) The plot shows that these variables have a reasonable amount of saying. We should keep there influence on the model by fixing our distance parameter to 1. The kernel function is used to weight the distance differently, and in the third plot, we can see that with the distance set to 1, the kernel "inv" as the best performance.
 
 # oversampling
+
+Since our data is highly unbalanced, we want to try two different methods to solve this issue - Smote and oversampling and see if this increases the performance of the model. 
 
 ```{r eval=FALSE, message=FALSE, warning=FALSE}
 
 knn_learner <- lrn("classif.kknn", predict_type = "prob")
-# po_smote = po("smote", dup_size = 6)
 po_over = po("classbalancing",
              id = "oversample", adjust = "minor",
              reference = "minor", shuffle = FALSE, ratio = 6)
@@ -371,8 +258,7 @@ knn_param_set <- ParamSet$new(list(ParamInt$new("classif.kknn.k", lower = 5, upp
 
 terms <- term("none")
 
-
-# creat autotuner, using the inner sampling and tuning parameter with random search
+# creat autotuner, using the inner sampling and tuning parameter with grid_search
 inner_rsmp <- rsmp("cv",folds = 5L)
 knn_auto <- AutoTuner$new(learner = lrn_over, resampling = inner_rsmp, 
                           measures = msr("classif.auc"), tune_ps = knn_param_set,
@@ -386,12 +272,12 @@ design = benchmark_grid(
   resamplings = outer_rsmp
 )
 
-# 14:08 -> 14:28, 14:34 ->
 # set seed before traing, then run the benchmark
 # save the results afterwards
 set.seed(2020)
 knn_bmr <- benchmark(design, store_models = TRUE)
 
+# plot results from 3 outer sampling rounds
 library(ggplot2)
 
 over_path1 = knn_bmr$data$learner[[1]]$archive("params")
@@ -421,8 +307,85 @@ ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend="bottom", n
 ```
 
 ```{r echo=FALSE}
-#knitr::include_graphics("images/3_over_auc.png")
+knitr::include_graphics("images/3_over_auc.png")
 #print("hello")
 ```
 
-Since we used a binary variable to indicate whether a category is present or not, the max distance can only be 1 or 0. Moreover, other numeric variables have a more significant distance, meaning that they have a more substantial impact on the distance than the categorical data without having a significant correlation with our target variable. To get better results, it would be necessary to either use other ways to handle categorical data better for distance calculation or using other training methods to perform classification instead of KNN.
+# Smote
+
+In this section, we will use the package **SMOTE** that is included in **mlr3**, to see whethere balancing the data with smote may improve the prediction of the model.
+
+```{r eval=FALSE, message=FALSE, warning=FALSE}
+
+# knn learner
+knn_learner <- lrn("classif.kknn", predict_type = "prob", distance=1, kernel= "inv")
+po_smote = po("smote", dup_size = 6)
+lrn_smote <- GraphLearner$new(po_smote %>>% knn_learner, predict_type = "prob")
+
+# setting the tunning for parameters
+knn_param_set <- ParamSet$new(params = list(
+  ParamInt$new("classif.kknn.k", lower = 25, upper = 65),
+  ParamInt$new("smote.dup_size", lower = 1, upper = 3),
+  ParamInt$new("smote.K", lower = 1, upper = 5)))
+
+# make grow smote.k exponential 2^n
+knn_param_set$trafo = function(x, param_set) {
+  x$smote.K = round(2^(x$smote.K))
+  x
+}
+
+# creat autotuner, using the inner sampling and tuning parameter with grid_search
+inner_rsmp <- rsmp("cv",folds = 5L)
+terms <- term("none")
+knn_auto <- AutoTuner$new(learner = lrn_smote, resampling = inner_rsmp, 
+                          measures = msr("classif.auc"), tune_ps = knn_param_set,
+                          terminator = terms, 
+                          tuner = tnr("grid_search", resolution = 6))
+
+# set outer_resampling, and creat a design with it
+outer_rsmp <- rsmp("cv", folds = 3L)
+design = benchmark_grid(
+  tasks = task,
+  learners = knn_auto,
+  resamplings = outer_rsmp
+)
+
+# set seed before traing, then run the benchmark
+# save the results afterwards
+set.seed(2020)
+knn_bmr <- benchmark(design, store_models = TRUE)
+
+# plot results from 3 outer sampling rounds
+library(ggplot2)
+stune_path1 = knn_bmr$data$learner[[1]]$archive("params")
+stune_gg1 = ggplot(stune_path1, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = factor(smote.K), shape = factor(smote.dup_size))) +
+  geom_point(size = 4) +
+  geom_line(size=1)
+
+stune_path2 = knn_bmr$data$learner[[2]]$archive("params")
+stune_gg2 = ggplot(stune_path2, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = factor(smote.K), shape = factor(smote.dup_size))) +
+  geom_point(size = 4) + 
+  geom_line(size=1)
+
+stune_path3 = knn_bmr$data$learner[[3]]$archive("params")
+stune_gg3 = ggplot(stune_path3, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = factor(smote.K), shape = factor(smote.dup_size))) +
+  geom_point(size = 4) + 
+  geom_line(size=1)
+
+library(ggpubr)
+ggarrange(stune_gg1, stune_gg2, stune_gg3, common.legend = TRUE, legend="bottom", nrow=1)
+
+```
+
+```{r echo=FALSE}
+knitr::include_graphics("images/3_smote_auc.png")
+#print("hello")
+```
+
+As we can see, there is no significant improvement after trying different methods to balance the data. Since we used a binary variable to indicate whether a category is present or not, the max distance can only be 1 or 0. Moreover, other numeric variables have a more significant distance, meaning that they have a more substantial impact on the distance than the categorical data without having a significant correlation with our target variable. To get better results, it would be necessary to either use other ways to handle categorical data better for distance calculation or using different training methods to perform classification instead of KNN.
