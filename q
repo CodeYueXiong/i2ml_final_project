@@ -1,0 +1,455 @@
+[33mcommit 9917de0dcabb9259f4bfc35bf281cf134c1a5799[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Sat May 2 00:27:20 2020 +0200
+
+    add knn to report
+
+[33mcommit d15168c96e18d84307b1a0b86326cb884e92f967[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Fri May 1 13:28:04 2020 +0200
+
+    remove data uploaded by mistake
+
+[33mcommit d7b52791bddbb2575aa4f63cb4bf196ca3010ce2[m
+Author: alex he <hebailanc@outlook.com>
+Date:   Fri May 1 10:45:04 2020 +0200
+
+    upload first draft, very  rough
+
+[33mcommit 2335ff05427f4d0244f5c31f472942bde8f76449[m
+Author: EchoYueXiong <50625126+EchoYueXiong@users.noreply.github.com>
+Date:   Thu Apr 30 11:31:53 2020 +0200
+
+    Add files via upload
+
+[33mcommit 33f5ac287973e490cbb881e206a4e327d0404241[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Thu Apr 30 01:35:04 2020 +0200
+
+    dummy v1
+
+[33mcommit 5b74aa421fdc1db6e491f81adf5cdf42f5ac3e59[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Thu Apr 30 01:16:33 2020 +0200
+
+    knn v1
+
+[33mcommit cd172422a4bfcd13ff0be3f8faab619b28f831ab[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Wed Apr 29 23:21:28 2020 +0200
+
+    add plot
+
+[33mcommit 2f06cf3f60aa682aad00222eab68299436f339c3[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Wed Apr 29 12:53:11 2020 +0200
+
+    knn rmd first part final
+
+[33mcommit f8f805cc1e7c7e8353865058b1416aa955c65d5d[m
+Author: alex he <hebailanc@outlook.com>
+Date:   Tue Apr 28 21:06:19 2020 +0200
+
+    improve iv_data
+
+[33mcommit 33892cedd2f1578cf822ab70d4fc29e8b4e413f0[m
+Author: example <you@example.com>
+Date:   Tue Apr 28 17:38:46 2020 +0200
+
+    add parameter plots for documentation
+
+[33mcommit 7e183bc9ca0712841bc31d05b43a31e23f111410[m
+Author: example <you@example.com>
+Date:   Tue Apr 28 01:08:46 2020 +0200
+
+    add image
+
+[33mcommit de7153ab326f17709cd3cd94a717b9a4ec1e2392[m
+Author: example <you@example.com>
+Date:   Mon Apr 27 19:05:54 2020 +0200
+
+    add over/under sampling
+
+[33mcommit a298c463fe546f9f37206e7726b6e0580755e1b7[m
+Author: example <you@example.com>
+Date:   Mon Apr 27 15:36:16 2020 +0200
+
+    add smote auc
+
+[33mcommit 31f98f232d852c8dfe4fe069776107ae4995db97[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Mon Apr 27 00:52:10 2020 +0200
+
+    add smote comparison -> knn.k vs knn.auc
+
+[33mcommit a7bcc49be7fb040e42d977541d88bfc2349e4cd7[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Sun Apr 26 22:45:31 2020 +0200
+
+    add rmd
+
+[33mcommit 28121a2b1375c2d06cd9f653b27cd800d9286081[m
+Merge: b19ee98 e1054dc
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Sun Apr 26 18:12:55 2020 +0200
+
+    Merge branch 'master' of https://github.com/4hebailanc/i2ml_final_project
+
+[33mcommit b19ee982b29b8170b82bfb6ac5cb831987d0e60f[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Sun Apr 26 18:12:14 2020 +0200
+
+    add xgboost tunning
+
+[33mcommit e1054dc01099ecd2644f6a03fa1bf811e4416216[m
+Author: EchoYueXiong <50625126+EchoYueXiong@users.noreply.github.com>
+Date:   Sat Apr 25 20:16:22 2020 +0200
+
+    TuneRanger based on mlr
+
+[33mcommit 696e073f35609b42d852442891a9670484990c9f[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Sat Apr 25 16:44:59 2020 +0200
+
+    iv new/old compare result
+
+[33mcommit 7d5923192e35b3de9487d4fd6e4d258cbb1c1aab[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Sat Apr 25 16:16:11 2020 +0200
+
+    para pull
+
+[33mcommit e427efa9cea22c8288f2b9c3502090e05e01da35[m
+Merge: 24527f5 929d2c2
+Author: alex he <hebailanc@outlook.com>
+Date:   Sat Apr 25 15:18:20 2020 +0200
+
+    Merge branch 'master' of https://github.com/4hebailanc/i2ml_final_project
+
+[33mcommit 24527f553c08b7ab9911cd16232895f2de8276b9[m
+Author: alex he <hebailanc@outlook.com>
+Date:   Sat Apr 25 15:17:43 2020 +0200
+
+    improve iv_data, pimprove 5%
+
+[33mcommit 929d2c25a87b11db781212431adcfe25da73e93b[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Sat Apr 25 15:16:23 2020 +0200
+
+    knn para tunning with benchmark
+
+[33mcommit 1c404938772d3f5a822b192a3cbf4a6a631b24d5[m
+Author: alex he <hebailanc@outlook.com>
+Date:   Thu Apr 23 20:32:45 2020 +0200
+
+    add two code demo
+    :q
+
+[33mcommit 9e5813f8afc11b3feb9f8e87b70475b31b93172b[m
+Author: EchoYueXiong <50625126+EchoYueXiong@users.noreply.github.com>
+Date:   Tue Apr 21 22:58:31 2020 +0200
+
+    IMPORTANT! modelTuneUpdate
+
+[33mcommit d1b6daaafdf25059f1a501aae6dc54d90a70f750[m
+Author: EchoYueXiong <50625126+EchoYueXiong@users.noreply.github.com>
+Date:   Tue Apr 21 17:21:22 2020 +0200
+
+    Model Tune correction
+
+[33mcommit 308cd9b3863e0ee297e537a79ab617fc1704f548[m
+Author: EchoYueXiong <50625126+EchoYueXiong@users.noreply.github.com>
+Date:   Mon Apr 20 10:33:50 2020 +0200
+
+    Model Tuning R code
+    
+    Make sure to use read.csv or read.csv2
+
+[33mcommit a0239309253023ab2750b74641c8e3c0dcbffaef[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Sun Apr 19 18:28:54 2020 +0200
+
+    add runtime info
+
+[33mcommit cec2698aee4bea2d4a8ce49ac9f24da3b601195d[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Sun Apr 19 03:11:18 2020 +0200
+
+    add doc
+
+[33mcommit a1452511468aff9eac8f8d3fae366cdc140a5afd[m
+Author: EchoHugh1124 <50625126+EchoHugh1124@users.noreply.github.com>
+Date:   Sat Apr 18 12:24:10 2020 +0200
+
+    Column names correction.
+
+[33mcommit 0c13cee326a9403a4e454c7cb8d2eb931bc52daa[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Sat Apr 18 05:01:23 2020 +0200
+
+    rmd knn + lda v1
+
+[33mcommit 8fcd586489813eea2b175358c2daab863e072cc9[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Fri Apr 17 19:42:05 2020 +0200
+
+    dummy + KNN rmarkdown v2
+
+[33mcommit e01c80d7eaa388b3ab0402e9fbc455e88c1d4ee2[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Fri Apr 17 19:07:20 2020 +0200
+
+    KNN: para tunning
+
+[33mcommit 7ba03b78de0efa883cc7aa391cf0ccfcc2a85713[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Fri Apr 17 16:59:05 2020 +0200
+
+    improve train function
+
+[33mcommit 14ce6ce432a6c96abccbdd42aea4da991ad0b17e[m
+Author: EchoHugh1124 <50625126+EchoHugh1124@users.noreply.github.com>
+Date:   Fri Apr 17 16:16:53 2020 +0200
+
+    Corrections made!
+
+[33mcommit b16e6ff9d6e44b3ecd786e26f05b504b0d5a3733[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Fri Apr 17 16:07:11 2020 +0200
+
+    delete oh data
+
+[33mcommit 1bab9c24a4ddad5becd8dee735011edfca0ab27f[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Fri Apr 17 16:05:45 2020 +0200
+
+    delete oh data
+
+[33mcommit 280c7bb7673df62e30b2fe360d2de8cad4fe96c6[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Fri Apr 17 15:47:20 2020 +0200
+
+    updata dummy data (remove first dummy)
+
+[33mcommit 51e5d6ab4bc51e01829741c64c552b74b37f76ff[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Fri Apr 17 15:31:29 2020 +0200
+
+    adjust settings
+
+[33mcommit 0677e17c789cd6aa38835d0d92a846b2112bb393[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Fri Apr 17 15:30:50 2020 +0200
+
+    (alex) add rmarkdown
+
+[33mcommit 55abaf62eedf4e161e07acd1625583a2aaff1622[m
+Author: EchoHugh1124 <50625126+EchoHugh1124@users.noreply.github.com>
+Date:   Fri Apr 17 09:36:51 2020 +0200
+
+    upload with the newly updated one-hot encoding
+
+[33mcommit e2603c96653fff2b65839381160637b5392de998[m
+Author: EchoHugh1124 <50625126+EchoHugh1124@users.noreply.github.com>
+Date:   Thu Apr 16 22:09:55 2020 +0200
+
+    update mf data with seeds set to 2020
+
+[33mcommit efea5aff7ff219cf0ff9f968e16847b09aebede0[m
+Author: alex he <hebailanc@outlook.com>
+Date:   Thu Apr 16 19:00:23 2020 +0200
+
+    add iv_data
+
+[33mcommit 27a35c9632f1fd31560ebb006a29ffe729428076[m
+Author: EchoHugh1124 <50625126+EchoHugh1124@users.noreply.github.com>
+Date:   Thu Apr 16 18:07:50 2020 +0200
+
+    update one-hot data with seeds set to 2020
+
+[33mcommit 3ee7bda3061ab014076461e44a8cdd19b34736e3[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Thu Apr 16 17:33:00 2020 +0200
+
+    updata dummy data
+
+[33mcommit 267f6c7141d70d5f60ac03ec65de4147c34145fd[m
+Author: alex he <hebailanc@outlook.com>
+Date:   Thu Apr 16 17:22:32 2020 +0200
+
+    modify names
+
+[33mcommit e03932fbd54b79ce13afb14e6a1766d25c87ba3a[m
+Author: alex he <hebailanc@outlook.com>
+Date:   Thu Apr 16 17:19:15 2020 +0200
+
+    add 3files,wusing three different measures to deal with na.
+
+[33mcommit a152733c3aba7e2734ce8e3b18e687b0c911ce18[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Thu Apr 16 00:45:31 2020 +0200
+
+    add training pipeline (training multiple models)
+
+[33mcommit 8dceeca1838523798e75bd3f9f048585fb15bdd5[m
+Author: EchoHugh1124 <50625126+EchoHugh1124@users.noreply.github.com>
+Date:   Wed Apr 15 23:58:14 2020 +0200
+
+    Add files via upload
+
+[33mcommit 382b4304820929e5ee3fb702e7080c5cbf0817c4[m
+Author: alex he <hebailanc@outlook.com>
+Date:   Wed Apr 15 20:28:46 2020 +0200
+
+    correct file name and add csv file.
+
+[33mcommit ee40f8a2311f82c95ba674d06d57ce56e1764af9[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Wed Apr 15 20:09:09 2020 +0200
+
+    upload dummy data (dl/mf/mice)
+
+[33mcommit a9113f5e1c7e838e18c214d49a4e45f631c18ddf[m
+Author: EchoHugh1124 <50625126+EchoHugh1124@users.noreply.github.com>
+Date:   Wed Apr 15 14:28:16 2020 +0200
+
+    onehot + dl_mice_mf
+
+[33mcommit c1fb5426e958f3d2de6d261406750a897fe727d7[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Wed Apr 15 03:04:44 2020 +0200
+
+    dummy variable - handling missing data (NA)
+
+[33mcommit 805987d1502132414b6e3cb3ee4118f36717e3dd[m
+Merge: eafa032 85b3a7b
+Author: alex he <hebailanc@outlook.com>
+Date:   Mon Apr 13 22:47:14 2020 +0200
+
+    Merge branch 'master' of https://github.com/4hebailanc/i2ml_final_project
+
+[33mcommit eafa0329bc1c2d10f4a66915696d275c61e3a59a[m
+Author: alex he <hebailanc@outlook.com>
+Date:   Mon Apr 13 22:46:43 2020 +0200
+
+    save iv_data, find them in iv_data folder
+
+[33mcommit 85b3a7b1cf983a99b0170d5ac522fd9a5db8c07c[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Mon Apr 13 03:37:34 2020 +0200
+
+    dummy -> train: classif, eval: ROC (AUC)
+
+[33mcommit f215464e6298f013eea052540cd445932329d92e[m
+Author: EchoHugh1124 <50625126+EchoHugh1124@users.noreply.github.com>
+Date:   Sun Apr 12 23:00:58 2020 +0200
+
+    Add files via upload
+
+[33mcommit 4602cf584ad85a28a1db4e487f4e71a1a5f2480f[m
+Author: EchoHugh1124 <50625126+EchoHugh1124@users.noreply.github.com>
+Date:   Sun Apr 12 21:47:34 2020 +0200
+
+    one-hot-encoding + SVM + Random Forest
+    
+    There is a problem occurred with SVM when variable "FLAG_MOBIL" is only 1(constant). Do not know exactly how to set "scale = FALSE" with mlr3 Learner.
+
+[33mcommit 5565c3a524c31956803779b89854413d42e18d35[m
+Merge: b2549fd 87f5f96
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Sun Apr 12 15:48:16 2020 +0200
+
+    Merge branch 'master' of https://github.com/4hebailanc/i2ml_final_project
+
+[33mcommit b2549fd76d013d01384a95b0ed3d67aa93b77ee0[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Sun Apr 12 15:47:14 2020 +0200
+
+    git ignore
+
+[33mcommit 87f5f96b67dbc7adb5826184d2e69c9c5a7dae83[m
+Author: Alex he <55342825+4hebailanc@users.noreply.github.com>
+Date:   Sun Apr 12 15:38:26 2020 +0200
+
+    Delete .DS_Store
+
+[33mcommit 76b84c295cbdc06828c7e43aacd1a1575cfc354a[m
+Author: Alex he <55342825+4hebailanc@users.noreply.github.com>
+Date:   Sun Apr 12 15:37:50 2020 +0200
+
+    Delete .DS_Store
+
+[33mcommit 9f8fe5e8f80576d16d608ef0c567575d4c137fdc[m
+Author: alex he <hebailanc@outlook.com>
+Date:   Sun Apr 12 15:27:12 2020 +0200
+
+    finish features engineering
+
+[33mcommit cf17df253ebcb4a7dd6147d90c437ceb6105c2e6[m
+Merge: 47419da c780839
+Author: alex he <hebailanc@outlook.com>
+Date:   Sun Apr 12 15:21:26 2020 +0200
+
+    Merge branch 'master' of https://github.com/4hebailanc/i2ml_final_project
+
+[33mcommit c7808393c32cc3b0bc86338dd811c633758ee27b[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Fri Apr 10 14:28:34 2020 +0200
+
+    dummy var + relative path
+
+[33mcommit 47419da51f6ff536e60201d4442c495710700092[m
+Author: alex he <hebailanc@outlook.com>
+Date:   Wed Apr 8 19:19:09 2020 +0200
+
+    convert target y into factor
+
+[33mcommit 923d272448e3bc134dd0fabea2e49c9c3e5b514c[m
+Author: alex he <hebailanc@outlook.com>
+Date:   Wed Apr 8 19:04:06 2020 +0200
+
+    change the folder, add R code for data preparation
+
+[33mcommit 86b8161173f09d24fc44364c586ca1f1a3da0eaa[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Tue Apr 7 20:02:40 2020 +0200
+
+    data prep
+
+[33mcommit c2f0d01d0f2008b2d4270546d0db6fe0004fbe56[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Tue Apr 7 19:23:28 2020 +0200
+
+    add new data (kaggle)
+
+[33mcommit 4efb27868ea32d2128fa178ee6f6e9eccb17c374[m
+Author: Alexander Jensen <ajexsen@gmail.com>
+Date:   Tue Apr 7 19:21:04 2020 +0200
+
+    add new data (kaggle)
+
+[33mcommit e74625130fb7506c210ab20763e9c187f1fe2ee7[m
+Author: alex he <hebailanc@outlook.com>
+Date:   Wed Apr 1 12:59:36 2020 +0200
+
+    data preparation update on 1st. April,next meeting will on 8th. April.
+
+[33mcommit a50f8ca0690858c31d8a9b7e083b41c05ff467bd[m
+Author: alex he <hebailanc@outlook.com>
+Date:   Tue Mar 31 23:50:53 2020 +0200
+
+    data preparation
+
+[33mcommit e4e39489c426a9e545f836040aa97d2212aec7bc[m
+Author: rui yang <rui.yang@campus.lmu.de>
+Date:   Sun Mar 29 16:20:11 2020 +0200
+
+    Final Dataset
+    
+    add Final Dataset
+
+[33mcommit eb5ea0c9c97a9846e3b276b7838869f8fc892b4c[m
+Author: Alex he <55342825+4hebailanc@users.noreply.github.com>
+Date:   Sun Mar 29 15:48:24 2020 +0200
+
+    Initial commit
