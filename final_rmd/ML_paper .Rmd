@@ -1,0 +1,1788 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Introduction
+
+The credit card business has entered a fast-rising development stage after an incremental transformation from the traditional payment to E-payment. Major banks and related financial institutions increase the issuance of credit cards with the growing demand and high profits of credit card business. However, high profits are accompanied by high risks, especially in the cases of facing hundreds of thousands credit card applications from potential customers. In the actual situation, credit risk management system is set up for meeting the tremendous demand of credit card application while the increasing Probability of Default (PD), brought up by individuals who cannot pay back the loans, appears accordingly. In order to control and monitor the credit risk, the traditional credit assessment approach is an artificial credit risk assessment, which is performed by credit risk analysts who review the information submitted by credit card applicants, generally including customer personal data (age, ID card, etc.), work (income, occupation, etc.), individual assets, stability of repayment capacity, and so on. Banks and financial institutions value the repayment ability of cardholders. In other words, the stronger the repayment ability, the easier to issue credit cards will be. Nowadays, there are more and more people who apply for credit cards, and the bank's credit card business system gradually reflects the characteristics of large issuance, frequent transactions, and comprehensive and accurate transaction information. It’s even clearer that traditional manual estimation is no longer able to complete these tasks. Under such circumstances, a set of practical prediction models that decide whether or not to approve these applications and monitor the credit risk, will be necessary. The traditional model and techniques cannot satisfy the current situation. For this reason, this report “Research on Prediction of Credit Card Approval Based on Machine Learning” aims to address the problem of forecasting credit risk by the use of an emerging technique “Machine Learning”, and this project is based on the public dataset **“credit card approval prediction” from Kaggle**, the U.S. data competition platform. Our ultimate purpose is using machine learning approaches based on **mlr3 R package**, such as logistic regression, KNN, random forest model, etc. to establish a credit card risk assessment model to determine whether the applicant would overdue or not repay the loan and achieved a quantitative analysis of personal credit risk.
+
+\newpage
+
+
+## 1. Data
+According to (Bishop, Christopher (2006))[1], In machine learning, a feature is an individual measurable property or characteristic of a phenomenon being observed, and the concept of "feature" is related to that of explanatory variables used in statistic application. Therefore, both concepts mentioned in this report are the same based upon the definition of feature and variable. In this study, all features are classified into three kinds of variables according to their data type: binary variables, categorical variables, and continuous variables. The description of all features and a self-defined response variable will be provided in this section.
+
+### 1.1 Reading in the data
+The raw data, which consists of two data set **application_record.csv** and **credit_record.csv**, given by an Excel file in the csv format.
+
+One of the most straightforward ways to import an Excel file into R is using the **read_csv** function. It is good practice to conduct a preliminary examination after importing the raw data, in order to ensure that the imported data has the expected format:
+```{r echo=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+
+```{r warning=FALSE,message=FALSE}
+library(readr)
+set.seed(2020)
+application_data <- read_csv("./data/application_record.csv") # the first data set
+record <- read_csv("./data/credit_record.csv") # the second data set
+```
+
+
+### 1.2 Defining response variable
+
+The following code describes the process of defining the response variable with the name **y**. For some operations we rely on the **dplyr** package.
+
+```{r warning=FALSE,message=FALSE}
+
+library(dplyr)
+
+opentime_data <- record %>%
+  group_by(ID) %>%
+  # extract the snapshot date when an account is opened
+  filter(MONTHS_BALANCE == min(MONTHS_BALANCE)) %>%
+  select(ID, MONTHS_BALANCE) %>%
+  rename(opentime = MONTHS_BALANCE) # rename the snapshot date as "opentime"
+
+# merge two dataset based on the common variable "ID"
+data_with_day <- left_join(application_data, opentime_data, by = "ID")
+```
+
+
+A payment default is in simple terms an overdue account. In short, in most cases it arises when a debt has become overdue, and based on the Basel Agreement(2007)[2] and Guidance to banks on non-performing loans from European Central Bank(ECB) <https://www.bankingsupervision.europa.eu/ecb/pub/pdf/guidance_on_npl.en.pdf>, the potential client, whose debt is not paid more than 60 days of the payment date printed on the invoice by the credit provider or the lender has reason to believe that the loan will not be repaid, will be classified as risk users.
+
+```{r}
+unique(record$STATUS)
+```
+
+Variable **STATUS** in the data set **record** describes the overdue status, which is used to define the target in this project. The following table shows all values of the varibale $STATUS$ and corresponding meanings:
+
+
+ Value         Meaning        
+-----------   ----------------------------------------------------------
+"X"             No loan for the month
+"0"             1-29 days past due 
+"C"             Paid off that month 
+"1"             30-59 days past due 
+"2"             60-89 days overdue 
+"3"             90-119 days overdue 
+"4"             120-149 days overdue 
+"5"             Overdue or bad debts, write-offs for more than 150 days 
+
+
+
+```{r}
+creat_target <- function(x) {
+  if (x == "2" | x == "3" | x == "4" | x == "5") {
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+}
+```
+
+The following code shows how to define the target varible **y** by using the pre-defined function "creat_target". As a result, the target varible is a binary variable, $"1"$ means that the credit card application should not be approved.
+
+```{r}
+library(purrr)
+# compute variable "target" with function "creat_target", and save it in new_record
+new_record <- record %>% mutate(target = map_dbl(record$STATUS, creat_target))
+# sum the value of variable "target" for each group(grouped by ID).
+data_target <- new_record %>%
+  group_by(ID) %>%
+  summarise(y = sum(target))
+# for each ID, if the target value >0, means there is at least one TRUE under the ID number,
+# if an ID has one TURE, means this person has been overdue at least 60 days.
+# then we mark this ID as 1,means we will not approve the application.
+data_target$y <- map_dbl(data_target$y, function(x) ifelse(x > 0, 1, 0))
+```
+
+```{r}
+round(prop.table(table(data_target$y)), digits = 2)
+```
+
+The above result shows that only 1% of records are classified as risk users. From that point of view, due to the imbalanced distribution of the target variable, it is necessary to utilize an appropriate technique to deal with this problem by training the model.
+
+
+```{r}
+# merge two data with method inner_join.
+data <- inner_join(data_with_day, data_target, by = "ID")
+# convert all character data into facotr datatype.
+final_data <- data %>%
+  mutate_if(is.character, as.factor) %>%
+  mutate(y = as.factor(y))
+# check data
+str(final_data)
+# remove useless variable
+# ID used to identify applications from indivuduals
+# All values of "FLAG_MOBIL" are 1, which plays no role for training the model.
+final_data <- final_data %>% select(-ID, -FLAG_MOBIL)
+
+dim(final_data)
+```
+
+After performing the above code, we can get a final data set with 36,457 observations of 18 variables and we assume that the variable **y** (binary variable with 0 and 1) is our ultimate target variable to decide for the final decision regarding whether or not the issue shall be approved. Also, we may need to turn the data set into data frame in order to facilitate the following data processing procedures.
+
+```{r}
+# turnning the data into data frame
+to_imp_data <- final_data %>% as.data.frame()
+
+names(final_data)
+```
+
+Three different variable types (e.g. binary, categorical and continuous variable) in the final data set will be introduced in detail as follows. 
+
+### 1.3 Binary variable
+
+Binary variable is a type of disrete random variable which only take two possible values. While many variables and questions are naturally binary e.g. gender and "yes or no" question. The following table shows six binary variables used to record the personal information:
+
++-------------------------------+--------------------+--------------------+
+| Name of variable in R         | Meaning            |    Value           |
++===============================+====================+====================+
+| "CODE_GENDER"                 | Gender             | - "F": Female      |
+|                               |                    | - "M": Male        |
++-------------------------------+--------------------+--------------------+
+| "FLAG_OWN_CAR"                | Having a car or not| - "Y": Yes         |     
+|                               |                    | - "N": No          |  
++-------------------------------+--------------------+--------------------+
+| "FLAG_OWN_REALTY"             | Having house       | - "Y": Yes         |     
+|                               | reality or not     | - "N": No          |
++-------------------------------+--------------------+--------------------+
+| "FLAG_PHONE"                  | Having a phone     | - "1": Yes         |     
+|                               | or not             | - "0": No          |
++-------------------------------+--------------------+--------------------+
+| "FLAG_EMAIL"                  | Having an email    | - "1": Yes         |     
+|                               | or not             | - "0": No          |
++-------------------------------+--------------------+--------------------+
+| "FLAG_WORK_PHONE"             | Having a Work Phone| - "1": Yes         |     
+|                               | or not             | - "0": No          |
++-------------------------------+--------------------+--------------------+
+
+### 1.4 Categorical variable
+
+A categorical variable is a type of statistical variable that can take on one of a finite and usually fixed number of possible values. Examples of categorical variables include different types of occupation (e.g. Core staff, Sales staff, High skill tech staff). Based on previously known qualitative properties, this kind of variable assigns each individual or other single unit of observed objects to a specific group or nominal category. five categorical varibales include the following:
+
++-------------------------------+--------------------+----------------------+
+| Name of variable in R         | Meaning            |    Value             |
++===============================+====================+======================+
+| "NAME_INCOME_TYPE"            | Income type        | - "Pensioner"        |
+|                               | (5 types)          | - "Working"          |
+|                               |                    | ...                  |
++-------------------------------+--------------------+----------------------+
+| "OCCUPATION_TYPE"             | Occupation Type    | - "Core staff"       |     
+|                               | (18 types)         | - "Sales staff"      |
+|                               |                    | ...                  |
++-------------------------------+--------------------+----------------------+
+| "NAME_HOUSING_TYPE"           | House Type         | - "With parents"     |     
+|                               | (6 types)          | - "House / apartment"|
+|                               |                    | ...                  |
++-------------------------------+--------------------+----------------------+
+| "NAME_EDUCATION_TYPE"         | Education          | - "Higher education" |     
+|                               | (5 types)          | - "Incomplete higher"|
+|                               |                    | ...                  |
++-------------------------------+--------------------+----------------------+
+| "NAME_FAMILY_STATUS"          | Marriage Condition | - "Married"          |     
+|                               | (5 types)          | - "Separated"        |
+|                               |                    | ...                  |
++-------------------------------+--------------------+----------------------+
+
+### 1.5 Continuous variable
+
+A continuous variable is a type of numerical variables which may take on infinite values and is always collected in the form of numbers, despite the fact that other types of data also appear in the form of numbers. Examples of continuous variables include the annual income, and the number of children is not classified as categorical varibale but continuous variable in this project. The value of age is not intuitive, because it is calculated based on the actual number of days not years and represented as negative value due to the benchmark setting. The following table describes all continuous varibales used in this project:
+
++-------------------------------+--------------------+----------------------+
+| Name of variable in R         | Meaning            |    Value             |
++===============================+====================+======================+
+| "CNT_CHILDREN"                | Children Numbers   | - "0"                |
+|                               |                    | - "1"                |
+|                               |                    | ...                  |
++-------------------------------+--------------------+----------------------+
+| "AMT_INCOME_TOTAL"            | Annual Income      | - "427500"           |     
+|                               |                    | - "112500"           |
+|                               |                    | ...                  |
++-------------------------------+--------------------+----------------------+
+| "DAYS_BIRTH"                  | Age                | - "-12005"           |     
+|                               |                    | - "-21474"           |
+|                               |                    | ...                  |
++-------------------------------+--------------------+----------------------+
+| "DAYS_EMPLOYED"               | Working Days      | - "-4542"            |     
+|                               |                    | - "-1134"            |
+|                               |                    | ...                  |
++-------------------------------+--------------------+----------------------+
+| "CNT_FAM_MEMBERS"             | Famliy Size        | - "1"                |     
+|                               |                    | - "2"                |
+|                               |                    | ...                  |
++-------------------------------+--------------------+----------------------+
+| "opentime"                    | Duration of accout | - "-15"              |     
+|                               | (Month)            | - "-14"              |
+|                               |                    | ...                  |
++-------------------------------+--------------------+----------------------+
+
+### 1.6 Missing values processing
+
+```{r}
+summary(final_data)
+```
+
+The above result shows that there are 11,323 missing values in the varibale `OCCUPATION_TYPE`, and these missing values are marked with “NA” that cannot be addressed directly. In order to get a considerably better idea of dealing with the missing data and also to minimize the negative impact of the missing values, it is necessary to implement several methods to cover this issue, which are **listwise deletion** and with the help of two powerful R packages (**MICE** and **missForest**).
+
+#### 1.6.1 Missing pattern and missing data mechanism
+
+In order to choose an appropriate method to deal with missing values, it is necessary to analyse the corresponding **missing pattern** and **missing data mechanism**, because these approach are based on different assumptions. It is easy to distinguish the missing pattern of this data set by the use of the function **md.pattern** from **MICE** package.
+
+```{r}
+library(mice)
+# check the missing pattern by using md.pattern function
+mice::md.pattern(to_imp_data, plot = TRUE)
+```
+
+The above figure and result illustrate that the corresponding missing pattern is **Univariate Nonresponse**, whereby a single variable `OCCUPATION_TYPE` has missing values, and therefore, the corresponding missing data mechanism could be **Missing Completely At Random (MCAR)**. a brief description of these three missing data mechanism is provided below:
+
+**Missing Completely At Random (MCAR)**: If the events that lead to any specific data item being missing are indepen- dent not only of observable variables but also of unobservable parameters of interest, and if they occur completely at random, then the corresponding missing values in a data set are MCAR
+
+**Missing At Random (MAR)**: In contrast to MCAR data, the MAR mechanism occurs when the missing- ness is not completely random, and can be explained by at least one other variable with complete information. In this case, the missingness proba- bility is related to some of the observed data instead of the missing data itself.
+
+**Not Missing At Random (NMAR)**: When the missing data are NMAR, the missingness has an exclusive relationship with the missing data. In other words, the missingness probability is allowed to be dependent on the missing values themselves.
+
+
+#### 1.6.2 Listwise Deletion
+
+In this section, we simply delete the missing values by using the **na.omit()** function. With this function, we would delete the whole row where the missing values appear.
+
+```{r, eval=FALSE}
+# by using na.omit, we reomve the whole row in which the missing data is included
+completeData <- na.omit(final_data)
+# check the dataset after deleting
+str(completeData)
+```
+After deleting, there are only 25,134 rows left for data analysis which means we have removed for more than 30 percent of the raw data. Therefore, a significant negative impact of listwise deletion is that it reduces the the sample size. However, the benifit of it is that it does not lead to the reduction of variability in the data, which implies that the standard deviations and variance estimates are likely to be the same, if the missing data mechanism is MCAR.
+
+An initial guess without comparison with these methods is that listwise deletion is probably better than the other two **Multiple Imputation (MI)** methods, the possible reason is that the missing data mechanism in this case is MCAR, based on which the potential distribution by the use of listwise deletion does not change very much. In addition to this, imputing the missing values could also introduce additional errors in the original data set. The comparison results will also be provided in the subsequent section. 
+
+
+#### 1.6.3 Multiple imputation with MICE package
+
+In contrast to listwise deletion, MI considers statistical uncertainty when imputing missing values. One of the two powerful R-packages that handle missing data is multivariate imputation by chained equations (MICE), also called "sequential regression multiple imputation" or "fully conditional specification." This is one of the most important methods used to address and impute missing data. In consideration of the flexibility of chained equations, MICE can handle various types of variables in the data set, such as continuous variables, categorical variables, and mixed-type variables. If the distribution of each variable in the data set is already established, this method is more applicable. For example, if a variable fits the normal distribution then specific approaches can be defined in advance to impute the missing values of this variable by using the `mice()` function. Even if no appropriate multivariate distribution can be found, MICE remains an applicable option; this implies that MICE is suitable for data sets composed of mixed-type data. In conclusion, for the application of MICE the specific distribution of each variable in the data set should be defined in advance, which is based on a univariate distribution. The R-package MICE uses the FCS algorithm, which imputes each variable with missing values in the data set by conducting several repetitions.
+
+
+Regarding the application of MICE, two assumptions should be taken into consideration. The first assumption is that the missing data mechanism is MAR. If data are not MAR, biased results are likely to be obtained when applying MICE. However, in order to compare the performance of MICE under the circumstances of different missing data mechanisms, MICE is also implemented in the cases of MCAR and NMAR data. The second assumption concerns the size of the data set. In practice, data sets tend to be large in size, which implies that they include thou- sands of observations and hundreds of variables (He et al.(2009); Stuart et al.(2009)). Furthermore, in these large data sets a high variety of variables often exists. Based on the large size of data sets, a large joint model for all of the various types of variables should be fitted. With the help of the flex- ibility of MICE a series of regression models is run for each variable with missing data, which are based on the distribution of each variable. For the purposes of operability and objective comparison between different impu- tation methods, the data set in this simulation study is not large.
+
+When using the **MICE** function, there are 2 prime parameters that need to be configured. One parameter is **m**, intended for the number of imputed dataset that we would like to generate. As a result, 1 is enough. And the other is **meth**, designed for the methods we have chosen to undergo the regression. Here, we are using the "polyreg", Bayesian polytomous regression, due to reason that these missing values all belong to factor variables.
+
+
+```{r, eval=FALSE}
+### imputed data with mice function
+tempData <- mice(to_imp_data, m = 1, meth = "polyreg", seed = 2020)
+# to extract the imputed data with the assigned column name "OCCUPATION_TYPE"
+tempData$imp$OCCUPATION_TYPE
+```
+In order to get a whole dataset, we can complete the data frame with the imputed ones.
+
+```{r, eval=FALSE}
+# complete the whole dataset with the imputed data
+completeData <- complete(tempData)
+```
+
+
+#### 1.6.4 Multiple imputation with missForest package
+
+In MICE, parametric regression models are needed and assumptions about the distribution of data are considered as prior knowledge. In the applica- tion of MICE it is necessary to specify the appropriate approach for each imputed variable in advance. If the assumptions are not correct then biased imputation results are likely to be produced. For example, it is assumed that a continuous variable fits the normal distribution; in fact this variable cannot perfectly fit normal distribution, which would lead to the estimation of problematic parameters. In addition, if there are complicated interactions, nonlinear relation structures, or high correlation between the regression model variables in the data sets, then predictions made using MICE tend to be less accurate. Consequently, the quality of the imputation would be decreased. missForest is a nonparametric method, which implies that it does not need to make assumptions about structural aspects of the data. Therefore, biased imputation results would not be caused by improper assumptions when applying missForest.
+
+Regarding the prime parameter selection, there are three parameters that need to be taken into consideration. Firstly, the dataset with missing values **xmins**. Then, **maxiter**, which helps decide the number of iterations that need to be done during the imputation. The last parameter is **ntree** which implies the number of random trees to grow in each forest. 
+
+```{r, eval=FALSE}
+### Missing value imputation with missForest
+
+library(missForest)
+# generate final data after imputation while using missForest
+imputed_Data <- missForest(to_imp_data)
+# check imputation with OCCUPATION_TYPE
+imputed_Data$ximp$OCCUPATION_TYPE
+# get complete data with the imputed data inserted in
+completeData <- imputed_Data$ximp
+```
+
+finally we get three datasets based different imputation methods: **dl_na_data**, **mf_na_data** and **mice_na_data**.
+
+## 2. Features Engineering
+### 2.1 WOE Encoding
+After running several model based on original features, we find that the positive 
+samples(y=1) are not able to be good classified. We suppose that our model are 
+overfitting to negative samples, because some features have too many categories,
+and there is a traditional variables transformation that use WOE to replace features.
+This is basically a technique that can be applied if we have a binary response variable.
+
+#### 2.1.1 Introduction
+Weight of evidence (WOE) and Information value (IV) are simple but powerful 
+techniques to perform variable transformation and selection. 
+It is widely used in credit scoring to measure the separation of good vs bad customers.
+They help to explore data and screen variables. 
+It is also used in marketing analytics project such as customer attrition model, campaign response model etc.
+
+* What is Weight of Evidence (WOE)?  
+The weight of evidence tells the predictive power of an independent variable in 
+relation to the dependent variable. 
+
+* Steps of Calculating WOE  
+1. For a continuous variable, split data into several parts.
+2. Calculate the number of events and non-events in each group (bin)  
+3. Calculate the % of events and % of non-events in each group.  
+4. Calculate WOE by taking natural log of division of % of non-events and % of events.  
+
+$$
+WOE = ln \frac{\%of\ nonevents}{\%of\ events}
+$$
+
+* Benefits of WOE
+1. It can treat outliers. Suppose you have a continuous variable such as annual
+salary and extreme values are more than 500 million dollars. These values would
+be grouped to a class of (let's say 250-500 million dollars). Later, instead of 
+using the raw values, we would be using WOE scores of each classes.
+2. It can handle missing values as missing values can be binned separately.
+3. Since WOE Transformation handles categorical variable so there is no need for dummy variables.
+4. WoE transformation helps you to build strict linear relationship with log odds.
+Otherwise it is not easy to accomplish linear relationship using other transformation
+methods such as log, square-root etc. In short, if you would not use WOE transformation,
+you may have to try out several transformation methods to achieve this.
+
+* What is Information Value (IV)?  
+Information value is one of the most useful technique to select important 
+variables in a predictive model. It helps to rank variables on the basis of their 
+importance.
+
+$$ IV = \sum_{}(\%of\ nonevents\ -\ \%of\ event)*WOE $$
+
+
+* Important Points  
+Information value is not an optimal feature (variable) selection method when 
+you are building a classification model other than binary logistic regression
+(for eg. random forest or SVM). So we only use IV to judge which categories should 
+be combine together. For example: when we merge two categories into one categories
+within one feature and the IV does not change a lot, which means the distribution
+of feature with respect to target is not rapidly changed, we can accept this mergence.
+
+#### 2.1.2 Implementation
+```{r echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(fig.height = 3)
+# load library
+library(tidyverse)
+library(data.table)
+library(mltools)
+library(checkmate)
+library(scorecard)
+```
+
+```{r echo=FALSE}
+set.seed(2020)
+setwd("/Users/hebailan/R Programm/i2ml programm/final project/i2ml_final_project/credit_card_prediction")
+
+# calc_iv function compute the "information value" of a variable.
+calc_iv <- function(feature) {
+  # how many rows we need.
+  number_row <- length(unique(final_data[[feature]]))
+  # initialize the tibble
+  inner_iv_table <- tibble(feature = 0, val = 0, all = 0, good = 0, bad = 0)
+  # for each level, we calculate their information value
+  for (i in seq(number_row)) {
+    # mark which level is computed
+    val <- unique(final_data[[feature]])[[i]]
+    # conver data as "data.table" for the convenience of select.
+    final_data <- data.table(final_data)
+    # compute how many simples within this level
+    all <- nrow(final_data[final_data[[feature]] == val])
+    # the number of good people within this level
+    good <- nrow(final_data[final_data[[feature]] == val & final_data$y == 0])
+    # the number of bad people within this level
+    bad <- nrow(final_data[final_data[[feature]] == val & final_data$y == 1])
+    # store as a tibble
+    inner_tibble <- tibble(feature, val, all, good, bad)
+    # rbind "inner_tibble" with "inner_iv_table
+    inner_iv_table <- rbind(inner_iv_table, inner_tibble)
+  }
+  # delet our initial rows.
+  inner_iv_table <- inner_iv_table[-1, ]
+
+  # compute IV
+  inner_iv_table <- inner_iv_table %>%
+    # compute the proportion for each level,
+    mutate(share = all / sum(all)) %>%
+    # compute bad rate
+    mutate(bad_rate = bad / all) %>%
+    # compute good distribution
+    mutate(good_dis = (all - bad) / (sum(all) - sum(bad))) %>%
+    # compute bad distribution
+    mutate(bad_dis = bad / sum(bad)) %>%
+    # compute woe
+    mutate(woe = log(good_dis / bad_dis))
+  # deal with the extreme situation
+  inner_iv_table$woe[is.infinite(inner_iv_table$woe)] <- 0
+  # compute IV
+  iv_table <- inner_iv_table %>% mutate(iv = woe * (good_dis - bad_dis))
+  # return value of IV
+  print(sum(iv_table$iv))
+  # return "iv_table"
+  return(iv_table)
+}
+```
+
+
+In this section, we will do features engineering based on three principles:   
+As for binary factor variables, we will convert them into binary numeric type for next modelling.  
+As for categorical variables, we will try to reduce the types of them without influence their IV.  
+As for continuous variables, By using **woebin** function of **scorecard** package,
+we will replace them with binning data.  
+Since we use 3 different strategies to deal with the missing data, we now have
+three dataset and for all the datasets we will excute the same process to finish features engineering.
+Using **dl_na_data** as an example.
+
+##### Binary variables
+
+After loading data, we inspect our factory variables as mentioned above, there are 8 factory
+variables, i.e. `CODE_GENDER`, `FLAG_OWN_CAR`, `FLAG_OWN_REALTY`, `NAME_INCOME_TYPE`
+`NAME_EDUCATION_TYPE`, `NAME_FAMILY_STATUS`, `NAME_HOUSING_TYPE`, `OCCUPATION_TYPE`,
+only  `CODE_GENDER`, `FLAG_OWN_CAR`, `FLAG_OWN_REALTY` are binary factory variables.
+
+```{r, message=FALSE, warning=FALSE}
+# load final_data
+dl_data <- read.csv2("./data/dl_na_data.csv")
+final_data <- dl_data
+binary_data <- final_data %>% select_if(is.factor)
+glimpse(binary_data)
+```
+
+
+As for binary factor variables, we write a function **convert_binary_variable** to  convert them into binary numeric type for next modelling.
+```{r, message=FALSE, warning=FALSE}
+# function to convert binary variable into numeric.
+convert_binary_variable <- function(feature) {
+  # save condition for succinct expression
+  # check for defensive programm
+  if (check_class(feature, "factor") & nlevels(feature) == 2) {
+    levels(feature) <- seq(nlevels(feature))
+    feature <- as.numeric(feature)
+    return(feature)
+  }
+}
+# convert all binary variable into binary number
+converted_data <- final_data %>% mutate_if(is.factor, convert_binary_variable)
+# inspect binary variables
+converted_binary_data <- binary_data %>% mutate_if(is.factor, convert_binary_variable)
+glimpse(converted_binary_data)
+```
+
+##### Categorical variables 
+After converting binary factor variables, five Categorical variables are remained, i.e.
+`NAME_INCOME_TYPE`, `NAME_EDUCATION_TYPE`, `NAME_FAMILY_STATUS`, `NAME_HOUSING_TYPE`, `OCCUPATION_TYPE`,
+```{r, message=FALSE, warning=FALSE}
+# find which variables have several values
+dif_variable <- setdiff(names(final_data), names(converted_data))
+dif_variable
+```
+
+As for `NAME_INCOME_TYPE`, we write the function **calc_iv** to inspect its WOE and IV.
+```{r, message=FALSE, warning=FALSE}
+calc_iv(dif_variable[1])
+```
+
+We  noticed that factor type `Student` and `Pensioner` are remarkably useful to determine the target.
+Factor `Pensioner` can be regarded as  "refuse mark", as they doesn't work and have less resilient financial condition.
+On the other hand, `Student` can be regarded as "accept mark", perhaps because they can get finantial support from their parents.
+Although the two factor are relatively strange, we will not merge them into other types.
+```{r, message=FALSE, warning=FALSE}
+# analyse the details of first multi-factors variable
+# found the variable "NAME_INCOME_TYPE" has 5 types of values
+final_data["less_factor_income"] <- final_data %>%
+  pull(dif_variable[[1]])
+```
+
+As for `NAME_EDUCSTION_TYPE`, we also inspect this variables at first.
+```{r, message=FALSE, warning=FALSE}
+calc_iv(dif_variable[2])
+```
+
+We noticed that factor `Academic degree` also can be regarded as "accept mark", 
+`Higher education` and `Incomplete higher` have the same distribution, so we merge them together.
+IV slightly decreases from **0.01043881** to **0.00935902**, which we can accpet.
+```{r, message=FALSE, warning=FALSE}
+# analyse the details of second multi-factors variable
+# found the variable "NAME_EDUCSTION_TYPE" has 5 types of values. we integrate
+# "Incomplete higher" with "Higher education"
+final_data["less_factor_edu"] <- final_data %>%
+  pull(dif_variable[[2]]) %>%
+  recode("Higher education" = "Incomplete higher")
+# analyse how the IV of the variable has been changed.
+calc_iv("less_factor_edu")
+```
+
+We noticed `NAME_FAMILY_STATUS` feature is relatively balanced, no need to change.
+```{r, message=FALSE, warning=FALSE}
+# analyse the details of third multi-factors variable
+calc_iv(dif_variable[3])
+final_data["less_factor_status"] <- final_data %>% pull(dif_variable[3])
+# found this variable seems relatively balanced, no need to change.
+```
+
+
+We noticed the variable `NAME_HOUSING_TYPE` has 6 types of values. Factor `Co-op apartment` has 
+the same distribution with `Office apartment`. so we merge them into one factor.
+```{r, message=FALSE, warning=FALSE}
+calc_iv(dif_variable[4])
+```
+
+After merge `Co-op apartment` into `Office apartment`, IV slightly decreases from **0.007327503** to **0.007086979**,which we can accpet.
+```{r, message=FALSE, warning=FALSE}
+# analyse the details of fourth multi-factors variable
+# found the variable "NAME_HOUSING_TYPE" has 6 types of values. we integrate
+# "Co-op apartment" with "Office apartment"
+final_data["less_factor_house"] <- final_data %>%
+  pull(dif_variable[[4]]) %>%
+  recode("Co-op apartment" = "Office apartment")
+# analyse how the IV of the variable has been changed.
+calc_iv("less_factor_house")
+```
+
+We found the variable `NAME_HOUSING_TYPE` has too manny categories.
+We integrate some of them with different working status. i.e. `Cleaning staff`, `Cooking staff`
+can be classified as `Labor`, `Accountants`, `Core staff` can be classified as `Office`,
+`IT staff`, `High skilltech staff` can be classified as `higher`,which means they earn a higher salary.
+```{r, message=FALSE, warning=FALSE}
+calc_iv(dif_variable[5])
+```
+
+```{r, message=FALSE, warning=FALSE}
+
+# analyse the details of fifth multi-factors variable
+# found the variable "NAME_HOUSING_TYPE" has too many categories.
+
+final_data["less_factor_work"] <- final_data %>%
+  pull(dif_variable[[5]]) %>%
+  recode(
+    "Cleaning staff" = "Labor",
+    "Cooking staff" = "Labor",
+    "Drivers" = "Labor",
+    "Laborers" = "Labor",
+    "Low-skill Laborers" = "Labor",
+    "Security staff" = "Labor",
+    "Waiters/barmen staff" = "Labor"
+  ) %>%
+  recode(
+    "Accountants" = "Office",
+    "Core staff" = "Office",
+    "HR staff" = "Office",
+    "Medicine staff" = "Office",
+    "Private service staff" = "Office",
+    "Realty agents" = "Office",
+    "Sales staff" = "Office",
+    "Secretaries" = "Office"
+  ) %>%
+  recode(
+    "Managers" = "higher",
+    "High skill tech staff" = "higher",
+    "IT staff" = "higher"
+  )
+# analyse how the IV of the variable has been changed.
+
+calc_iv("less_factor_work")
+```
+
+Then encode multi-factors variables as one-hot variables.
+```{r, message=FALSE, warning=FALSE}
+########
+# encode multi-factors variables into one-hot
+factor_data <- final_data %>%
+  select(starts_with("less")) %>%
+  as.data.table()
+oh_data <- one_hot(factor_data, dropCols = T)
+# cbind oh_data with converted_data
+converted_data <- final_data %>% mutate_if(is.factor, convert_binary_variable)
+converted_data <- converted_data %>% add_column(oh_data)
+# print oh_data
+glimpse(oh_data)
+```
+
+And we discretizate the continuous variables with the help of **woebin** function from **scorecard** package.
+When using the **woebin** function, there is one parameter **method** that need to be configured, desiged for which method will based on to discretizate variables. **method** has two options, **tree** and **chimerge**. We choose **chimerge** because we 
+noticed it brings better performance for modelling.
+```{r, message=FALSE, warning=FALSE}
+# Binning continuous variable to improve performance.
+dl_bin <- woebin(converted_data,
+  y = "y",
+  x = c("CNT_CHILDREN", "AMT_INCOME_TOTAL", "DAYS_BIRTH", "DAYS_EMPLOYED", "CNT_FAM_MEMBERS"),
+  method = "chimerge"
+)
+```
+
+Now we inspect the Binning variables.
+As for `CNT_CHILDREN` , we notice that it is discretizated into 3 categories, i.e.
+`[-inf, 1)`,`[1,2)`,`[2, inf)`. and the bad ratios for categories is linear, which means 
+this binnning is good.
+```{r, message=FALSE, warning=FALSE, fig.height=4}
+# plot binning variable
+plotlist <- woebin_plot(dl_bin)
+plotlist[1]
+```
+  
+  
+As for `AMT_INCOME_TOTAL` , we notice that it is discretizated into several categories,
+although the bad ratios for categories is not strictly linear, this binning has second highest IV 0.1368.
+```{r, message=FALSE, warning=FALSE}
+# plot binning variable
+plotlist <- woebin_plot(dl_bin)
+plotlist[2]
+```
+  
+As for `DAYS_BIRTH` , we notice that it is discretizated into 7 categories, i.e.
+`[-inf, -19000]`,`[-19000, -175000]` etc.  and the bad ratios for categories is linear, which means 
+this binnning is good.
+```{r, message=FALSE, warning=FALSE}
+# plot binning variable
+plotlist <- woebin_plot(dl_bin)
+plotlist[3]
+```
+  
+As for `DAYS_EMPLOYED` , we notice that it is discretizated into several categories,
+although the bad ratios for categories is not strictly linear, this binning has  highest IV 0.2815.
+```{r, message=FALSE, warning=FALSE}
+# plot binning variable
+plotlist <- woebin_plot(dl_bin)
+plotlist[4]
+``` 
+
+As for `CNT_FAM_MEMBERS` , we notice that it is discretizated into 4 categories, i.e.
+`[-inf, 2)`,`[2, 3)`,`[3, 4)` and `[4, inf)`. and the bad ratios for categories is linear, which means 
+this binnning is good.
+```{r, message=FALSE, warning=FALSE}
+# plot binning variable
+plotlist <- woebin_plot(dl_bin)
+plotlist[5]
+``` 
+
+Finally we combine binning variables, binary factor variables, and category variables with original data to produce
+`dl_iv_data` and For the consistency of features engineering we repeat the whole process for mf_data and mice_data to produce `mf_iv_data` and `mf_mice_data`.
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# cbind dl_bin with dl_iv_data
+dl_iv_data <- woebin_ply(converted_data, rbindlist(dl_bin))
+# save dl_iv_data
+dl_iv_data$y <- as.factor(dl_iv_data$y)
+colnames(dl_iv_data) <- make.names(colnames(dl_iv_data), unique = T)
+glimpse(dl_iv_data)
+```
+
+As for **mf_na_data** and **mice_na_data**, we produce the same process to keep 
+the consistency of data, therefor we will get three datasets: **dl_iv_data**, **mf_iv_data** and **mice_iv_data**.
+
+### 2.2 Nominal variable Encoding
+Having a look at the whole dataset after deleting or imputation, we can figure out there are 8 nominal variables. And since all the nominal variables are categorically arranged, we can use the *one-hot-encoding* to deal with different kinds of nominals. The general idea of using one-hot-encoding is to mark the nominals(categories) into vectors(0 and 1 composed), in which if this particular category exists then mark the element with 1. When the entire encoding is done, there would be newly generated columns with category marked with name in place for the nominal variables. For example, when dealing with categorical variables "OCCUPATION_TYPE" which includes different types of occupation (e.g. Core staff, Sales staff, High skill tech staff, etc.), one particular type would be extracted out as a single vector with only 0 and 1 entered in where element 1 is marked for potential users corresponding to the same job. Similarily, the data processing with binary variables such as "GENDER" would be much easier to address.
+```{r, eval=FALSE}
+library(dataPreparation)
+
+# Compute encoding with category names
+encoding <- build_encoding(completeData,
+  cols = c(
+    "CODE_GENDER", "FLAG_OWN_CAR", "FLAG_OWN_REALTY",
+    "NAME_INCOME_TYPE", "NAME_EDUCATION_TYPE",
+    "NAME_FAMILY_STATUS", "NAME_HOUSING_TYPE",
+    "OCCUPATION_TYPE"
+  ), verbose = TRUE
+)
+
+# Apply one hot encoding to turn the records of categories into 0,1 composed vectors
+completeData <- one_hot_encoder(completeData, encoding = encoding, drop = TRUE)
+```
+And in order to generate the task for mlr3, we need to transform the target variable into factor type.
+```{r, eval=FALSE}
+# convert all character y data into factor data type.
+completeData <- data %>%
+  mutate_if(is.character, as.factor) %>%
+  mutate(y = as.factor(y))
+head(completeData)
+```
+
+After the above preprocessing procedures with nominal variable addressed with one-hot encoding, the corresponding 3 datasets were generated accordingly which are named as *dl_oh_data*, *mf_oh_data* and *mice_oh_data*.
+
+When finishing with the nominal variable encoding process, there are 6 datasets in general named with 2 groups: the *iv* group and the *one-hot* group. There are *dl_iv_data*, *mf_iv_data* and *mice_iv_data* included in the *iv* group while *dl_oh_data*, *mf_oh_data* and *mice_oh_data* included in the *one-hot* group.
+
+
+
+## 3. General Introduction
+
+### 3.1 Logistic regression
+Logistic Regression is a Machine Learning classification algorithm that is used to predict the probability of a categorical dependent variable. In logistic regression, the dependent variable is a binary variable that contains data coded as 1 (yes, success, etc.) or 0 (no, failure, etc.). In other words, the logistic regression model predicts P(Y=1) as is shown in formular of X. 
+$$ P=(y=1|x,\beta) = \frac{1}{1+e^{-\beta^Tx}} $$  
+
+### 3.2 KNN  
+
+KNN (k-nearest neighbors) is a method used for classification. In simple words, to classify one specific data point, it takes k neighbors with the shortest distance. Furthermore, based on how the neighbors are classified, we will assign the new input to the most popular category in the k neighbors.  
+The **KNN** package included in **mlr3** has the following parameters: __k__ (the number of neighbors considered), __distance__ (Parameter of Minkowski distance), __kernel__ (kernel functions used to weight the neighbors). Here the number of k and the method of calculating the distances between data points are crucial. We will first evaluate how KNN performs between different data, including different encoding, and different missing value handling. Then we will explore different methods to get better results. First, we investigate them separately and then combine the knowledge to perform further fine-tuning to improve the model.  
+
+### 3.3 SVM  
+
+A Support Vector Machine (SVM) is a discriminative classifier formally defined by a separating hyperplane. In other words, given labeled training data (supervised learning), the algorithm outputs an optimal hyperplane which categorizes new examples. In two dimentional space this hyperplane is a line dividing a plane in two parts where in each class lay in either side.
+
+Correspondingly, we will use the SVM algorithm embedded in the **mlr3** learner and analyze the prediction performances with AUC (Area under the ROC Curve) values. 
+
+When it comes to model tuning for SVM, we consider the __kernel__ function, __cost__ (also known as __C-Regularization__ parameter) and __gamma__ to tune.
+
+__kernels__: The main function of the kernel is to take low dimensional input space and transform it into a higher-dimensional space. It is mostly useful in non-linear separation problem.
+
+__cost (Regularisation)__: Cost is the penalty parameter, which represents misclassification or error term. The misclassification or error term tells the SVM optimisation how much error is bearable. This is how you can control the trade-off between decision boundary and misclassification term.
+
+__Gamma__: It defines how far influences the calculation of plausible line of separation.
+
+### 3.4 Random Forest  
+
+Random Forest, also known as Random Decision Forest, is an algorithm mainly used for dealing with classification problems. It consists of multiple decision trees and harnesses bagging and feature randomness in order to create an uncorrelated forest of trees whose prediction performance is more accurate than of any individual tree.
+With regards to model tuning for Random Rorest, there are mainly four variables to take into consideration.
+One of the crucial hyperparameters of RF is __mtry__, defined as how many variables to select at a node split when growing a decision tree. Generally, lower values of mtry will lead to more different, less correlated trees, arousing better stability while aggregating. As mentioned by Probst in the article Hyperparameters and tuning strategies for random forest, mtry values are sampled from the space $[0,p]$ with p being the number of predictor variables. Accordingly, we should set the range of mtry values to meet the above requirements.
+Secondly, the sample size parameter, __sample.fraction__, determines how many observations are drawn for the training of each tree. It has a similar effect as the mtry parameter. Decreasing the sample size leads to more diverse trees and thereby lower correlation between the trees, which has a positive effect on the prediction accuracy when aggregating the trees. However, the accuracy of the single trees decreases, since fewer observations are used for training. Hence, similarly to the mtry parameter, the choice of the sample size can be seen as a trade-off between stability and accuracy of the trees. Therefore, sample size values shall be sampled from $[0.2n, 0.9n]$ with n being the number of observations.
+Moreover, the nodesize parameter, __min.node.size__, specifies the minimum number of observations in a terminal node. Setting it lower leads to trees with a larger depth which means that more splits are performed until the terminal nodes. Considering tuning with it (see Hyperparameters and tuning strategies for random forest), node size values should be sampled from with higher probability (in the initial design) for smaller values by sampling $x$ from $[0, 1]$ and transforming the value by the formula $[(0.2n)^x]$.
+Last but not least, the number of trees in a forest is a parameter that is not tunable in the classical sense but should be set sufficiently high. According to measures based on the mean quadratic loss such as the mean squared error (in case of regression) or the Brier score (in case of classification), however, more trees are always better, as theoretically proved by Probst and Boulesteix (2017). Thence, we have decided to set it to be fixed with 1000 to meet the considerably latge number of obsearvations of records. Also, it can be vividly seen from the target dataset we have generated from the data preparation step that the distribution with target 1 and 0 are so imbalanced that we must train the learner with SMOTE function to get considerably balanced training data. Fortunately, in mlr3pipelines, there is a classbalancing and a smote pipe operator that can be combined with any learner. We have decided to combine the fixed tree number of learner with SMOTE function learner in order to get the optimal parameter settings for smote.K and smote.dup_size.  
+
+#### 3.5 Metrics 
+
+##### ROC curve and AUC score
+
+A receiver operating characteristic curve, or ROC curve, is a graphical plot that illustrates the diagnostic ability of a binary classifier system as its discrimination threshold is varied.
+The ROC curve is created by plotting the true positive rate $TPR = \frac{TP}{TP+FN}$ against
+the false positive rate $FPR = \frac{FP}{FP+TN}$ at various threshold settings.
+The true-positive rate is also known as sensitivity, reacall or probablitly of detection in machine learning. The false-positive rate
+is also known as probability of false alarm and can be calculated as (1 - specificity). It can also be thought of as a plot of the 
+power as fa cuntion of the Type I Error of the decision rule. Auc stands for "Area under the Roc Curve", it measures the entire two-dimensional area underneath the entire ROC curve form (0,0) to (1,1). It tells how much model is capable of distinguishing between classes. Higher the AUC, better the model is at predicting 0s as 0s and 1s as 1s.
+
+##### Why choose AUC and ROC
+
+In our experiment, we looked at several different measures to evaluate our result, 
+including fbeta, ce, acc and AUC. Ingeneral, using fbeta would be ideal when facing imbalanced data[recite]. However, our data is highly imbalanced, and the fbeta performs in favour of predicting all as the majority category. It outputs, in most cases with a very similar value close to 0.99. Thus, we decided to stick with AUC. By comparing the AUC value, we can better distinguish the improvement in models.
+
+
+## 4. Choosing the training task  
+
+### 4.1 Introduction  
+As for the process concerning the general model tuning, we would firstly go with the 6 different datasets corresponding to 6 training tasks and train the 4 models with default parameter settings and see which task to choose according to the ultimate performance output based on the best auc level. By doing these, the training workload for the following tuning procedures would be tremendously decreased as we have considerably more learners to train the task with.  
+
+### 4.2 Models results  
+first we load all the datasets. As the requests of **mlr3**, all integer numeric should be converted as double numeric, and
+target **y** should be converted as type factor.
+```{r}
+# loading library
+library(tidyverse)
+# set seed
+set.seed(2020)
+# load data
+dl_iv_data <- read.csv2("./data/dl_iv_data.csv") %>%
+  mutate_if(is.integer, as.numeric) %>%
+  mutate(y = as.factor(y))
+mf_iv_data <- read.csv2("./data/mf_iv_data.csv") %>%
+  mutate_if(is.integer, as.numeric) %>%
+  mutate(y = as.factor(y))
+mice_iv_data <- read.csv2("./data/mice_iv_data.csv") %>%
+  mutate_if(is.integer, as.numeric) %>%
+  mutate(y = as.factor(y))
+dl_oh_data <- read.csv("./data/dl_oh_data.csv") %>%
+  mutate_if(is.integer, as.numeric) %>%
+  mutate(y = as.factor(y))
+mf_oh_data <- read.csv("./data/mf_oh_data.csv") %>%
+  mutate_if(is.integer, as.numeric) %>%
+  mutate(y = as.factor(y))
+mice_oh_data <- read.csv("./data/mice_oh_data.csv") %>%
+  mutate_if(is.integer, as.numeric) %>%
+  mutate(y = as.factor(y))
+```
+
+then we creat and combine all the tasks into a list.
+```{r}
+library(mlr3)
+# creat task for all the data
+# creat task without dm
+task_all <- list(
+  TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y"),
+  TaskClassif$new("mf_iv", backend = mf_iv_data, target = "y"),
+  TaskClassif$new("mice_iv", backend = mice_iv_data, target = "y"),
+  TaskClassif$new("dl_oh", backend = dl_oh_data, target = "y"),
+  TaskClassif$new("mf_oh", backend = mf_oh_data, target = "y"),
+  TaskClassif$new("mice_oh", backend = mice_oh_data, target = "y")
+)
+```
+
+for each model, we work the same procedures.  
+we all use **benchmark_grid** to creat design, setting with __5 folds cv__, __predict_type = "prob"__ and __measure = msr("classif.auc")__ for computing auc. In addition, we fix random seed as __2020__ for reproducing.
+
+#### 4.2.1 Logistic Regression:  
+
+We will first evaluate how Logistic Regression performs between different data, including different encoding, and different missing value handling. As mentioned above, we pass arguments to **benchmark** function from **mlr3** to train logsitic regression.
+```{r eval=FALSE, results='hide', warning=FALSE}
+# load library
+library(mlr3learners)
+library(mlr3tuning)
+library(paradox)
+
+# creat a benchmark
+design <- benchmark_grid(
+  tasks = task_all,
+  learners = lrn("classif.log_reg", predict_type = "prob"),
+  resampling = rsmp("cv", folds = 5L)
+)
+
+# set measure
+all_measures <- msr("classif.auc")
+# run the benchmark
+set.seed(2020)
+lg_bmr <- benchmark(design, store_models = TRUE)
+# save the results
+lg_results <- lg_bmr$aggregate(measures = msr("classif.auc"))
+```
+For better comparing with each task, we write **multiplot_roc** function to plots results.
+```{r eval =FALSE}
+library(mlr3viz)
+
+# plot for the 6 data tasks
+multiplot_roc <- function(models, type = "roc") {
+  # set a null list
+  plots <- list()
+  # clone results
+  model <- models$clone()$filter(task_id = "dl_iv")
+  # format auc
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  # plot
+  plots[[1]] <- autoplot(model, type = type) + ggtitle(paste("dl_iv:", auc))
+
+  model <- models$clone()$filter(task_id = "mf_iv")
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  plots[[2]] <- autoplot(model, type = type) + ggtitle(paste("mf_iv:", auc))
+
+  model <- models$clone()$filter(task_id = "mice_iv")
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  plots[[3]] <- autoplot(model, type = type) + ggtitle(paste("mice_iv:", auc))
+
+  model <- models$clone()$filter(task_id = "dl_oh")
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  plots[[4]] <- autoplot(model, type = type) + ggtitle(paste("dl_oh:", auc))
+
+  model <- models$clone()$filter(task_id = "mf_oh")
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  plots[[5]] <- autoplot(model, type = type) + ggtitle(paste("mf_oh:", auc))
+
+  model <- models$clone()$filter(task_id = "mice_oh")
+  auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
+  plots[[6]] <- autoplot(model, type = type) + ggtitle(paste("mice_oh", auc))
+
+  do.call("grid.arrange", plots)
+}
+multiplot_roc(lg_bmr)
+```
+
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("logistic_all_task.png")
+```
+
+From the ROC plots above, we can see that as for different encoding methods, tasks tackled with WOE encoding generally perform 0.05 better with the auc score than the corresbonding counterpart binary encoding group, as for different missing data handling methods, Logistic Regression has better prediction performance on datasets by deleting missing values with whole row, i.e. **dl_iv_data**, **dl_oh_data**. Above all, we choose **dl_iv_data** as final datasets.  
+
+
+#### 4.2.2 KNN  
+
+We will first evaluate how KNN performs between different data, including different encoding, and different missing value handling. Then we will explore different methods to get better results.
+
+```{r eval=FALSE, results='hide', warning=FALSE}
+# creat a benchmark
+design <- benchmark_grid(
+  tasks = task_all,
+  learners = lrn("classif.kknn", predict_type = "prob"),
+  resampling = rsmp("cv", folds = 5L)
+)
+
+# set measure
+all_measures <- msr("classif.auc")
+# run the benchmark
+set.seed(2020)
+knn_bmr <- benchmark(design, store_models = TRUE)
+# save the results
+knn_results <- knn_bmr$aggregate(measures = msr("classif.auc"))
+
+multiplot_roc(knn_bmr)
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("knn_all_task.png")
+```
+From the ROC plots above, we can see that KNN performs with no significant difference between different encoding and missing data handling methods. Moreover, To reduce our computation cost, we decided to take the task with the highest AUC value in this step, being dl_iv. Now, we will focus on the task dl_iv, and fine-tune the parameters.
+
+#### 4.2.3 SVM 
+
+```{r eval=FALSE}
+# create a benchmark to train a list of tasks with default hyperparameter settings
+design <- benchmark_grid(
+  tasks = task_all,
+  learners = lrn("classif.svm", predict_type = "prob", kernel = "linear"),
+  resampling = rsmp("cv", folds = 5L)
+)
+# set measure
+all_measures <- msr("classif.auc")
+
+# run the benchmark to  train the model
+svm_bmr <- benchmark(design, store_models = TRUE)
+# save the results
+svm_results <- svm_bmr$aggregate(all_measures)
+
+multiplot_roc(svm_bmr)
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("svm_all_task.png")
+```
+
+Similarly, we go with the **dl_iv_data** training task.
+
+#### 4.2.4 Random Forest  
+```{r eval=FALSE}
+# create a benchmark to train a list of tasks with default hyperparameter settings
+design <- benchmark_grid(
+  tasks = task_all,
+  learners = lrn("classif.ranger", predict_type = "prob"),
+  resampling = rsmp("cv", folds = 5L)
+)
+# set measure
+all_measures <- msr("classif.auc")
+
+# run the benchmark to  train the model
+rf_bmr <- benchmark(design, store_models = TRUE)
+# save the results
+rf_results <- rf_bmr$aggregate(all_measures)
+
+multiplot_roc(rf_bmr)
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("rf_all_task.png")
+```
+
+Similarly, we go with the **dl_iv_data** training task.
+
+
+### 4.3 Conclusion
+according to the results above, **dl_iv_data** generally has the best prediction performance among all the six tasks with regards to 4 different models. Hence **dl_iv_data** is chosen as the final training dataset.
+
+## 5 Finetunning 
+
+### 5.1 Introduction
+
+Based on the imbalanced target dataset we already have, it is crucial that we need to firstly address the imbalance problem. When it comes to deal with imbalanced data, there are two options to choose. The first method is the **smote**  and the other is the **oversampling**. In mlr3pipelines, there is a **classbalancing** and a **smote** pipe operator that can be combined with any learner. Note that **smote** has two hyperparameters __K__ and __dup_size__. While __K__ changes the behavior of the SMOTE algorithm, __dup_size__ will affect oversampling rate of SMOTE algorithm. As for **oversampling** oeperator, there is only one hyperparameter
+__oversample.ratio__, which determines the oversampling rate of **oversampling** operator.
+
+
+To focus on the effect of the oversampling rate on the performance, we will consider different parameter settings with regards to the **oversampling** pipe operator which can be adapted to different training models.
+
+when it comes to hyperparameter tuning, we need to set different learners based on the **mlr3 package** to tune tasks. The next step is to set for the hyperparameters which are used to tune with different ranges or factor levels.
+
+
+We create a list of AutoTuner classes of the 4 different learners (Random Forest, SVM, Logistic and KNN) to tune the graph (4 different model learners + imbalance data correction method) based on a 3-fold CV using the classif.auc as the performance measure. To keep runtime low, we define the resolution with grid_search to 5. However, one can also jointly tune the hyperparameter of the learner along with the imbalance correction method by extending the search space with the learner’s hyperparameters. Note that SMOTE has two hyperparameters __K__ and __dup_size__. While __K__ changes the behavior of the SMOTE algorithm, __dup_size__ will affect oversampling rate. To focus on the effect of the oversampling rate on the performance, we will consider different parameter settings with regards to the **oversampling** pipe operator which can be adapted to different training models.
+
+Therefore, we will need to firstly find the optimal settings for __smote.K__ and __smote.dup_size__ to correct the imbalanced target data distribution. Hence, we use grid search with the corresponding hyperparameter configurations for the oversampling method and each SMOTE variant for tuning. The **AutoTuner** is a fully tuned graph that behaves like a usual learner. For the innner tuning, a 3-fold CV is used. Now, we use the **benchmark** function to compare the tuned class imbalance pipeline graphs based on a 3-fold CV for the outer evaluation.
+After all these tuning procedures mentioned above, we can therefore draw different parameter combinations with **ggplot** and see what the general trend is with different parameter ranges or levels to choose the optimal hyperparameter combinations for the best prediction performance. Also one thing to mention, we would generally use the y pixel as the auc value, x pixel as the tuning parameter and the color parameter as well to show the different tendencies if necessary.
+Ultimately, after all these step-to-step tuning procedures, we can grab the best performance (measured by auc value) with the recommended parameter settings and therefore improve our default models.
+
+
+### 5.2 Fintunning results  
+
+#### 5.2.1 Logistic Regression  
+
+
+##### oversampling  
+
+At first we define the oversampling PipeOps.
+```{r}
+# load library
+library(mlr3learners)
+library(mlr3tuning)
+library(mlr3pipelines)
+library(paradox)
+task <- TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y")
+# logistic learner
+lg_learner <- lrn("classif.log_reg", predict_type = "prob")
+# po_smote = po("smote", dup_size = 6)
+po_over <- po("classbalancing",
+  id = "oversample", adjust = "minor",
+  reference = "minor", shuffle = FALSE, ratio = 6
+)
+# creat oversample
+lg_over_learner <- GraphLearner$new(po_over %>>% lg_learner, predict_type = "prob")
+```
+
+As for **classbalancing**, __oversample.ratio__ is the hyperparamter we must set, ranging from 10 to 70.
+We define the search space in order to tune the hyperparameters of the class imbalance methods. 
+We create an AutoTuner class from the learner to tune the graph based on a 3-fold CV using the classif.auc as performance measure. 
+```{r}
+lg_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", lower = 10, upper = 70)))
+terms <- term("none")
+inner_rsmp <- rsmp("cv", folds = 5L)
+lg_over_auto <- AutoTuner$new(
+  learner = lg_over_learner, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = lg_over_param_set,
+  terminator = terms, tuner = tnr("grid_search", resolution = 10)
+)
+# set outer_resampling, and creat a design with it
+outer_rsmp <- rsmp("cv", folds = 3L)
+lg_over_design <- benchmark_grid(
+  tasks = task,
+  learners = lg_over_auto,
+  resamplings = outer_rsmp
+)
+```
+
+With __store_models = TRUE__ we allow the benchmark function to store each single model that was computed during tuning. Therefore, we can plot the tuning path of the best learner from the subsampling iterations:
+
+```{r ,eval=FALSE,results='hide', message=FALSE, warning=FALSE}
+set.seed(2020)
+lg_over_bmr <- benchmark(lg_over_design, store_models = TRUE)
+lg_over_results <- lg_over_bmr$aggregate(measures = msr("classif.auc"))
+# inspect auc value.
+lg_over_results$classif.auc
+
+# load library
+library(ggplot2)
+library(ggpubr)
+# plot path for each cv
+over_path1 <- lg_over_bmr$data$learner[[1]]$archive("params")
+over_gg1 <- ggplot(over_path1, aes(
+  x = oversample.ratio,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+
+over_path2 <- lg_over_bmr$data$learner[[2]]$archive("params")
+over_gg2 <- ggplot(over_path2, aes(
+  x = oversample.ratio,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+
+over_path3 <- lg_over_bmr$data$learner[[3]]$archive("params")
+over_gg3 <- ggplot(over_path3, aes(
+  x = oversample.ratio,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+# summary plots
+ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend = "bottom")
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("over_lg.png")
+```
+
+shown on the plots above, it is better to choose __oversample.ratio__ with value 
+40 in order to show a considerably good prediction performance measured around 0.73.  
+In comparison with defalut **dl_iv_data**, there is no significant increment. Thence,
+oversample method seems not suitable for Logistic Regression.
+
+##### 5.2.1.2 smote  
+
+At first we define the smote PipeOps.
+```{r}
+po_smote <- po("smote", dup_size = 50)
+# creat smote
+lg_smote_learner <- GraphLearner$new(po_smote %>>% lg_learner, predict_type = "prob")
+```
+
+As for **smote**, we set hyperparamters __smote.K__ ranging from 20 to 60 and  __smote.dup_size__ ranging from 10 to 20.
+We define the search space in order to tune the hyperparameters of the class imbalance methods. 
+other configurations remain mentioned above.
+```{r}
+lg_smote_param_set <- ParamSet$new(params = list(
+  ParamInt$new("smote.dup_size", lower = 20, upper = 60),
+  ParamInt$new("smote.K", lower = 10, upper = 20)
+))
+# set outer_resampling, and creat a design with it
+terms <- term("none")
+inner_rsmp <- rsmp("cv", folds = 3L)
+lg_smote_auto <- AutoTuner$new(
+  learner = lg_smote_learner, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = lg_smote_param_set,
+  terminator = terms, tuner = tnr("grid_search", resolution = 5)
+)
+
+# set outer_resampling, and creat a design with it
+outer_rsmp <- rsmp("cv", folds = 3L)
+lg_smote_design <- benchmark_grid(
+  tasks = task,
+  learners = lg_smote_auto,
+  resamplings = outer_rsmp
+)
+```
+
+With __store_models = TRUE__ we allow the benchmark function to store each single model that was computed during tuning. Therefore, we can plot the tuning path of the best learner from the subsampling iterations:
+
+```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
+set.seed(2020)
+# run benchmark
+lg_smote_bmr <- benchmark(lg_smote_design, store_models = TRUE)
+lg_smote_results <- lg_smote_bmr$aggregate(measures = msr("classif.auc"))
+lg_smote_results$classif.auc
+# plot path
+over_path1 <- lg_smote_bmr$data$learner[[1]]$archive("params")
+over_gg1 <- ggplot(over_path1, aes(
+  x = smote.dup_size,
+  y = classif.auc, col = factor(smote.K)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+
+over_path2 <- lg_smote_bmr$data$learner[[2]]$archive("params")
+over_gg2 <- ggplot(over_path2, aes(
+  x = smote.dup_size,
+  y = classif.auc, col = factor(smote.K)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+
+over_path3 <- lg_smote_bmr$data$learner[[3]]$archive("params")
+over_gg3 <- ggplot(over_path3, aes(
+  x = smote.dup_size,
+  y = classif.auc, col = factor(smote.K)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+
+ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend = "bottom")
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("smote_lg.png")
+```
+
+shown on the plots above, it is better to choose __smote.K__ with value 
+40 and __smote.dup_size__ with value 15 in order to show a considerably good prediction performance measured around **0.72**.  
+In comparison with defalut **dl_iv_data**, there is no significant increment. Thence,
+smote method seems not suitable for Logistic Regression.
+
+#### 5.2.2 KNN  
+
+##### oversampling  
+
+##### smote  
+
+
+
+#### 5.2.3 SVM (smote)
+
+Considering the super imbalanced target dataset to process, it is also necessary to implement the **SMOTE** function to firstly balance the whole dataset. Therefore, to determine the two crucial parameters __smote.dup_size__ and __smote.K__ is the first step. With __smote.dup_size__ defined from 10 to 60 and __smote.K__ from 10 to 25, it is better to implement a __grid_search__ to figure out what is the optimal parameter settings for the 2 parameters based on the **svm** learner and the __dl_iv_data__ training task.
+
+```{r}
+# suppress svm package
+suppressPackageStartupMessages(library(e1071))
+## test for best matches with smote function's parameter with SVM learner
+svm_lrn <- lrn("classif.svm", predict_type = "prob")
+# train with smote function's 2 parameters
+param_smote <- ParamSet$new(params = list(
+  ParamInt$new("smote.dup_size", lower = 10, upper = 60),
+  ParamInt$new("smote.K", lower = 10, upper = 25)
+))
+# inner resampling set
+inner_rsmp <- rsmp("cv", folds = 3L)
+po_smote <- po("smote", dup_size = 50)
+# create smote learner fixed in svm learner
+svm_smote_lrn <- GraphLearner$new(po_smote %>>% svm_lrn, predict_type = "prob")
+# create Autolearner
+svm_auto_smote <- AutoTuner$new(
+  learner = svm_smote_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = param_smote,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
+)
+```
+
+```{r echo=FALSE,eval=FALSE}
+# outer resampling set
+outer_rsmp <- rsmp("cv", folds = 3L)
+# design for smote
+design_smote <- benchmark_grid(
+  tasks = task,
+  learners = svm_auto_smote,
+  resampling = outer_rsmp
+)
+# run benchmark
+run_benchmark <- function(design) {
+  set.seed(2020)
+  tic()
+  bmr <- benchmark(design, store_models = TRUE)
+  toc()
+  run_benchmark <- bmr
+}
+bmr_smote <- benchmark(design_smote, store_models = TRUE)
+smote_path1 <- bmr_smote$data$learner[[1]]$archive("params")
+svm_ggp1 <- ggplot(smote_path1, aes(
+  x = smote.dup_size,
+  y = classif.auc, col = factor(smote.K)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+smote_path2 <- bmr_smote$data$learner[[2]]$archive("params")
+svm_ggp2 <- ggplot(smote_path2, aes(
+  x = smote.dup_size,
+  y = classif.auc, col = factor(smote.K)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+smote_path3 <- bmr_smote$data$learner[[2]]$archive("params")
+svm_ggp3 <- ggplot(smote_path3, aes(
+  x = smote.dup_size,
+  y = classif.auc, col = factor(smote.K)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("svm_smote.png")
+```
+
+As can be seen from the plots above, __smote.dup_size__ is showing better prediction performance when defined as 40 and __smote.K__ shall be defined as 21 which is having more stable training performance with color blue correspondingly.
+
+Then the next step would be to determine which __kernel__ function type to use with fixed __smote.dup_size__ and __smote.K__. Regarding the choice of suitable kernel function with SVM, there are in total four options to choose: __linear__, __polynomial__, __radial__, __sigmoid__. The default value for the mlr3 SVM learner is the __radical__ function. Thence, we need to implement the other three kernel functions on the previous training models with the __dl_iv_data__ task and again use the __grid_search__ to check which __kernel__ function will generate better prediction performance shown with higher auc value.
+
+```{r, eval=FALSE}
+# train with kernel type
+kernel_type <- c("linear", "polynomial", "radial", "sigmoid")
+param_kernel <- ParamSet$new(params = list(ParamFct$new("classif.svm.kernel", levels = kernel_type)))
+po_smote <- po("smote", dup_size = 45, K = 21)
+# create smote learner fixed in rf_trees_fixed_lrn
+svm_smote_lrn <- GraphLearner$new(po_smote %>>% svm_lrn, predict_type = "prob")
+# create Autolearner for step 1
+svm_auto_kernel <- AutoTuner$new(
+  learner = svm_smote_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = param_kernel,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
+)
+```
+
+```{r echo=FALSE,eval=FALSE}
+# design for smote
+design_kernel <- benchmark_grid(
+  tasks = task,
+  learners = svm_auto_kernel,
+  resampling = outer_rsmp
+)
+# run benchmark
+run_benchmark <- function(design) {
+  set.seed(2020)
+  tic()
+  bmr <- benchmark(design, store_models = TRUE)
+  toc()
+  run_benchmark <- bmr
+}
+bmr_smote <- benchmark(design_smote, store_models = TRUE)
+kernel_path1 <- bmr_smote$data$learner[[1]]$archive("params")
+svm_ggp1 <- ggplot(kernel_path1, aes(
+  x = classif.svm.kernel,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+kernel_path2 <- bmr_smote$data$learner[[2]]$archive("params")
+svm_ggp2 <- ggplot(kernel_path2, aes(
+  x = classif.svm.kernel,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+kernel_path3 <- bmr_smote$data$learner[[3]]$archive("params")
+svm_ggp3 <- ggplot(kernel_path3, aes(
+  x = classif.svm.kernel,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
+```
+
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("svm_kernel.png")
+```
+
+As you can seen from the plots which refer to the comparison with different __kernel__ functions, the best performance is given by the __radial__ function for the __dl_iv_data__ task. Nevertheless, we still need to figure out the optimal choice with parameter __cost__ and __gamma__ and as for the tuning range for __cost__, the first try would be to set with 0.1, 1, 10 and 100.
+
+```{r, eval=FALSE}
+svm_lrn <- lrn("classif.svm", predict_type = "prob", kernel = "radial", type = "C-classification")
+# train with different set with parameter cost
+param_cost <- ParamSet$new(params = list(ParamDbl$new("classif.svm.cost", lower = 0, upper = 3)))
+param_cost$trafo = function(x, param_set){
+  x$classif.svm.cost = 10**(x$classif.svm.cost)/10
+  x
+}
+# create smote learner fixed un svm learner
+svm_smote_lrn <- GraphLearner$new(po_smote %>>% svm_lrn, predict_type = "prob")
+# create Autolearner
+svm_auto_smote <- AutoTuner$new(
+  learner = svm_smote_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = param_cost,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 3)
+)
+```
+
+
+```{r echo=FALSE,eval=FALSE}
+# design for smote
+design_smote <- benchmark_grid(
+  tasks = task,
+  learners = svm_auto_smote,
+  resampling = outer_rsmp
+)
+
+bmr_smote <- benchmark(design_smote, store_models = TRUE)
+cost_path1 <- bmr_smote$data$learner[[1]]$archive("params")
+svm_ggp1 <- ggplot(cost_path1, aes(
+  x = classif.svm.cost,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+cost_path2 <- bmr_smote$data$learner[[2]]$archive("params")
+svm_ggp2 <- ggplot(cost_path2, aes(
+  x = classif.svm.cost,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+cost_path3 <- bmr_smote$data$learner[[3]]$archive("params")
+svm_ggp3 <- ggplot(cost_path3, aes(
+  x = classif.svm.cost,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
+```
+
+
+```{r eval=FALSE,echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("svm_cost.png")
+```
+
+Shown on the plots above, it is better to choose __cost__ with value 0.1. Hence, the last step would be to tune __gamma__ for the __dl_iv_data__ training task. Ranging from xx to xx with __gamma__, we would like to see the trend of the tuning performance and determine for the ultimate __gamma__ accordingly.
+
+```{r eval=FALSE}
+svm_lrn <- lrn("classif.svm", predict_type = "prob", kernel = "radial", cost = 0.1, type = "C-classification")
+# train with gamm
+param_gamma <- ParamSet$new(params = list(ParamDbl$new("classif.svm.gamma", lower = 0, upper = 3)))
+param_cost$trafo = function(x, param_set){
+  x$classif.svm.gamma = 10 ** (x$classif.svm.gamma) / 10**3
+  x
+}
+po_smote <- po("smote", dup_size = 45, K = 21)
+# create smote learner
+svm_smote_lrn <- GraphLearner$new(po_smote %>>% svm_lrn, predict_type = "prob")
+# create Autolearner for step 1
+svm_auto_smote <- AutoTuner$new(
+  learner = svm_smote_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = param_gamma,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 4)
+)
+```
+
+```{r echo=FALSE,eval=FALSE}
+# design for smote
+design_smote <- benchmark_grid(
+  tasks = task,
+  learners = svm_auto_smote,
+  resampling = outer_rsmp
+)
+bmr_smote <- benchmark(design_smote, store_models = TRUE)
+bmr_smote_result <- bmr_smote$aggregate(msr("classif.auc"))
+gamma_path1 <- bmr_smote$data$learner[[1]]$archive("params")
+svm_ggp1 <- ggplot(gamma_path1, aes(
+  x = classif.svm.gamma,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+gamma_path2 <- bmr_smote$data$learner[[2]]$archive("params")
+svm_ggp2 <- ggplot(gamma_path2, aes(
+  x = classif.svm.gamma,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+gamma_path3 <- bmr_smote$data$learner[[3]]$archive("params")
+svm_ggp3 <- ggplot(gamma_path3, aes(
+  x = classif.svm.gamma,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
+```
+
+```{r eval=FALSE,echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("svm_gamma.png")
+```
+
+In conclusion, it is better to go with _radial_ kernel function, _cost_ being set to 0.1 and _gamma_ being set to 0.75 on the condition that _smote.dup_size_ is set to 40 and _smote.K_ to 21. And the ultimate prediction performance measured by AUC is therefore 0.7839 with an increase of 0.0x in regards to the previous svm model with default parameter settings.
+
+#### 5.2.4 Random Forest (smote)
+
+As mentioned in chapter 3, we fix the parameter __num.trees__ with value 1000 and set training range 30 to 60 for __smote.dup_size__ and 10 to 20 for __smote.K__ seperately in order to find the best training pairs with the two parameters, reaching the best prediction performance.
+
+```{r eval=FALSE}
+library(ranger)
+# step 1: test for best matches with smote function's parameter
+# learner with fixed number of trees: 1000
+rf_lrn <- lrn("classif.ranger", predict_type = "prob", num.trees = 1000)
+# train with smote function's 2 parameters
+param_smote <- ParamSet$new(params = list(
+  ParamInt$new("smote.dup_size", lower = 30, upper = 60),
+  ParamInt$new("smote.K", lower = 10, upper = 20)
+))
+# inner resampling set
+inner_rsmp <- rsmp("cv", folds = 3)
+po_smote <- po("smote", dup_size = 50)
+# create smote learner fixed in rf_trees_fixed_lrn
+rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
+# create Autolearner for step 1
+rf_auto_smote <- AutoTuner$new(
+  learner = rf_smote_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = param_smote,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
+)
+# outer resampling set
+outer_rsmp <- rsmp("cv", folds = 3L)
+# design for smote
+design_smote <- benchmark_grid(
+  tasks = task,
+  learners = rf_auto_smote,
+  resampling = outer_rsmp
+)
+# create benchmark
+run_benchmark <- function(design) {
+  set.seed(2020)
+  tic()
+  bmr <- benchmark(design, store_models = TRUE)
+  toc()
+  run_benchmark <- bmr
+}
+# run benchmark
+bmr_smote <- ren_benchmark(design_smote, store_models = TRUE)
+# plot path
+smote_path1 <- bmr_smote$data$learner[[1]]$archive("params")
+rf_ggp1 <- ggplot(smote_path1, aes(
+  x = smote.dup_size,
+  y = classif.auc, col = factor(smote.K)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+smote_path2 <- bmr_smote$data$learner[[2]]$archive("params")
+rf_ggp2 <- ggplot(smote_path2, aes(
+  x = smote.dup_size,
+  y = classif.auc, col = factor(smote.K)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+smote_path3 <- bmr_smote$data$learner[[2]]$archive("params")
+rf_ggp3 <- ggplot(smote_path3, aes(
+  x = smote.dup_size,
+  y = classif.auc, col = factor(smote.K)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("rf_smote.png")
+```
+We can see from the plots above, __smote.dup_size__ ranging from 37 to 53 together with __smote.k__ from 15 to 25 tends to have better AUC values. Then we need to reset the __smote.dup_size__ to 37 to 53 and __smote.k__ 5 to 25, repeating the __grid_search__ again to explore the two parameters further.
+
+```{r}
+# learner with fixed number of trees: 1000
+rf_lrn <- lrn("classif.ranger", predict_type = "prob", num.trees = 1000)
+# train with smote function's 2 parameters
+param_smote <- ParamSet$new(params = list(
+  ParamInt$new("smote.dup_size", lower = 37, upper = 53),
+  ParamInt$new("smote.K", lower = 5, upper = 25)
+))
+# create smote learner fixed in rf_trees_fixed_lrn
+rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
+```
+
+```{r echo=FALSE, eval=FALSE}
+# create Autolearner for step 1
+rf_auto_smote <- AutoTuner$new(
+  learner = rf_smote_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"),
+  tune_ps = param_smote,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
+)
+# design for smote
+design_smote <- benchmark_grid(
+  tasks = task,
+  learners = rf_auto_smote,
+  resampling = outer_rsmp
+)
+bmr_smote <- benchmark(design_smote, store_models = TRUE)
+smote_path1 <- bmr_smote$data$learner[[1]]$archive("params")
+rf_ggp1 <- ggplot(smote_path1, aes(
+  x = smote.dup_size,
+  y = classif.auc, col = factor(smote.K)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+smote_path2 <- bmr_smote$data$learner[[2]]$archive("params")
+rf_ggp2 <- ggplot(smote_path2, aes(
+  x = smote.dup_size,
+  y = classif.auc, col = factor(smote.K)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+smote_path3 <- bmr_smote$data$learner[[3]]$archive("params")
+rf_ggp3 <- ggplot(smote_path3, aes(
+  x = smote.dup_size,
+  y = classif.auc, col = factor(smote.K)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("rf_smote_2.png")
+```
+
+Shown on the plots above, we have discovered that the two parameters __smote.dup_size__ and __smote.K__ should be set to 45 and 15 seperately where the AUC distributions always tend to have a summit around dup_size value 45 and K with value 15 is much more stable with the prediction performance here at the same time. Then the next step we shall need to stay with the optimal smote parameter settings ( __smote.dup_size__ is set to 45 and __smote.K__ to 15) and take the mtry and the __num.trees__ parameters into consideration with parameters' tuning ranges set to 1-13 and 400-1700 in order to get the best pair settings with the highest AUC value.
+
+
+```{r}
+# RF with 4 different paramSets, to analysis how to do further tuning
+# tuning for best num.trees and mtry pairs
+rf_lrn <- lrn("classif.ranger", predict_type = "prob")
+# train with ranger function's 2 parameters
+param_nt_mtry <- ParamSet$new(params = list(
+  ParamInt$new("classif.ranger.num.trees", lower = 400, upper = 1700),
+  ParamInt$new("classif.ranger.mtry", lower = 1, upper = 13)
+))
+po_smote <- po("smote", dup_size = 45, K = 15)
+# create smote learner fixed in rf_lrn
+rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
+```
+
+```{r eval=FALSE,echo=FALSE}
+# create Autolearner for rf_learner
+rf_auto_smote <- AutoTuner$new(
+  learner = rf_smote_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = param_nt_mtry,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
+)
+# design for smote
+design_smote <- benchmark_grid(
+  tasks = task,
+  learners = rf_auto_smote,
+  resampling = outer_rsmp
+)
+
+# run benchmark
+run_benchmark <- function(design) {
+  set.seed(2020)
+  tic()
+  bmr <- benchmark(design, store_models = TRUE)
+  toc()
+  run_benchmark <- bmr
+}
+bmr_smote <- benchmark(design_smote, store_models = TRUE)
+nt_mtry_path1 <- bmr_smote$data$learner[[1]]$archive("params")
+rf_ggp1 <- ggplot(nt_mtry_path1, aes(
+  x = classif.ranger.num.trees,
+  y = classif.auc, col = factor(classif.ranger.mtry)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+nt_mtry_path2 <- bmr_smote$data$learner[[2]]$archive("params")
+rf_ggp2 <- ggplot(nt_mtry_path2, aes(
+  x = classif.ranger.num.trees,
+  y = classif.auc, col = factor(classif.ranger.mtry)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+nt_mtry_path3 <- bmr_smote$data$learner[[3]]$archive("params")
+rf_ggp3 <- ggplot(nt_mtry_path3, aes(
+  x = classif.ranger.num.trees,
+  y = classif.auc, col = factor(classif.ranger.mtry)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("rf_smote_3.png")
+```
+So, we would go with the combination of __num.trees__ = 1000 and __mtry__ = 7. And the next step would be to tune __min.node.size__ and __sample.fraction__ with the previous selected parameters settings. According to rangerTune algorithm, we shall try setting tuning range for __min.node.size__ from 2 to 8 and __sample.fraction__ from 0.5 to 0.8 and see the corresponding AUC performance.
+
+
+```{r}
+# RF with 4 different paramSets, to analysis how to do further tuning
+## tuning for best min.node.size and sample.fraction pairs
+rf_lrn <- lrn("classif.ranger", predict_type = "prob", num.trees = 1000, mtry = 7)
+# train with smote function's 2 parameters
+param_mns_sf <- ParamSet$new(params = list(
+  ParamInt$new("classif.ranger.min.node.size", lower = 2, upper = 8),
+  ParamDbl$new("classif.ranger.sample.fraction", lower = 0.5, upper = 0.8)
+))
+
+po_smote <- po("smote", dup_size = 45, K = 15)
+# create smote learner fixed in rf_lrn
+rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
+```
+
+
+
+```{r eval=FALSE,echo=FALSE}
+# create Autolearner for rf_learner
+rf_auto_smote <- AutoTuner$new(
+  learner = rf_smote_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = param_mns_sf,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
+)
+
+# outer resampling set
+outer_rsmp <- rsmp("cv", folds = 3L)
+# design for smote
+design_smote <- benchmark_grid(
+  tasks = task,
+  learners = rf_auto_smote,
+  resampling = outer_rsmp
+)
+# run benchmark
+run_benchmark <- function(design) {
+  set.seed(2020)
+  tic()
+  bmr <- benchmark(design, store_models = TRUE)
+  toc()
+  run_benchmark <- bmr
+}
+bmr_smote <- benchmark(design_smote, store_models = TRUE)
+mns_sf_path1 <- bmr_smote$data$learner[[1]]$archive("params")
+rf_ggp1 <- ggplot(mns_sf_path1, aes(
+  x = classif.ranger.sample.fraction,
+  y = classif.auc, col = factor(classif.ranger.min.node.size)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+mns_sf_path2 <- bmr_smote$data$learner[[1]]$archive("params")
+rf_ggp2 <- ggplot(mns_sf_path2, aes(
+  x = classif.ranger.sample.fraction,
+  y = classif.auc, col = factor(classif.ranger.min.node.size)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+mns_sf_path3 <- bmr_smote$data$learner[[1]]$archive("params")
+rf_ggp3 <- ggplot(mns_sf_path3, aes(
+  x = classif.ranger.sample.fraction,
+  y = classif.auc, col = factor(classif.ranger.min.node.size)
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("rf_smote_4.png")
+```
+
+We would go with __min.node.size__ = 3 as we can see the auc value tends to reach the best performance when we set it to 3. However, it is still not clear the approximated defined range for parameter __sample.fraction.__ Next, we need to retrain the model with a wider range with parameter __sample.fraction__ from 0.45 to 0.95.
+
+```{r}
+# RF with 4 different paramSets, to analysis how to do further tuning
+## tuning for best sample.fraction
+rf_lrn <- lrn("classif.ranger",
+  predict_type = "prob", num.trees = 1000,
+  mtry = 7, min.node.size = 3
+)
+# train with smote function's 2 parameters
+param_sf <- ParamSet$new(params = list(ParamDbl$new("classif.ranger.sample.fraction",
+  lower = 0.45, upper = 0.95
+)))
+# inner resampling set
+inner_rsmp <- rsmp("cv", folds = 3)
+
+po_smote <- po("smote", dup_size = 45, K = 15)
+
+# create smote learner fixed in rf_lrn
+rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
+```
+
+
+
+```{r eval=FALSE,echo=FALSE}
+# create Autolearner for rf_learner
+rf_auto_smote <- AutoTuner$new(
+  learner = rf_smote_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = param_sf,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
+)
+# design for smote
+design_smote <- benchmark_grid(
+  tasks = task,
+  learners = rf_auto_smote,
+  resampling = outer_rsmp
+)
+# run benchmark
+run_benchmark <- function(design) {
+  set.seed(2020)
+  tic()
+  bmr <- benchmark(design, store_models = TRUE)
+  toc()
+  run_benchmark <- bmr
+}
+bmr_smote <- benchmark(design_smote, store_models = TRUE)
+mns_sf_path1 <- bmr_smote$data$learner[[1]]$archive("params")
+rf_ggp1 <- ggplot(mns_sf_path1, aes(
+  x = classif.ranger.sample.fraction,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+mns_sf_path2 <- bmr_smote$data$learner[[1]]$archive("params")
+rf_ggp2 <- ggplot(mns_sf_path2, aes(
+  x = classif.ranger.sample.fraction,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+mns_sf_path3 <- bmr_smote$data$learner[[1]]$archive("params")
+rf_ggp3 <- ggplot(mns_sf_path3, aes(
+  x = classif.ranger.sample.fraction,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
+bmr_result <- bmr_smote$aggregate(msr("classif.auc"))
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("rf_smote_5.png")
+```
+
+When reaching the highest auc value, __sample.fraction__ is always taking good performance values around 0.55 and 0.6 and the distributions of __min.node.size__ are showing better performance results (measured by auc) with value 3. Therefore, we would choose the __sample.fraction__ with 0.575 and have a better auc performance value with 0.83.
+
+After the step-by-step hyperparameter tuning, we have finally managed to reach our best prediction performance with auc value fixed at 0.83 which shows the improvement of 0.07 in comparison with the performance of Random Forest's default model with value 0.76. In conclusion, when __smote.dup_size__ being set to 45 and __smote.K__ to 15 with the SMOTE operator, the final parameter settings combination would be __num.trees__ = 1000, __mtry__ = 7, __min.node.size__ = 3 and __sample.fraction__ = 0.575, reaching an auc level at 0.83.
+
+### 6. Conclusion and Discussion
+#### 6.1 Conclusion
+In general, we have implemented four different training models (Logistic Regression, KNN, SVM and Random Forest) on the same training task (dl_iv_data). Besides the basic training process with default parameter settings with different models, we have also discovered the necessary methods (SMOTE algorithm and Oversampling Operator) to tackle with the imbalanced target data distribution and tune the models with corresponding parameters afterwards. By plotting the changing trend of different parameters separately, we shall be able to determine the best parameter setting combinations and achieve the highest auc score with the ultimate chosen model. After determining for the related parameters which are used for data balancing and finishing the model tuning procedures with parameters accordingly, we have run into the  conclusion that Random Forest has shown a considerably better prediction performance, with an average of 10% improvement among all other training models, in regard to the decision on whether or not to issue the credit card to the potential customer. As for our mission to predict the ultimate decision concerning credit card approval, we would definitely choose Random Forest algorithm and implement the prediction afterwards with various customers.
+
+#### 6.2 Discussion
+Based on our previous work, there are still many aspects can be improved in our article. First of all, more powerful models that we can use to solve some problems that we met. For example, it's computationally expensive to train the SVM model, a 3*3 nested resampling of SVM model takes 5 hours. Secondly, we have tried xgboost and we found it extremly fast to excute but with the worst prediction performance of all (auc=0.5 and not improved after any kinds of model tuning).
+On the other hand, there are still a lot of cutting-edge models we haven't used,
+e.g. lightGBM(not included in mlr3 yet), Deep learning method(require high computational power).
+Last but not least, there are still areas to explore in our feature engineering procedure. For example, dimension reduction methods such as PCA, MDS and Factor analysis (included in mlr3 filters) can also be used.
+
+
+
+
+
+
