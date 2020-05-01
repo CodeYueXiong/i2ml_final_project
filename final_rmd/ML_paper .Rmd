@@ -1164,9 +1164,151 @@ smote method seems not suitable for Logistic Regression.
 
 ##### oversampling  
 
+Since our data is highly unbalanced, we want to try two different methods to solve this issue - Smote and oversampling and see if this increases the performance of the model. 
+
+```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
+knn_learner <- lrn("classif.kknn", predict_type = "prob")
+po_over = po("classbalancing",
+             id = "oversample", adjust = "minor",
+             reference = "minor", shuffle = FALSE, ratio = 6)
+
+lrn_over <- GraphLearner$new(po_over %>>% knn_learner, predict_type = "prob")
+
+# setting the tunning for parameters, and terminator
+knn_param_set <- ParamSet$new(list(ParamInt$new("classif.kknn.k", lower = 5, upper = 45), 
+                            ParamDbl$new("oversample.ratio", lower = 30, upper = 40)))
+
+terms <- term("none")
+
+# creat autotuner, using the inner sampling and tuning parameter with grid_search
+inner_rsmp <- rsmp("cv",folds = 5L)
+knn_auto <- AutoTuner$new(learner = lrn_over, resampling = inner_rsmp, 
+                          measures = msr("classif.auc"), tune_ps = knn_param_set,
+                          terminator = terms, tuner = tnr("grid_search", resolution = 6))
+
+# set outer_resampling, and creat a design with it
+outer_rsmp <- rsmp("cv", folds = 3L)
+design = benchmark_grid(
+  tasks = task,
+  learners = knn_auto,
+  resamplings = outer_rsmp
+)
+
+# set seed before traing, then run the benchmark
+# save the results afterwards
+set.seed(2020)
+knn_bmr <- benchmark(design, store_models = TRUE)
+
+# plot results from 3 outer sampling rounds
+library(ggplot2)
+
+over_path1 = knn_bmr$data$learner[[1]]$archive("params")
+over_gg1 = ggplot(over_path1, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = factor(oversample.ratio))) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+
+over_path2 = knn_bmr$data$learner[[2]]$archive("params")
+over_gg2 = ggplot(over_path2, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = factor(oversample.ratio))) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+
+over_path3 = knn_bmr$data$learner[[3]]$archive("params")
+over_gg3 = ggplot(over_path3, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = factor(oversample.ratio))) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+
+library(ggpubr)
+ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend="bottom", nrow=1)
+
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("3_over_auc.png")
+```
+
 ##### smote  
 
+In this section, we will use the package **SMOTE** that is included in **mlr3**, to see whethere balancing the data with smote may improve the prediction of the model.
 
+```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
+
+# knn learner
+knn_learner <- lrn("classif.kknn", predict_type = "prob", distance=1, kernel= "inv")
+po_smote = po("smote", dup_size = 6)
+lrn_smote <- GraphLearner$new(po_smote %>>% knn_learner, predict_type = "prob")
+
+# setting the tunning for parameters
+knn_param_set <- ParamSet$new(params = list(
+  ParamInt$new("classif.kknn.k", lower = 25, upper = 65),
+  ParamInt$new("smote.dup_size", lower = 1, upper = 3),
+  ParamInt$new("smote.K", lower = 1, upper = 5)))
+
+# make grow smote.k exponential 2^n
+knn_param_set$trafo = function(x, param_set) {
+  x$smote.K = round(2^(x$smote.K))
+  x
+}
+
+# creat autotuner, using the inner sampling and tuning parameter with grid_search
+inner_rsmp <- rsmp("cv",folds = 5L)
+terms <- term("none")
+knn_auto <- AutoTuner$new(learner = lrn_smote, resampling = inner_rsmp, 
+                          measures = msr("classif.auc"), tune_ps = knn_param_set,
+                          terminator = terms, 
+                          tuner = tnr("grid_search", resolution = 6))
+
+# set outer_resampling, and creat a design with it
+outer_rsmp <- rsmp("cv", folds = 3L)
+design = benchmark_grid(
+  tasks = task,
+  learners = knn_auto,
+  resamplings = outer_rsmp
+)
+
+# set seed before traing, then run the benchmark
+# save the results afterwards
+set.seed(2020)
+knn_bmr <- benchmark(design, store_models = TRUE)
+
+# plot results from 3 outer sampling rounds
+library(ggplot2)
+stune_path1 = knn_bmr$data$learner[[1]]$archive("params")
+stune_gg1 = ggplot(stune_path1, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = factor(smote.K), shape = factor(smote.dup_size))) +
+  geom_point(size = 4) +
+  geom_line(size=1)
+
+stune_path2 = knn_bmr$data$learner[[2]]$archive("params")
+stune_gg2 = ggplot(stune_path2, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = factor(smote.K), shape = factor(smote.dup_size))) +
+  geom_point(size = 4) + 
+  geom_line(size=1)
+
+stune_path3 = knn_bmr$data$learner[[3]]$archive("params")
+stune_gg3 = ggplot(stune_path3, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = factor(smote.K), shape = factor(smote.dup_size))) +
+  geom_point(size = 4) + 
+  geom_line(size=1)
+
+library(ggpubr)
+ggarrange(stune_gg1, stune_gg2, stune_gg3, common.legend = TRUE, legend="bottom", nrow=1)
+
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("3_smote_auc.png")
+```
+
+As we can see, there is no significant improvement after trying different methods to balance the data. Since we used a binary variable to indicate whether a category is present or not, the max distance can only be 1 or 0. Moreover, other numeric variables have a more significant distance, meaning that they have a more substantial impact on the distance than the categorical data without having a significant correlation with our target variable. To get better results, it would be necessary to either use other ways to handle categorical data better for distance calculation or using different training methods to perform classification instead of KNN.
 
 #### 5.2.3 SVM (smote)
 
@@ -1197,6 +1339,7 @@ svm_auto_smote <- AutoTuner$new(
 
 ```{r echo=FALSE,eval=FALSE}
 # outer resampling set
+
 outer_rsmp <- rsmp("cv", folds = 3L)
 # design for smote
 design_smote <- benchmark_grid(
@@ -1235,6 +1378,7 @@ svm_ggp3 <- ggplot(smote_path3, aes(
   geom_point(size = 3) +
   geom_line() #+ theme(legend.position = "none")
 ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
+
 ```
 
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
