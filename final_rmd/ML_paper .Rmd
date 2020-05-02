@@ -1,10 +1,12 @@
 ---
-output:
-  pdf_document: default
-  html_document: default
+title: "Classification of Risk Factors"
+output: 
+  pdf_document:
+    toc: true
+    number_sections: true
 ---
 
-## Introduction
+# Introduction
 
 The credit card business has entered a fast-rising development stage after an incremental transformation from the traditional payment to E-payment. Major banks and related financial institutions increase the issuance of credit cards with the growing demand and high profits of credit card business. However, high profits are accompanied by high risks, especially in the cases of facing hundreds of thousands credit card applications from potential customers. In the actual situation, credit risk management system is set up for meeting the tremendous demand of credit card application while the increasing Probability of Default (PD), brought up by individuals who cannot pay back the loans, appears accordingly. In order to control and monitor the credit risk, the traditional credit assessment approach is an artificial credit risk assessment, which is performed by credit risk analysts who review the information submitted by credit card applicants, generally including customer personal data (age, ID card, etc.), work (income, occupation, etc.), individual assets, stability of repayment capacity, and so on. Banks and financial institutions value the repayment ability of cardholders. In other words, the stronger the repayment ability, the easier to issue credit cards will be. Nowadays, there are more and more people who apply for credit cards, and the bank's credit card business system gradually reflects the characteristics of large issuance, frequent transactions, and comprehensive and accurate transaction information. It’s even clearer that traditional manual estimation is no longer able to complete these tasks. Under such circumstances, a set of practical prediction models that decide whether or not to approve these applications and monitor the credit risk, will be necessary. The traditional model and techniques cannot satisfy the current situation. For this reason, this report “Research on Prediction of Credit Card Approval Based on Machine Learning” aims to address the problem of forecasting credit risk by the use of an emerging technique “Machine Learning”, and this project is based on the public dataset **“credit card approval prediction” from Kaggle**, the U.S. data competition platform. Our ultimate purpose is using machine learning approaches based on **mlr3 R package**, such as logistic regression, KNN, random forest model, etc. to establish a credit card risk assessment model to determine whether the applicant would overdue or not repay the loan and achieved a quantitative analysis of personal credit risk.
 
@@ -14,10 +16,10 @@ The credit card business has entered a fast-rising development stage after an in
 
 ```
 
-## 1. Data
+# Data
 According to (Bishop, Christopher (2006))[1], In machine learning, a feature is an individual measurable property or characteristic of a phenomenon being observed, and the concept of "feature" is related to that of explanatory variables used in statistic application. Therefore, both concepts mentioned in this report are the same based upon the definition of feature and variable. In this study, all features are classified into three kinds of variables according to their data type: binary variables, categorical variables, and continuous variables. The description of all features and a self-defined response variable will be provided in this section.
 
-### 1.1 Reading in the data
+## Reading in the data
 The raw data, which consists of two data set **application_record.csv** and **credit_record.csv**, given by an Excel file in the csv format.
 
 One of the most straightforward ways to import an Excel file into R is using the **read_csv** function. It is good practice to conduct a preliminary examination after importing the raw data, in order to ensure that the imported data has the expected format:
@@ -34,7 +36,7 @@ record <- read_csv("./data/credit_record.csv") # the second data set
 ```
 
 
-### 1.2 Defining response variable
+## Defining response variable
 
 The following code describes the process of defining the response variable with the name **y**. For some operations we rely on the **dplyr** package.
 
@@ -137,7 +139,7 @@ names(final_data)
 
 Three different variable types (e.g. binary, categorical and continuous variable) in the final data set will be introduced in detail as follows. 
 
-### 1.3 Binary variable
+## Binary variable
 
 Binary variable is a type of disrete random variable which only take two possible values. While many variables and questions are naturally binary e.g. gender and "yes or no" question. The following table shows six binary variables used to record the personal information:
 
@@ -163,7 +165,7 @@ Binary variable is a type of disrete random variable which only take two possibl
 |                               | or not             | - "0": No          |
 +-------------------------------+--------------------+--------------------+
 
-### 1.4 Categorical variable
+## Categorical variable
 
 A categorical variable is a type of statistical variable that can take on one of a finite and usually fixed number of possible values. Examples of categorical variables include different types of occupation (e.g. Core staff, Sales staff, High skill tech staff). Based on previously known qualitative properties, this kind of variable assigns each individual or other single unit of observed objects to a specific group or nominal category. five categorical varibales include the following:
 
@@ -191,7 +193,7 @@ A categorical variable is a type of statistical variable that can take on one of
 |                               |                    | ...                  |
 +-------------------------------+--------------------+----------------------+
 
-### 1.5 Continuous variable
+## Continuous variable
 
 A continuous variable is a type of numerical variables which may take on infinite values and is always collected in the form of numbers, despite the fact that other types of data also appear in the form of numbers. Examples of continuous variables include the annual income, and the number of children is not classified as categorical varibale but continuous variable in this project. The value of age is not intuitive, because it is calculated based on the actual number of days not years and represented as negative value due to the benchmark setting. The following table describes all continuous varibales used in this project:
 
@@ -223,7 +225,7 @@ A continuous variable is a type of numerical variables which may take on infinit
 |                               |                    | ...                  |
 +-------------------------------+--------------------+----------------------+
 
-### 1.6 Missing values processing
+# Missing values processing
 
 ```{r}
 summary(final_data)
@@ -231,7 +233,7 @@ summary(final_data)
 
 The above result shows that there are 11,323 missing values in the varibale `OCCUPATION_TYPE`, and these missing values are marked with “NA” that cannot be addressed directly. In order to get a considerably better idea of dealing with the missing data and also to minimize the negative impact of the missing values, it is necessary to implement several methods to cover this issue, which are **listwise deletion** and with the help of two powerful R packages (**MICE** and **missForest**).
 
-#### 1.6.1 Missing pattern and missing data mechanism
+## Missing pattern and missing data mechanism
 
 In order to choose an appropriate method to deal with missing values, it is necessary to analyse the corresponding **missing pattern** and **missing data mechanism**, because these approach are based on different assumptions. It is easy to distinguish the missing pattern of this data set by the use of the function **md.pattern** from **MICE** package.
 
@@ -250,7 +252,7 @@ The above figure and result illustrate that the corresponding missing pattern is
 **Not Missing At Random (NMAR)**: When the missing data are NMAR, the missingness has an exclusive relationship with the missing data. In other words, the missingness probability is allowed to be dependent on the missing values themselves.
 
 
-#### 1.6.2 Listwise Deletion
+## Listwise Deletion
 
 In this section, we simply delete the missing values by using the **na.omit()** function. With this function, we would delete the whole row where the missing values appear.
 
@@ -265,7 +267,7 @@ After deleting, there are only 25,134 rows left for data analysis which means we
 An initial guess without comparison with these methods is that listwise deletion is probably better than the other two **Multiple Imputation (MI)** methods, the possible reason is that the missing data mechanism in this case is MCAR, based on which the potential distribution by the use of listwise deletion does not change very much. In addition to this, imputing the missing values could also introduce additional errors in the original data set. The comparison results will also be provided in the subsequent section. 
 
 
-#### 1.6.3 Multiple imputation with MICE package
+## Multiple imputation with MICE package
 
 In contrast to listwise deletion, MI considers statistical uncertainty when imputing missing values. One of the two powerful R-packages that handle missing data is multivariate imputation by chained equations (MICE), also called "sequential regression multiple imputation" or "fully conditional specification." This is one of the most important methods used to address and impute missing data. In consideration of the flexibility of chained equations, MICE can handle various types of variables in the data set, such as continuous variables, categorical variables, and mixed-type variables. If the distribution of each variable in the data set is already established, this method is more applicable. For example, if a variable fits the normal distribution then specific approaches can be defined in advance to impute the missing values of this variable by using the `mice()` function. Even if no appropriate multivariate distribution can be found, MICE remains an applicable option; this implies that MICE is suitable for data sets composed of mixed-type data. In conclusion, for the application of MICE the specific distribution of each variable in the data set should be defined in advance, which is based on a univariate distribution. The R-package MICE uses the FCS algorithm, which imputes each variable with missing values in the data set by conducting several repetitions.
 
@@ -289,7 +291,7 @@ completeData <- complete(tempData)
 ```
 
 
-#### 1.6.4 Multiple imputation with missForest package
+## Multiple imputation with missForest package
 
 In MICE, parametric regression models are needed and assumptions about the distribution of data are considered as prior knowledge. In the applica- tion of MICE it is necessary to specify the appropriate approach for each imputed variable in advance. If the assumptions are not correct then biased imputation results are likely to be produced. For example, it is assumed that a continuous variable fits the normal distribution; in fact this variable cannot perfectly fit normal distribution, which would lead to the estimation of problematic parameters. In addition, if there are complicated interactions, nonlinear relation structures, or high correlation between the regression model variables in the data sets, then predictions made using MICE tend to be less accurate. Consequently, the quality of the imputation would be decreased. missForest is a nonparametric method, which implies that it does not need to make assumptions about structural aspects of the data. Therefore, biased imputation results would not be caused by improper assumptions when applying missForest.
 
@@ -309,15 +311,15 @@ completeData <- imputed_Data$ximp
 
 finally we get three datasets based different imputation methods: **dl_na_data**, **mf_na_data** and **mice_na_data**.
 
-## 2. Features Engineering
-### 2.1 WOE Encoding
+# Features Engineering
+## WOE Encoding
 After running several model based on original features, we find that the positive 
 samples(y=1) are not able to be good classified. We suppose that our model are 
 overfitting to negative samples, because some features have too many categories,
 and there is a traditional variables transformation that use WOE to replace features.
 This is basically a technique that can be applied if we have a binary response variable.
 
-#### 2.1.1 Introduction
+### Introduction
 Weight of evidence (WOE) and Information value (IV) are simple but powerful 
 techniques to perform variable transformation and selection. 
 It is widely used in credit scoring to measure the separation of good vs bad customers.
@@ -366,7 +368,7 @@ be combine together. For example: when we merge two categories into one categori
 within one feature and the IV does not change a lot, which means the distribution
 of feature with respect to target is not rapidly changed, we can accept this mergence.
 
-#### 2.1.2 Implementation
+### Implementation
 ```{r echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(fig.height = 3)
 # load library
@@ -440,7 +442,7 @@ Since we use 3 different strategies to deal with the missing data, we now have
 three dataset and for all the datasets we will excute the same process to finish features engineering.
 Using **dl_na_data** as an example.
 
-##### Binary variables
+### Binary variables
 
 After loading data, we inspect our factory variables as mentioned above, there are 8 factory
 variables, i.e. `CODE_GENDER`, `FLAG_OWN_CAR`, `FLAG_OWN_REALTY`, `NAME_INCOME_TYPE`
@@ -709,18 +711,18 @@ When finishing with the nominal variable encoding process, there are 6 datasets 
 
 
 
-## 3. General Introduction
+# General Introduction
 
-### 3.1 Logistic regression
+## Logistic regression
 Logistic Regression is a Machine Learning classification algorithm that is used to predict the probability of a categorical dependent variable. In logistic regression, the dependent variable is a binary variable that contains data coded as 1 (yes, success, etc.) or 0 (no, failure, etc.). In other words, the logistic regression model predicts P(Y=1) as is shown in formular of X. 
 $$ P=(y=1|x,\beta) = \frac{1}{1+e^{-\beta^Tx}} $$  
 
-### 3.2 KNN  
+## KNN  
 
 KNN (k-nearest neighbors) is a method used for classification. In simple words, to classify one specific data point, it takes k neighbors with the shortest distance. Furthermore, based on how the neighbors are classified, we will assign the new input to the most popular category in the k neighbors.  
 The **KNN** package included in **mlr3** has the following parameters: __k__ (the number of neighbors considered), __distance__ (Parameter of Minkowski distance), __kernel__ (kernel functions used to weight the neighbors). Here the number of k and the method of calculating the distances between data points are crucial. We will first evaluate how KNN performs between different data, including different encoding, and different missing value handling. Then we will explore different methods to get better results. First, we investigate them separately and then combine the knowledge to perform further fine-tuning to improve the model.  
 
-### 3.3 SVM  
+## SVM  
 
 A Support Vector Machine (SVM) is a discriminative classifier formally defined by a separating hyperplane. In other words, given labeled training data (supervised learning), the algorithm outputs an optimal hyperplane which categorizes new examples. In two dimentional space this hyperplane is a line dividing a plane in two parts where in each class lay in either side.
 
@@ -734,7 +736,7 @@ __cost (Regularisation)__: Cost is the penalty parameter, which represents miscl
 
 __Gamma__: It defines how far influences the calculation of plausible line of separation.
 
-### 3.4 Random Forest  
+## Random Forest  
 
 Random Forest, also known as Random Decision Forest, is an algorithm mainly used for dealing with classification problems. It consists of multiple decision trees and harnesses bagging and feature randomness in order to create an uncorrelated forest of trees whose prediction performance is more accurate than of any individual tree.
 With regards to model tuning for Random Rorest, there are mainly four variables to take into consideration.
@@ -743,9 +745,9 @@ Secondly, the sample size parameter, __sample.fraction__, determines how many ob
 Moreover, the nodesize parameter, __min.node.size__, specifies the minimum number of observations in a terminal node. Setting it lower leads to trees with a larger depth which means that more splits are performed until the terminal nodes. Considering tuning with it (see Hyperparameters and tuning strategies for random forest), node size values should be sampled from with higher probability (in the initial design) for smaller values by sampling $x$ from $[0, 1]$ and transforming the value by the formula $[(0.2n)^x]$.
 Last but not least, the number of trees in a forest is a parameter that is not tunable in the classical sense but should be set sufficiently high. According to measures based on the mean quadratic loss such as the mean squared error (in case of regression) or the Brier score (in case of classification), however, more trees are always better, as theoretically proved by Probst and Boulesteix (2017). Thence, we have decided to set it to be fixed with 1000 to meet the considerably latge number of obsearvations of records. Also, it can be vividly seen from the target dataset we have generated from the data preparation step that the distribution with target 1 and 0 are so imbalanced that we must train the learner with SMOTE function to get considerably balanced training data. Fortunately, in mlr3pipelines, there is a classbalancing and a smote pipe operator that can be combined with any learner. We have decided to combine the fixed tree number of learner with SMOTE function learner in order to get the optimal parameter settings for smote.K and smote.dup_size.  
 
-#### 3.5 Metrics 
+## Metrics 
 
-##### ROC curve and AUC score
+### ROC curve and AUC score
 
 A receiver operating characteristic curve, or ROC curve, is a graphical plot that illustrates the diagnostic ability of a binary classifier system as its discrimination threshold is varied.
 The ROC curve is created by plotting the true positive rate $TPR = \frac{TP}{TP+FN}$ against
@@ -754,18 +756,18 @@ The true-positive rate is also known as sensitivity, reacall or probablitly of d
 is also known as probability of false alarm and can be calculated as (1 - specificity). It can also be thought of as a plot of the 
 power as fa cuntion of the Type I Error of the decision rule. Auc stands for "Area under the Roc Curve", it measures the entire two-dimensional area underneath the entire ROC curve form (0,0) to (1,1). It tells how much model is capable of distinguishing between classes. Higher the AUC, better the model is at predicting 0s as 0s and 1s as 1s.
 
-##### Why choose AUC and ROC
+### Why choose AUC and ROC
 
 In our experiment, we looked at several different measures to evaluate our result, 
 including fbeta, ce, acc and AUC. Ingeneral, using fbeta would be ideal when facing imbalanced data[recite]. However, our data is highly imbalanced, and the fbeta performs in favour of predicting all as the majority category. It outputs, in most cases with a very similar value close to 0.99. Thus, we decided to stick with AUC. By comparing the AUC value, we can better distinguish the improvement in models.
 
 
-## 4. Choosing the training task  
+# Choosing the training task  
 
-### 4.1 Introduction  
+## Introduction  
 As for the process concerning the general model tuning, we would firstly go with the 6 different datasets corresponding to 6 training tasks and train the 4 models with default parameter settings and see which task to choose according to the ultimate performance output based on the best AUC level. By doing these, the training workload for the following tuning procedures would be tremendously decreased as we have considerably more learners to train the task with.  
 
-### 4.2 Models results  
+## Models results  
 first we load all the datasets. As the requests of **mlr3**, all integer numeric should be converted as double numeric, and
 target **y** should be converted as type factor.
 ```{r}
@@ -812,7 +814,7 @@ task_all <- list(
 for each model, we work the same procedures.  
 we all use **benchmark_grid** to creat design, setting with __5 folds cv__, __predict_type = "prob"__ and __measure = msr("classif.auc")__ for computing AUC. In addition, we fix random seed as __2020__ for reproducing.
 
-#### 4.2.1 Logistic Regression:  
+### Logistic Regression:  
 
 We will first evaluate how Logistic Regression performs between different data, including different encoding, and different missing value handling. As mentioned above, we pass arguments to **benchmark** function from **mlr3** to train logsitic regression.
 ```{r eval=FALSE, results='hide', warning=FALSE}
@@ -884,7 +886,7 @@ knitr::include_graphics("logistic_all_task.png")
 From the ROC plots above, we can see that as for different encoding methods, tasks tackled with WOE encoding generally perform 0.05 better with the AUC score than the corresbonding counterpart binary encoding group, as for different missing data handling methods, Logistic Regression has better prediction performance on datasets by deleting missing values with whole row, i.e. **dl_iv_data**, **dl_oh_data**. Above all, we choose **dl_iv_data** as final datasets.  
 
 
-#### 4.2.2 KNN  
+### KNN  
 
 We will first evaluate how KNN performs between different data, including different encoding, and different missing value handling. Then we will explore different methods to get better results.
 
@@ -912,7 +914,7 @@ knitr::include_graphics("knn_all_task.png")
 ```
 From the ROC plots above, we can see that KNN performs with no significant difference between different encoding and missing data handling methods. Moreover, To reduce our computation cost, we decided to take the task with the highest AUC value in this step, being dl_iv. Now, we will focus on the task dl_iv, and fine-tune the parameters.
 
-#### 4.2.3 SVM 
+### SVM 
 
 ```{r eval=FALSE}
 # create a benchmark to train a list of tasks with default hyperparameter settings
@@ -938,7 +940,7 @@ knitr::include_graphics("svm_all_task.png")
 
 Similarly, we go with the **dl_iv_data** training task.
 
-#### 4.2.4 Random Forest  
+### Random Forest  
 ```{r eval=FALSE}
 # create a benchmark to train a list of tasks with default hyperparameter settings
 design <- benchmark_grid(
@@ -964,12 +966,12 @@ knitr::include_graphics("rf_all_task.png")
 Similarly, we go with the **dl_iv_data** training task.
 
 
-### 4.3 Conclusion
+### Conclusion
 according to the results above, **dl_iv_data** generally has the best prediction performance among all the six tasks with regards to 4 different models. Hence **dl_iv_data** is chosen as the final training dataset.
 
-## 5 Finetunning 
+# Finetunning 
 
-### 5.1 Introduction
+## Introduction
 
 Based on the imbalanced target dataset we already have, it is crucial that we need to firstly address the imbalance problem. When it comes to deal with imbalanced data, there are two options to choose. The first method is the **smote**  and the other is the **oversampling**. In mlr3pipelines, there is a **classbalancing** and a **smote** pipe operator that can be combined with any learner. Note that **smote** has two hyperparameters __K__ and __dup_size__. While __K__ changes the behavior of the SMOTE algorithm, __dup_size__ will affect oversampling rate of SMOTE algorithm. As for **oversampling** oeperator, there is only one hyperparameter
 __oversample.ratio__, which determines the oversampling rate of **oversampling** operator.
@@ -987,12 +989,12 @@ After all these tuning procedures mentioned above, we can therefore draw differe
 Ultimately, after all these step-to-step tuning procedures, we can grab the best performance (measured by AUC value) with the recommended parameter settings and therefore improve our default models.
 
 
-### 5.2 Fintunning results  
+## Fintunning results  
 
-#### 5.2.1 Logistic Regression  
+### Logistic Regression  
 
 
-##### oversampling  
+#### oversampling  
 
 At first we define the oversampling PipeOps.
 ```{r}
@@ -1083,7 +1085,7 @@ shown on the plots above, it is better to choose __oversample.ratio__ with value
 In comparison with defalut **dl_iv_data**, there is no significant increment. Thence,
 oversample method seems not suitable for Logistic Regression.
 
-##### 5.2.1.2 smote  
+#### smote  
 
 At first we define the smote PipeOps.
 ```{r}
@@ -1163,9 +1165,9 @@ shown on the plots above, it is better to choose __smote.K__ with value
 In comparison with defalut **dl_iv_data**, there is no significant increment. Thence,
 smote method seems not suitable for Logistic Regression.
 
-#### 5.2.2 KNN  
+### KNN  
 
-##### oversampling  
+#### oversampling  
 
 Since our data is highly unbalanced, we want to try two different methods to solve this issue - Smote and oversampling and see if this increases the performance of the model. 
 
@@ -1235,7 +1237,7 @@ ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend="bottom", n
 knitr::include_graphics("3_over_auc.png")
 ```
 
-##### smote  
+#### smote  
 
 In this section, we will use the package **SMOTE** that is included in **mlr3**, to see whethere balancing the data with smote may improve the prediction of the model.
 
@@ -1313,7 +1315,9 @@ knitr::include_graphics("3_smote_auc.png")
 
 As we can see, there is no significant improvement after trying different methods to balance the data. Since we used a binary variable to indicate whether a category is present or not, the max distance can only be 1 or 0. Moreover, other numeric variables have a more significant distance, meaning that they have a more substantial impact on the distance than the categorical data without having a significant correlation with our target variable. To get better results, it would be necessary to either use other ways to handle categorical data better for distance calculation or using different training methods to perform classification instead of KNN.
 
-#### 5.2.3 SVM (smote)
+### SVM
+
+#### smote
 
 Considering the super imbalanced target dataset to process, it is also necessary to implement the **SMOTE** function to firstly balance the whole dataset. Therefore, to determine the two crucial parameters __smote.dup_size__ and __smote.K__ is the first step. With __smote.dup_size__ defined from 10 to 60 and __smote.K__ from 10 to 25, it is better to implement a __grid_search__ to figure out what is the optimal parameter settings for the 2 parameters based on the **svm** learner and the __dl_iv_data__ training task.
 
@@ -1571,7 +1575,8 @@ knitr::include_graphics("svm_gamma.png")
 
 In conclusion, it is better to go with _radial_ kernel function, _cost_ being set to 0.1 and _gamma_ being set to 0.75 on the condition that _smote.dup_size_ is set to 40 and _smote.K_ to 21. And the ultimate prediction performance measured by AUC is therefore 0.7839 with an increase of 0.0x in regards to the previous svm model with default parameter settings.
 
-#### 5.2.4 Random Forest (smote)
+### Random Forest 
+#### smote
 
 As mentioned in chapter 3, we fix the parameter __num.trees__ with value 1000 and set training range 30 to 60 for __smote.dup_size__ and 10 to 20 for __smote.K__ seperately in order to find the best training pairs with the two parameters, reaching the best prediction performance.
 
@@ -1918,11 +1923,11 @@ When reaching the highest AUC value, __sample.fraction__ is always taking good p
 
 After the step-by-step hyperparameter tuning, we have finally managed to reach our best prediction performance with AUC value fixed at 0.83 which shows the improvement of 0.07 in comparison with the performance of Random Forest's default model with value 0.76. In conclusion, when __smote.dup_size__ being set to 45 and __smote.K__ to 15 with the SMOTE operator, the final parameter settings combination would be __num.trees__ = 1000, __mtry__ = 7, __min.node.size__ = 3 and __sample.fraction__ = 0.575, reaching an AUC level at 0.83.
 
-### 6. Conclusion and Discussion
-#### 6.1 Conclusion
+# Conclusion and Discussion
+## Conclusion
 In general, we have implemented four different training models (Logistic Regression, KNN, SVM and Random Forest) on the same training task (dl_iv_data). Besides the basic training process with default parameter settings with different models, we have also discovered the necessary methods (SMOTE algorithm and Oversampling Operator) to tackle with the imbalanced target data distribution and tune the models with corresponding parameters afterwards. By plotting the changing trend of different parameters separately, we shall be able to determine the best parameter setting combinations and achieve the highest AUC score with the ultimate chosen model. After determining for the related parameters which are used for data balancing and finishing the model tuning procedures with parameters accordingly, we have run into the  conclusion that Random Forest has shown a considerably better prediction performance, with an average of 10% improvement among all other training models, in regard to the decision on whether or not to issue the credit card to the potential customer. As for our mission to predict the ultimate decision concerning credit card approval, we would definitely choose Random Forest algorithm and implement the prediction afterwards with various customers.
 
-#### 6.2 Discussion
+## Discussion
 Based on our previous work, there are still many aspects can be improved in our article. First of all, more powerful models that we can use to solve some problems that we met. For example, it's computationally expensive to train the SVM model, a 3*3 nested resampling of SVM model takes 5 hours. Secondly, we have tried xgboost and we found it extremly fast to excute but with the worst prediction performance of all (AUC=0.5 and not improved after any kinds of model tuning).
 On the other hand, there are still a lot of cutting-edge models we haven't used,
 e.g. lightGBM(not included in mlr3 yet), Deep learning method(require high computational power).
