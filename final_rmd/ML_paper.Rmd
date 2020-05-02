@@ -1,6 +1,6 @@
 ---
 title: "Research on Prediction of Credit Card Approval Based on Machine Learning"
-author: "Bailan He, Xiong Yue, Rui Yang, Jan Alexander Jensen"
+author: "Bailan He, Yue Xiong, Rui Yang, Jan Alexander Jensen"
 header-includes:
 - \usepackage{indentfirst}
 output: 
@@ -8,9 +8,7 @@ output:
     toc: true
     toc_depth: 4  
     number_sections: true
-
 indent: true
-
 ---
 
 \newpage
@@ -31,7 +29,7 @@ The flowchart above illustrates the process of our experiment. First, we prepare
 
 According to (Bishop, Christopher (2006))[1], In machine learning, a feature is an individual measurable property or characteristic of a phenomenon being observed, and the concept of "feature" is related to that of explanatory variables used in statistic application. Therefore, both concepts mentioned in this report are the same based upon the definition of feature and variable. In this study, all features are classified into three kinds of variables according to their data type: binary variables, categorical variables, and continuous variables. The description of all features and a self-defined response variable will be provided in this section.
 
-## Reading in the data
+## Reading data
 
 The raw data, which consists of two data set **application_record.csv** and **credit_record.csv**, given by an Excel file in the csv format.
 
@@ -152,7 +150,8 @@ names(final_data)
 
 Three different variable types (e.g. binary, categorical and continuous variable) in the final data set will be introduced in detail as follows. 
 
-## Binary variable
+## Data types
+### Binary variable
 
 Binary variable is a type of disrete random variable which only take two possible values. While many variables and questions are naturally binary e.g. gender and "yes or no" question. The following table shows six binary variables used to record the personal information:
 
@@ -178,7 +177,7 @@ Binary variable is a type of disrete random variable which only take two possibl
 |                               | or not             | - "0": No          |
 +-------------------------------+--------------------+--------------------+
 
-## Categorical variable
+### Categorical variable
 
 A categorical variable is a type of statistical variable that can take on one of a finite and usually fixed number of possible values. Examples of categorical variables include different types of occupation (e.g. Core staff, Sales staff, High skill tech staff). Based on previously known qualitative properties, this kind of variable assigns each individual or other single unit of observed objects to a specific group or nominal category. five categorical varibales include the following:
 
@@ -206,7 +205,7 @@ A categorical variable is a type of statistical variable that can take on one of
 |                               |                    | ...                  |
 +-------------------------------+--------------------+----------------------+
 
-## Continuous variable
+### Continuous variable
 
 A continuous variable is a type of numerical variables which may take on infinite values and is always collected in the form of numbers, despite the fact that other types of data also appear in the form of numbers. Examples of continuous variables include the annual income, and the number of children is not classified as categorical varibale but continuous variable in this project. The value of age is not intuitive, because it is calculated based on the actual number of days not years and represented as negative value due to the benchmark setting. The following table describes all continuous varibales used in this project:
 
@@ -266,8 +265,8 @@ The above figure and result illustrate that the corresponding missing pattern is
 
 **Not Missing At Random (NMAR)**: When the missing data are NMAR, the missingness has an exclusive relationship with the missing data. In other words, the missingness probability is allowed to be dependent on the missing values themselves.
 
-
-## Listwise Deletion
+## Methods
+### Listwise Deletion
 
 In this section, we simply delete the missing values by using the **na.omit()** function. With this function, we would delete the whole row where the missing values appear.
 
@@ -282,7 +281,7 @@ After deleting, there are only 25,134 rows left for data analysis which means we
 An initial guess without comparison with these methods is that listwise deletion is probably better than the other two **Multiple Imputation (MI)** methods, the possible reason is that the missing data mechanism in this case is MCAR, based on which the potential distribution by the use of listwise deletion does not change very much. In addition to this, imputing the missing values could also introduce additional errors in the original data set. The comparison results will also be provided in the subsequent section. 
 
 
-## Multiple imputation with MICE package
+### Multiple imputation with MICE package
 
 In contrast to listwise deletion, MI considers statistical uncertainty when imputing missing values. One of the two powerful R-packages that handle missing data is multivariate imputation by chained equations (MICE), also called "sequential regression multiple imputation" or "fully conditional specification." This is one of the most important methods used to address and impute missing data. In consideration of the flexibility of chained equations, MICE can handle various types of variables in the data set, such as continuous variables, categorical variables, and mixed-type variables. If the distribution of each variable in the data set is already established, this method is more applicable. For example, if a variable fits the normal distribution then specific approaches can be defined in advance to impute the missing values of this variable by using the `mice()` function. Even if no appropriate multivariate distribution can be found, MICE remains an applicable option; this implies that MICE is suitable for data sets composed of mixed-type data. In conclusion, for the application of MICE the specific distribution of each variable in the data set should be defined in advance, which is based on a univariate distribution. The R-package MICE uses the FCS algorithm, which imputes each variable with missing values in the data set by conducting several repetitions.
 
@@ -306,7 +305,7 @@ completeData <- complete(tempData)
 ```
 
 
-## Multiple imputation with missForest package
+### Multiple imputation with missForest package
 
 In MICE, parametric regression models are needed and assumptions about the distribution of data are considered as prior knowledge. In the applica- tion of MICE it is necessary to specify the appropriate approach for each imputed variable in advance. If the assumptions are not correct then biased imputation results are likely to be produced. For example, it is assumed that a continuous variable fits the normal distribution; in fact this variable cannot perfectly fit normal distribution, which would lead to the estimation of problematic parameters. In addition, if there are complicated interactions, nonlinear relation structures, or high correlation between the regression model variables in the data sets, then predictions made using MICE tend to be less accurate. Consequently, the quality of the imputation would be decreased. missForest is a nonparametric method, which implies that it does not need to make assumptions about structural aspects of the data. Therefore, biased imputation results would not be caused by improper assumptions when applying missForest.
 
@@ -336,7 +335,6 @@ overfitting to negative samples, because some features have too many categories,
 and there is a traditional variables transformation that use WOE to replace features.
 This is basically a technique that can be applied if we have a binary response variable.
 
-### Introduction
 Weight of evidence (WOE) and Information value (IV) are simple but powerful 
 techniques to perform variable transformation and selection. 
 It is widely used in credit scoring to measure the separation of good vs bad customers.
@@ -457,7 +455,7 @@ Since we use 3 different strategies to deal with the missing data, we now have
 three dataset and for all the datasets we will excute the same process to finish features engineering.
 Using **dl_na_data** as an example.
 
-**Binary variables**
+### Binary variables
 
 After loading data, we inspect our factory variables as mentioned above, there are 8 factory
 variables, i.e. `CODE_GENDER`, `FLAG_OWN_CAR`, `FLAG_OWN_REALTY`, `NAME_INCOME_TYPE`
@@ -492,7 +490,7 @@ converted_binary_data <- binary_data %>% mutate_if(is.factor, convert_binary_var
 glimpse(converted_binary_data)
 ```
 
-**Categorical variables**
+##### Categorical variables 
 After converting binary factor variables, five Categorical variables are remained, i.e.
 `NAME_INCOME_TYPE`, `NAME_EDUCATION_TYPE`, `NAME_FAMILY_STATUS`, `NAME_HOUSING_TYPE`, `OCCUPATION_TYPE`,
 ```{r, message=FALSE, warning=FALSE}
@@ -609,6 +607,7 @@ calc_iv("less_factor_work")
 
 Then encode multi-factors variables as one-hot variables.
 ```{r, message=FALSE, warning=FALSE}
+########
 # encode multi-factors variables into one-hot
 factor_data <- final_data %>%
   select(starts_with("less")) %>%
@@ -771,18 +770,17 @@ The true-positive rate is also known as sensitivity, reacall or probablitly of d
 is also known as probability of false alarm and can be calculated as (1 - specificity). It can also be thought of as a plot of the 
 power as fa cuntion of the Type I Error of the decision rule. Auc stands for "Area under the Roc Curve", it measures the entire two-dimensional area underneath the entire ROC curve form (0,0) to (1,1). It tells how much model is capable of distinguishing between classes. Higher the AUC, better the model is at predicting 0s as 0s and 1s as 1s.
 
-### Why choose AUC and ROC
-
 In our experiment, we looked at several different measures to evaluate our result, 
 including fbeta, ce, acc and AUC. Ingeneral, using fbeta would be ideal when facing imbalanced data[recite]. However, our data is highly imbalanced, and the fbeta performs in favour of predicting all as the majority category. It outputs, in most cases with a very similar value close to 0.99. Thus, we decided to stick with AUC. By comparing the AUC value, we can better distinguish the improvement in models.
 
 \newpage
 
-# Choosing the training task  
+# Choice with training task
 
 As for the process concerning the general model tuning, we would firstly go with the 6 different datasets corresponding to 6 training tasks and train the 4 models with default parameter settings and see which task to choose according to the ultimate performance output based on the best AUC level. By doing these, the training workload for the following tuning procedures would be tremendously decreased as we have considerably more learners to train the task with.  
 
-## Models results  
+## Basic model training results
+
 first we load all the datasets. As the requests of **mlr3**, all integer numeric should be converted as double numeric, and
 target **y** should be converted as type factor.
 ```{r}
@@ -981,12 +979,12 @@ knitr::include_graphics("rf_all_task.png")
 Similarly, we go with the **dl_iv_data** training task.
 
 
-### Conclusion
+## Conclusion
 according to the results above, **dl_iv_data** generally has the best prediction performance among all the six tasks with regards to 4 different models. Hence **dl_iv_data** is chosen as the final training dataset.
 
 \newpage
 
-# Finetunning
+# Fine-tuning
 
 Based on the imbalanced target dataset we already have, it is crucial that we need to firstly address the imbalance problem. When it comes to deal with imbalanced data, there are two options to choose. The first method is the **smote**  and the other is the **oversampling**. In mlr3pipelines, there is a **classbalancing** and a **smote** pipe operator that can be combined with any learner. Note that **smote** has two hyperparameters *K* and *dup_size*. While *K* changes the behavior of the SMOTE algorithm, *dup_size* will affect oversampling rate of SMOTE algorithm. As for **oversampling** oeperator, there is only one hyperparameter
 *oversample.ratio*, which determines the oversampling rate of **oversampling** operator.
@@ -1327,9 +1325,9 @@ knitr::include_graphics("3_smote_auc.png")
 
 As we can see, there is no significant improvement after trying different methods to balance the data. Since we used a binary variable to indicate whether a category is present or not, the max distance can only be 1 or 0. Moreover, other numeric variables have a more significant distance, meaning that they have a more substantial impact on the distance than the categorical data without having a significant correlation with our target variable. To get better results, it would be necessary to either use other ways to handle categorical data better for distance calculation or using different training methods to perform classification instead of KNN.
 
-## SVM (smote)
+## SVM
 
-Considering the super imbalanced target dataset to process, it is also necessary to implement the **SMOTE** function to firstly balance the whole dataset. Therefore, to determine the two crucial parameters *smote.dup_size* and *smote.K* is the first step. With *smote.dup_size* defined from 10 to 60 and *smote.K* from 10 to 25, it is better to implement a *grid_search* to figure out what is the optimal parameter settings for the 2 parameters based on the **svm** learner and the **dl_iv_data** training task.
+Considering the super imbalanced target dataset to process, it is also necessary to implement the **SMOTE** function to firstly balance the whole dataset. Therefore, to determine the two crucial parameters *smote.dup_size* and *smote.K* is the first step. With *smote.dup_size* defined from 10 to 60 and *smote.K* from 10 to 25, it is better to implement a *grid_search* to figure out what is the optimal parameter settings for the 2 parameters based on the **svm** learner and the *dl_iv_data* training task.
 
 ```{r}
 # suppress svm package
@@ -1404,7 +1402,7 @@ knitr::include_graphics("svm_smote.png")
 
 As can be seen from the plots above, *smote.dup_size* is showing better prediction performance when defined as 40 and *smote.K* shall be defined as 21 which is having more stable training performance with color blue correspondingly.
 
-Then the next step would be to determine which *kernel* function type to use with fixed *smote.dup_size* and *smote.K*. Regarding the choice of suitable kernel function with SVM, there are in total four options to choose: *linear*, *polynomial*, *radial*, *sigmoid*. The default value for the mlr3 SVM learner is the *radical* function. Thence, we need to implement the other three kernel functions on the previous training models with the **dl_iv_data** task and again use the *grid_search* to check which *kernel* function will generate better prediction performance shown with higher AUC value.
+Then the next step would be to determine which *kernel* function type to use with fixed *smote.dup_size* and *smote.K*. Regarding the choice of suitable kernel function with SVM, there are in total four options to choose: *linear*, *polynomial*, *radial*, *sigmoid*. The default value for the mlr3 SVM learner is the *radical* function. Thence, we need to implement the other three kernel functions on the previous training models with the *dl_iv_data* task and again use the *grid_search* to check which *kernel* function will generate better prediction performance shown with higher AUC value.
 
 ```{r, eval=FALSE}
 # train with kernel type
@@ -1466,7 +1464,7 @@ ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("svm_kernel.png")
 ```
 
-As you can seen from the plots which refer to the comparison with different *kernel* functions, the best performance is given by the *radial* function for the **dl_iv_data** task. Nevertheless, we still need to figure out the optimal choice with parameter *cost* and *gamma* and as for the tuning range for *cost*, the first try would be to set with 0.1, 1, 10 and 100.
+As you can seen from the plots which refer to the comparison with different *kernel* functions, the best performance is given by the *radial* function for the *dl_iv_data* task. Nevertheless, we still need to figure out the optimal choice with parameter *cost* and *gamma* and as for the tuning range for *cost*, the first try would be to set with 0.1, 1, 10 and 100.
 
 ```{r, eval=FALSE}
 svm_lrn <- lrn("classif.svm", predict_type = "prob", kernel = "radial", type = "C-classification")
@@ -1525,7 +1523,7 @@ ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("svm_cost.png")
 ```
 
-Shown on the plots above, it is better to choose *cost* with value 0.1. Hence, the last step would be to tune *gamma* for the **dl_iv_data** training task. Ranging from xx to xx with *gamma*, we would like to see the trend of the tuning performance and determine for the ultimate *gamma* accordingly.
+Shown on the plots above, it is better to choose *cost* with value 0.1. Hence, the last step would be to tune *gamma* for the *dl_iv_data* training task. Ranging from xx to xx with *gamma*, we would like to see the trend of the tuning performance and determine for the ultimate *gamma* accordingly.
 
 ```{r eval=FALSE}
 svm_lrn <- lrn("classif.svm", predict_type = "prob", kernel = "radial", cost = 0.1, type = "C-classification")
@@ -1585,7 +1583,7 @@ knitr::include_graphics("svm_gamma.png")
 
 In conclusion, it is better to go with _radial_ kernel function, _cost_ being set to 0.1 and _gamma_ being set to 0.75 on the condition that _smote.dup_size_ is set to 40 and _smote.K_ to 21. And the ultimate prediction performance measured by AUC is therefore 0.7839 with an increase of 0.0x in regards to the previous svm model with default parameter settings.
 
-## Random Forest (smote)
+## Random Forest
 
 As mentioned in chapter 3, we fix the parameter *num.trees* with value 1000 and set training range 30 to 60 for *smote.dup_size* and 10 to 20 for *smote.K* seperately in order to find the best training pairs with the two parameters, reaching the best prediction performance.
 
@@ -1853,7 +1851,7 @@ ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("rf_smote_4.png")
 ```
 
-We would go with *min.node.size* = 3 as we can see the AUC value tends to reach the best performance when we set it to 3. However, it is still not clear the approximated defined range for parameter *sample.fraction.* Next, we need to retrain the model with a wider range with parameter *sample.fraction* from 0.45 to 0.95.
+We would go with *min.node.size* = 3 as we can see the AUC value tends to reach the best performance when we set it to 3. However, it is still not clear the approximated defined range for parameter *sample.fraction* Next, we need to retrain the model with a wider range with parameter *sample.fraction* from 0.45 to 0.95.
 
 ```{r}
 # RF with 4 different paramSets, to analysis how to do further tuning
