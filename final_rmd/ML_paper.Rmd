@@ -6,15 +6,19 @@ output:
     number_sections: true
 ---
 
+\newpage
+
 # Introduction
 
 The credit card business has entered a fast-rising development stage after an incremental transformation from the traditional payment to E-payment. Major banks and related financial institutions increase the issuance of credit cards with the growing demand and high profits of credit card business. However, high profits are accompanied by high risks, especially in the cases of facing hundreds of thousands credit card applications from potential customers. In the actual situation, credit risk management system is set up for meeting the tremendous demand of credit card application while the increasing Probability of Default (PD), brought up by individuals who cannot pay back the loans, appears accordingly. In order to control and monitor the credit risk, the traditional credit assessment approach is an artificial credit risk assessment, which is performed by credit risk analysts who review the information submitted by credit card applicants, generally including customer personal data (age, ID card, etc.), work (income, occupation, etc.), individual assets, stability of repayment capacity, and so on. Banks and financial institutions value the repayment ability of cardholders. In other words, the stronger the repayment ability, the easier to issue credit cards will be. Nowadays, there are more and more people who apply for credit cards, and the bank's credit card business system gradually reflects the characteristics of large issuance, frequent transactions, and comprehensive and accurate transaction information. It’s even clearer that traditional manual estimation is no longer able to complete these tasks. Under such circumstances, a set of practical prediction models that decide whether or not to approve these applications and monitor the credit risk, will be necessary. The traditional model and techniques cannot satisfy the current situation. For this reason, this report “Research on Prediction of Credit Card Approval Based on Machine Learning” aims to address the problem of forecasting credit risk by the use of an emerging technique “Machine Learning”, and this project is based on the public dataset **“credit card approval prediction” from Kaggle**, the U.S. data competition platform. Our ultimate purpose is using machine learning approaches based on **mlr3 R package**, such as logistic regression, KNN, random forest model, etc. to establish a credit card risk assessment model to determine whether the applicant would overdue or not repay the loan and achieved a quantitative analysis of personal credit risk.
 
 \newpage
 
-```{}
-
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("flowchart_overview.png")
 ```
+
+The flowchart above illustrates the process of our experiment. First, we prepare the data and define the target variable. Afterwards, we need to take care of the missing values in our data set. Here, we will try three different methods to deal with missing values - Listwise deletion, MICE and missForest. Then we have to encode the nominal variable to a numeric format so that we can use it for training. We first compare the results of all data set between different learner without fine-tuning. Subsequently, we will select one data set and perform further fine-tuning on it. In the end, we will compare the final results of all, and conclude with one method.
 
 # Data
 According to (Bishop, Christopher (2006))[1], In machine learning, a feature is an individual measurable property or characteristic of a phenomenon being observed, and the concept of "feature" is related to that of explanatory variables used in statistic application. Therefore, both concepts mentioned in this report are the same based upon the definition of feature and variable. In this study, all features are classified into three kinds of variables according to their data type: binary variables, categorical variables, and continuous variables. The description of all features and a self-defined response variable will be provided in this section.
@@ -225,6 +229,8 @@ A continuous variable is a type of numerical variables which may take on infinit
 |                               |                    | ...                  |
 +-------------------------------+--------------------+----------------------+
 
+\newpage
+
 # Missing values processing
 
 ```{r}
@@ -310,6 +316,8 @@ completeData <- imputed_Data$ximp
 ```
 
 finally we get three datasets based different imputation methods: **dl_na_data**, **mf_na_data** and **mice_na_data**.
+
+\newpage
 
 # Features Engineering
 ## WOE Encoding
@@ -707,7 +715,7 @@ After the above preprocessing procedures with nominal variable addressed with on
 
 When finishing with the nominal variable encoding process, there are 6 datasets in general named with 2 groups: the *iv* group and the *one-hot* group. There are *dl_iv_data*, *mf_iv_data* and *mice_iv_data* included in the *iv* group while *dl_oh_data*, *mf_oh_data* and *mice_oh_data* included in the *one-hot* group.
 
-
+\newpage
 
 # General Introduction
 
@@ -759,6 +767,7 @@ power as fa cuntion of the Type I Error of the decision rule. Auc stands for "Ar
 In our experiment, we looked at several different measures to evaluate our result, 
 including fbeta, ce, acc and AUC. Ingeneral, using fbeta would be ideal when facing imbalanced data[recite]. However, our data is highly imbalanced, and the fbeta performs in favour of predicting all as the majority category. It outputs, in most cases with a very similar value close to 0.99. Thus, we decided to stick with AUC. By comparing the AUC value, we can better distinguish the improvement in models.
 
+\newpage
 
 # Choosing the training task  
 
@@ -966,6 +975,8 @@ Similarly, we go with the **dl_iv_data** training task.
 
 ### Conclusion
 according to the results above, **dl_iv_data** generally has the best prediction performance among all the six tasks with regards to 4 different models. Hence **dl_iv_data** is chosen as the final training dataset.
+
+\newpage
 
 # Finetunning 
 
@@ -1917,6 +1928,8 @@ knitr::include_graphics("rf_smote_5.png")
 When reaching the highest AUC value, __sample.fraction__ is always taking good performance values around 0.55 and 0.6 and the distributions of __min.node.size__ are showing better performance results (measured by AUC) with value 3. Therefore, we would choose the __sample.fraction__ with 0.575 and have a better AUC performance value with 0.83.
 
 After the step-by-step hyperparameter tuning, we have finally managed to reach our best prediction performance with AUC value fixed at 0.83 which shows the improvement of 0.07 in comparison with the performance of Random Forest's default model with value 0.76. In conclusion, when __smote.dup_size__ being set to 45 and __smote.K__ to 15 with the SMOTE operator, the final parameter settings combination would be __num.trees__ = 1000, __mtry__ = 7, __min.node.size__ = 3 and __sample.fraction__ = 0.575, reaching an AUC level at 0.83.
+
+\newpage
 
 # Conclusion and Discussion
 ## Conclusion
