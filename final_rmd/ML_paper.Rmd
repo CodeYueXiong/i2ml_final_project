@@ -457,7 +457,7 @@ Since we use 3 different strategies to deal with the missing data, we now have
 three dataset and for all the datasets we will excute the same process to finish features engineering.
 Using **dl_na_data** as an example.
 
-### Binary variables
+**Binary variables**
 
 After loading data, we inspect our factory variables as mentioned above, there are 8 factory
 variables, i.e. `CODE_GENDER`, `FLAG_OWN_CAR`, `FLAG_OWN_REALTY`, `NAME_INCOME_TYPE`
@@ -492,7 +492,7 @@ converted_binary_data <- binary_data %>% mutate_if(is.factor, convert_binary_var
 glimpse(converted_binary_data)
 ```
 
-##### Categorical variables 
+**Categorical variables**
 After converting binary factor variables, five Categorical variables are remained, i.e.
 `NAME_INCOME_TYPE`, `NAME_EDUCATION_TYPE`, `NAME_FAMILY_STATUS`, `NAME_HOUSING_TYPE`, `OCCUPATION_TYPE`,
 ```{r, message=FALSE, warning=FALSE}
@@ -609,7 +609,6 @@ calc_iv("less_factor_work")
 
 Then encode multi-factors variables as one-hot variables.
 ```{r, message=FALSE, warning=FALSE}
-########
 # encode multi-factors variables into one-hot
 factor_data <- final_data %>%
   select(starts_with("less")) %>%
