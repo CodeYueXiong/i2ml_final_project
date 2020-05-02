@@ -1402,7 +1402,7 @@ knitr::include_graphics("svm_smote.png")
 
 As can be seen from the plots above, *smote.dup_size* is showing better prediction performance when defined as 40 and *smote.K* shall be defined as 21 which is having more stable training performance with color blue correspondingly.
 
-Then the next step would be to determine which *kernel* function type to use with fixed *smote.dup_size* and *smote.K*. Regarding the choice of suitable kernel function with SVM, there are in total four options to choose: *linear*, *polynomial*, *radial*, *sigmoid*. The default value for the mlr3 SVM learner is the *radical* function. Thence, we need to implement the other three kernel functions on the previous training models with the *dl_iv_data* task and again use the *grid_search* to check which *kernel* function will generate better prediction performance shown with higher AUC value.
+Then the next step would be to determine which *kernel* function type to use with fixed *smote.dup_size* and *smote.K*. Regarding the choice of suitable kernel function with SVM, there are in total four options to choose: *linear*, *polynomial*, *radial*, *sigmoid*. The default value for the mlr3 SVM learner is the *radical* function. Thence, we need to implement the other three kernel functions on the previous training models with the **dl_iv_data** task and again use the *grid_search* to check which *kernel* function will generate better prediction performance shown with higher AUC value.
 
 ```{r, eval=FALSE}
 # train with kernel type
@@ -1464,7 +1464,7 @@ ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("svm_kernel.png")
 ```
 
-As you can seen from the plots which refer to the comparison with different *kernel* functions, the best performance is given by the *radial* function for the *dl_iv_data* task. Nevertheless, we still need to figure out the optimal choice with parameter *cost* and *gamma* and as for the tuning range for *cost*, the first try would be to set with 0.1, 1, 10 and 100.
+As you can seen from the plots which refer to the comparison with different *kernel* functions, the best performance is given by the *radial* function for the **dl_iv_data** task. Nevertheless, we still need to figure out the optimal choice with parameter *cost* and *gamma* and as for the tuning range for *cost*, the first try would be to set with 0.1, 1, 10 and 100.
 
 ```{r, eval=FALSE}
 svm_lrn <- lrn("classif.svm", predict_type = "prob", kernel = "radial", type = "C-classification")
@@ -1523,7 +1523,7 @@ ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("svm_cost.png")
 ```
 
-Shown on the plots above, it is better to choose *cost* with value 0.1. Hence, the last step would be to tune *gamma* for the *dl_iv_data* training task. Ranging from xx to xx with *gamma*, we would like to see the trend of the tuning performance and determine for the ultimate *gamma* accordingly.
+Shown on the plots above, it is better to choose *cost* with value 0.1. Hence, the last step would be to tune *gamma* for the **dl_iv_data** training task. Ranging from xx to xx with *gamma*, we would like to see the trend of the tuning performance and determine for the ultimate *gamma* accordingly.
 
 ```{r eval=FALSE}
 svm_lrn <- lrn("classif.svm", predict_type = "prob", kernel = "radial", cost = 0.1, type = "C-classification")
