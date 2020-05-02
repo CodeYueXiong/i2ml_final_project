@@ -381,8 +381,6 @@ library(scorecard)
 
 ```{r echo=FALSE}
 set.seed(2020)
-setwd("/Users/hebailan/R Programm/i2ml programm/final project/i2ml_final_project/credit_card_prediction")
-
 # calc_iv function compute the "information value" of a variable.
 calc_iv <- function(feature) {
   # how many rows we need.
@@ -442,7 +440,7 @@ Since we use 3 different strategies to deal with the missing data, we now have
 three dataset and for all the datasets we will excute the same process to finish features engineering.
 Using **dl_na_data** as an example.
 
-### Binary variables
+#### Binary variables
 
 After loading data, we inspect our factory variables as mentioned above, there are 8 factory
 variables, i.e. `CODE_GENDER`, `FLAG_OWN_CAR`, `FLAG_OWN_REALTY`, `NAME_INCOME_TYPE`
@@ -678,7 +676,7 @@ glimpse(dl_iv_data)
 As for **mf_na_data** and **mice_na_data**, we produce the same process to keep 
 the consistency of data, therefor we will get three datasets: **dl_iv_data**, **mf_iv_data** and **mice_iv_data**.
 
-### 2.2 Nominal variable Encoding
+## Nominal variable Encoding
 Having a look at the whole dataset after deleting or imputation, we can figure out there are 8 nominal variables. And since all the nominal variables are categorically arranged, we can use the *one-hot-encoding* to deal with different kinds of nominals. The general idea of using one-hot-encoding is to mark the nominals(categories) into vectors(0 and 1 composed), in which if this particular category exists then mark the element with 1. When the entire encoding is done, there would be newly generated columns with category marked with name in place for the nominal variables. For example, when dealing with categorical variables "OCCUPATION_TYPE" which includes different types of occupation (e.g. Core staff, Sales staff, High skill tech staff, etc.), one particular type would be extracted out as a single vector with only 0 and 1 entered in where element 1 is marked for potential users corresponding to the same job. Similarily, the data processing with binary variables such as "GENDER" would be much easier to address.
 ```{r, eval=FALSE}
 library(dataPreparation)
@@ -1315,9 +1313,7 @@ knitr::include_graphics("3_smote_auc.png")
 
 As we can see, there is no significant improvement after trying different methods to balance the data. Since we used a binary variable to indicate whether a category is present or not, the max distance can only be 1 or 0. Moreover, other numeric variables have a more significant distance, meaning that they have a more substantial impact on the distance than the categorical data without having a significant correlation with our target variable. To get better results, it would be necessary to either use other ways to handle categorical data better for distance calculation or using different training methods to perform classification instead of KNN.
 
-### SVM
-
-#### smote
+### SVM(smote)
 
 Considering the super imbalanced target dataset to process, it is also necessary to implement the **SMOTE** function to firstly balance the whole dataset. Therefore, to determine the two crucial parameters __smote.dup_size__ and __smote.K__ is the first step. With __smote.dup_size__ defined from 10 to 60 and __smote.K__ from 10 to 25, it is better to implement a __grid_search__ to figure out what is the optimal parameter settings for the 2 parameters based on the **svm** learner and the __dl_iv_data__ training task.
 
@@ -1575,8 +1571,7 @@ knitr::include_graphics("svm_gamma.png")
 
 In conclusion, it is better to go with _radial_ kernel function, _cost_ being set to 0.1 and _gamma_ being set to 0.75 on the condition that _smote.dup_size_ is set to 40 and _smote.K_ to 21. And the ultimate prediction performance measured by AUC is therefore 0.7839 with an increase of 0.0x in regards to the previous svm model with default parameter settings.
 
-### Random Forest 
-#### smote
+### Random Forest(smote)
 
 As mentioned in chapter 3, we fix the parameter __num.trees__ with value 1000 and set training range 30 to 60 for __smote.dup_size__ and 10 to 20 for __smote.K__ seperately in order to find the best training pairs with the two parameters, reaching the best prediction performance.
 
