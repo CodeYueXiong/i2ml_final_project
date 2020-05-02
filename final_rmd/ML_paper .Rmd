@@ -10,6 +10,9 @@ The credit card business has entered a fast-rising development stage after an in
 
 \newpage
 
+```{}
+
+```
 
 ## 1. Data
 According to (Bishop, Christopher (2006))[1], In machine learning, a feature is an individual measurable property or characteristic of a phenomenon being observed, and the concept of "feature" is related to that of explanatory variables used in statistic application. Therefore, both concepts mentioned in this report are the same based upon the definition of feature and variable. In this study, all features are classified into three kinds of variables according to their data type: binary variables, categorical variables, and continuous variables. The description of all features and a self-defined response variable will be provided in this section.
@@ -760,7 +763,7 @@ including fbeta, ce, acc and AUC. Ingeneral, using fbeta would be ideal when fac
 ## 4. Choosing the training task  
 
 ### 4.1 Introduction  
-As for the process concerning the general model tuning, we would firstly go with the 6 different datasets corresponding to 6 training tasks and train the 4 models with default parameter settings and see which task to choose according to the ultimate performance output based on the best auc level. By doing these, the training workload for the following tuning procedures would be tremendously decreased as we have considerably more learners to train the task with.  
+As for the process concerning the general model tuning, we would firstly go with the 6 different datasets corresponding to 6 training tasks and train the 4 models with default parameter settings and see which task to choose according to the ultimate performance output based on the best AUC level. By doing these, the training workload for the following tuning procedures would be tremendously decreased as we have considerably more learners to train the task with.  
 
 ### 4.2 Models results  
 first we load all the datasets. As the requests of **mlr3**, all integer numeric should be converted as double numeric, and
@@ -807,7 +810,7 @@ task_all <- list(
 ```
 
 for each model, we work the same procedures.  
-we all use **benchmark_grid** to creat design, setting with __5 folds cv__, __predict_type = "prob"__ and __measure = msr("classif.auc")__ for computing auc. In addition, we fix random seed as __2020__ for reproducing.
+we all use **benchmark_grid** to creat design, setting with __5 folds cv__, __predict_type = "prob"__ and __measure = msr("classif.auc")__ for computing AUC. In addition, we fix random seed as __2020__ for reproducing.
 
 #### 4.2.1 Logistic Regression:  
 
@@ -843,7 +846,7 @@ multiplot_roc <- function(models, type = "roc") {
   plots <- list()
   # clone results
   model <- models$clone()$filter(task_id = "dl_iv")
-  # format auc
+  # format AUC
   auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
   # plot
   plots[[1]] <- autoplot(model, type = type) + ggtitle(paste("dl_iv:", auc))
@@ -878,7 +881,7 @@ multiplot_roc(lg_bmr)
 knitr::include_graphics("logistic_all_task.png")
 ```
 
-From the ROC plots above, we can see that as for different encoding methods, tasks tackled with WOE encoding generally perform 0.05 better with the auc score than the corresbonding counterpart binary encoding group, as for different missing data handling methods, Logistic Regression has better prediction performance on datasets by deleting missing values with whole row, i.e. **dl_iv_data**, **dl_oh_data**. Above all, we choose **dl_iv_data** as final datasets.  
+From the ROC plots above, we can see that as for different encoding methods, tasks tackled with WOE encoding generally perform 0.05 better with the AUC score than the corresbonding counterpart binary encoding group, as for different missing data handling methods, Logistic Regression has better prediction performance on datasets by deleting missing values with whole row, i.e. **dl_iv_data**, **dl_oh_data**. Above all, we choose **dl_iv_data** as final datasets.  
 
 
 #### 4.2.2 KNN  
@@ -977,11 +980,11 @@ To focus on the effect of the oversampling rate on the performance, we will cons
 when it comes to hyperparameter tuning, we need to set different learners based on the **mlr3 package** to tune tasks. The next step is to set for the hyperparameters which are used to tune with different ranges or factor levels.
 
 
-We create a list of AutoTuner classes of the 4 different learners (Random Forest, SVM, Logistic and KNN) to tune the graph (4 different model learners + imbalance data correction method) based on a 3-fold CV using the classif.auc as the performance measure. To keep runtime low, we define the resolution with grid_search to 5. However, one can also jointly tune the hyperparameter of the learner along with the imbalance correction method by extending the search space with the learner’s hyperparameters. Note that SMOTE has two hyperparameters __K__ and __dup_size__. While __K__ changes the behavior of the SMOTE algorithm, __dup_size__ will affect oversampling rate. To focus on the effect of the oversampling rate on the performance, we will consider different parameter settings with regards to the **oversampling** pipe operator which can be adapted to different training models.
+We create a list of AutoTuner classes of the 4 different learners (Random Forest, SVM, Logistic and KNN) to tune the graph (4 different model learners + imbalance data correction method) based on a 3-fold CV using the classif.AUC as the performance measure. To keep runtime low, we define the resolution with grid_search to 5. However, one can also jointly tune the hyperparameter of the learner along with the imbalance correction method by extending the search space with the learner’s hyperparameters. Note that SMOTE has two hyperparameters __K__ and __dup_size__. While __K__ changes the behavior of the SMOTE algorithm, __dup_size__ will affect oversampling rate. To focus on the effect of the oversampling rate on the performance, we will consider different parameter settings with regards to the **oversampling** pipe operator which can be adapted to different training models.
 
 Therefore, we will need to firstly find the optimal settings for __smote.K__ and __smote.dup_size__ to correct the imbalanced target data distribution. Hence, we use grid search with the corresponding hyperparameter configurations for the oversampling method and each SMOTE variant for tuning. The **AutoTuner** is a fully tuned graph that behaves like a usual learner. For the innner tuning, a 3-fold CV is used. Now, we use the **benchmark** function to compare the tuned class imbalance pipeline graphs based on a 3-fold CV for the outer evaluation.
-After all these tuning procedures mentioned above, we can therefore draw different parameter combinations with **ggplot** and see what the general trend is with different parameter ranges or levels to choose the optimal hyperparameter combinations for the best prediction performance. Also one thing to mention, we would generally use the y pixel as the auc value, x pixel as the tuning parameter and the color parameter as well to show the different tendencies if necessary.
-Ultimately, after all these step-to-step tuning procedures, we can grab the best performance (measured by auc value) with the recommended parameter settings and therefore improve our default models.
+After all these tuning procedures mentioned above, we can therefore draw different parameter combinations with **ggplot** and see what the general trend is with different parameter ranges or levels to choose the optimal hyperparameter combinations for the best prediction performance. Also one thing to mention, we would generally use the y pixel as the AUC value, x pixel as the tuning parameter and the color parameter as well to show the different tendencies if necessary.
+Ultimately, after all these step-to-step tuning procedures, we can grab the best performance (measured by AUC value) with the recommended parameter settings and therefore improve our default models.
 
 
 ### 5.2 Fintunning results  
@@ -1037,7 +1040,7 @@ With __store_models = TRUE__ we allow the benchmark function to store each singl
 set.seed(2020)
 lg_over_bmr <- benchmark(lg_over_design, store_models = TRUE)
 lg_over_results <- lg_over_bmr$aggregate(measures = msr("classif.auc"))
-# inspect auc value.
+# inspect AUC value.
 lg_over_results$classif.auc
 
 # load library
@@ -1387,7 +1390,7 @@ knitr::include_graphics("svm_smote.png")
 
 As can be seen from the plots above, __smote.dup_size__ is showing better prediction performance when defined as 40 and __smote.K__ shall be defined as 21 which is having more stable training performance with color blue correspondingly.
 
-Then the next step would be to determine which __kernel__ function type to use with fixed __smote.dup_size__ and __smote.K__. Regarding the choice of suitable kernel function with SVM, there are in total four options to choose: __linear__, __polynomial__, __radial__, __sigmoid__. The default value for the mlr3 SVM learner is the __radical__ function. Thence, we need to implement the other three kernel functions on the previous training models with the __dl_iv_data__ task and again use the __grid_search__ to check which __kernel__ function will generate better prediction performance shown with higher auc value.
+Then the next step would be to determine which __kernel__ function type to use with fixed __smote.dup_size__ and __smote.K__. Regarding the choice of suitable kernel function with SVM, there are in total four options to choose: __linear__, __polynomial__, __radial__, __sigmoid__. The default value for the mlr3 SVM learner is the __radical__ function. Thence, we need to implement the other three kernel functions on the previous training models with the __dl_iv_data__ task and again use the __grid_search__ to check which __kernel__ function will generate better prediction performance shown with higher AUC value.
 
 ```{r, eval=FALSE}
 # train with kernel type
@@ -1836,7 +1839,7 @@ ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("rf_smote_4.png")
 ```
 
-We would go with __min.node.size__ = 3 as we can see the auc value tends to reach the best performance when we set it to 3. However, it is still not clear the approximated defined range for parameter __sample.fraction.__ Next, we need to retrain the model with a wider range with parameter __sample.fraction__ from 0.45 to 0.95.
+We would go with __min.node.size__ = 3 as we can see the AUC value tends to reach the best performance when we set it to 3. However, it is still not clear the approximated defined range for parameter __sample.fraction.__ Next, we need to retrain the model with a wider range with parameter __sample.fraction__ from 0.45 to 0.95.
 
 ```{r}
 # RF with 4 different paramSets, to analysis how to do further tuning
@@ -1911,16 +1914,16 @@ bmr_result <- bmr_smote$aggregate(msr("classif.auc"))
 knitr::include_graphics("rf_smote_5.png")
 ```
 
-When reaching the highest auc value, __sample.fraction__ is always taking good performance values around 0.55 and 0.6 and the distributions of __min.node.size__ are showing better performance results (measured by auc) with value 3. Therefore, we would choose the __sample.fraction__ with 0.575 and have a better auc performance value with 0.83.
+When reaching the highest AUC value, __sample.fraction__ is always taking good performance values around 0.55 and 0.6 and the distributions of __min.node.size__ are showing better performance results (measured by AUC) with value 3. Therefore, we would choose the __sample.fraction__ with 0.575 and have a better AUC performance value with 0.83.
 
-After the step-by-step hyperparameter tuning, we have finally managed to reach our best prediction performance with auc value fixed at 0.83 which shows the improvement of 0.07 in comparison with the performance of Random Forest's default model with value 0.76. In conclusion, when __smote.dup_size__ being set to 45 and __smote.K__ to 15 with the SMOTE operator, the final parameter settings combination would be __num.trees__ = 1000, __mtry__ = 7, __min.node.size__ = 3 and __sample.fraction__ = 0.575, reaching an auc level at 0.83.
+After the step-by-step hyperparameter tuning, we have finally managed to reach our best prediction performance with AUC value fixed at 0.83 which shows the improvement of 0.07 in comparison with the performance of Random Forest's default model with value 0.76. In conclusion, when __smote.dup_size__ being set to 45 and __smote.K__ to 15 with the SMOTE operator, the final parameter settings combination would be __num.trees__ = 1000, __mtry__ = 7, __min.node.size__ = 3 and __sample.fraction__ = 0.575, reaching an AUC level at 0.83.
 
 ### 6. Conclusion and Discussion
 #### 6.1 Conclusion
-In general, we have implemented four different training models (Logistic Regression, KNN, SVM and Random Forest) on the same training task (dl_iv_data). Besides the basic training process with default parameter settings with different models, we have also discovered the necessary methods (SMOTE algorithm and Oversampling Operator) to tackle with the imbalanced target data distribution and tune the models with corresponding parameters afterwards. By plotting the changing trend of different parameters separately, we shall be able to determine the best parameter setting combinations and achieve the highest auc score with the ultimate chosen model. After determining for the related parameters which are used for data balancing and finishing the model tuning procedures with parameters accordingly, we have run into the  conclusion that Random Forest has shown a considerably better prediction performance, with an average of 10% improvement among all other training models, in regard to the decision on whether or not to issue the credit card to the potential customer. As for our mission to predict the ultimate decision concerning credit card approval, we would definitely choose Random Forest algorithm and implement the prediction afterwards with various customers.
+In general, we have implemented four different training models (Logistic Regression, KNN, SVM and Random Forest) on the same training task (dl_iv_data). Besides the basic training process with default parameter settings with different models, we have also discovered the necessary methods (SMOTE algorithm and Oversampling Operator) to tackle with the imbalanced target data distribution and tune the models with corresponding parameters afterwards. By plotting the changing trend of different parameters separately, we shall be able to determine the best parameter setting combinations and achieve the highest AUC score with the ultimate chosen model. After determining for the related parameters which are used for data balancing and finishing the model tuning procedures with parameters accordingly, we have run into the  conclusion that Random Forest has shown a considerably better prediction performance, with an average of 10% improvement among all other training models, in regard to the decision on whether or not to issue the credit card to the potential customer. As for our mission to predict the ultimate decision concerning credit card approval, we would definitely choose Random Forest algorithm and implement the prediction afterwards with various customers.
 
 #### 6.2 Discussion
-Based on our previous work, there are still many aspects can be improved in our article. First of all, more powerful models that we can use to solve some problems that we met. For example, it's computationally expensive to train the SVM model, a 3*3 nested resampling of SVM model takes 5 hours. Secondly, we have tried xgboost and we found it extremly fast to excute but with the worst prediction performance of all (auc=0.5 and not improved after any kinds of model tuning).
+Based on our previous work, there are still many aspects can be improved in our article. First of all, more powerful models that we can use to solve some problems that we met. For example, it's computationally expensive to train the SVM model, a 3*3 nested resampling of SVM model takes 5 hours. Secondly, we have tried xgboost and we found it extremly fast to excute but with the worst prediction performance of all (AUC=0.5 and not improved after any kinds of model tuning).
 On the other hand, there are still a lot of cutting-edge models we haven't used,
 e.g. lightGBM(not included in mlr3 yet), Deep learning method(require high computational power).
 Last but not least, there are still areas to explore in our feature engineering procedure. For example, dimension reduction methods such as PCA, MDS and Factor analysis (included in mlr3 filters) can also be used.
