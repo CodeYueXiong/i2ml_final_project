@@ -1,10 +1,16 @@
 ---
 title: "Research on Prediction of Credit Card Approval Based on Machine Learning"
+author: "Bailan He, Xiong Yue, Rui Yang, Jan Alexander Jensen"
+header-includes:
+- \usepackage{indentfirst}
 output: 
   pdf_document:
     toc: true
     toc_depth: 4  
     number_sections: true
+
+indent: true
+
 ---
 
 \newpage
@@ -22,9 +28,11 @@ knitr::include_graphics("flowchart_overview.png")
 The flowchart above illustrates the process of our experiment. First, we prepare the data and define the target variable. Afterwards, we need to take care of the missing values in our data set. Here, we will try three different methods to deal with missing values - Listwise deletion, MICE and missForest. Then we have to encode the nominal variable to a numeric format so that we can use it for training. We first compare the results of all data set between different learner without fine-tuning. Subsequently, we will select one data set and perform further fine-tuning on it. In the end, we will compare the final results of all, and conclude with one method.
 
 # Data
+
 According to (Bishop, Christopher (2006))[1], In machine learning, a feature is an individual measurable property or characteristic of a phenomenon being observed, and the concept of "feature" is related to that of explanatory variables used in statistic application. Therefore, both concepts mentioned in this report are the same based upon the definition of feature and variable. In this study, all features are classified into three kinds of variables according to their data type: binary variables, categorical variables, and continuous variables. The description of all features and a self-defined response variable will be provided in this section.
 
 ## Reading in the data
+
 The raw data, which consists of two data set **application_record.csv** and **credit_record.csv**, given by an Excel file in the csv format.
 
 One of the most straightforward ways to import an Excel file into R is using the **read_csv** function. It is good practice to conduct a preliminary examination after importing the raw data, in order to ensure that the imported data has the expected format:
@@ -685,8 +693,9 @@ glimpse(dl_iv_data)
 As for **mf_na_data** and **mice_na_data**, we produce the same process to keep 
 the consistency of data, therefor we will get three datasets: **dl_iv_data**, **mf_iv_data** and **mice_iv_data**.
 
-## Nominal variable Encoding
+## One-hot Encoding
 Having a look at the whole dataset after deleting or imputation, we can figure out there are 8 nominal variables. And since all the nominal variables are categorically arranged, we can use the *one-hot-encoding* to deal with different kinds of nominals. The general idea of using one-hot-encoding is to mark the nominals(categories) into vectors(0 and 1 composed), in which if this particular category exists then mark the element with 1. When the entire encoding is done, there would be newly generated columns with category marked with name in place for the nominal variables. For example, when dealing with categorical variables "OCCUPATION_TYPE" which includes different types of occupation (e.g. Core staff, Sales staff, High skill tech staff, etc.), one particular type would be extracted out as a single vector with only 0 and 1 entered in where element 1 is marked for potential users corresponding to the same job. Similarily, the data processing with binary variables such as "GENDER" would be much easier to address.
+
 ```{r, eval=FALSE}
 library(dataPreparation)
 
@@ -998,7 +1007,7 @@ Ultimately, after all these step-to-step tuning procedures, we can grab the best
 ## Logistic Regression  
 
 
-### oversampling  
+### Oversampling  
 
 At first we define the oversampling PipeOps.
 ```{r}
@@ -1089,7 +1098,7 @@ shown on the plots above, it is better to choose __oversample.ratio__ with value
 In comparison with defalut **dl_iv_data**, there is no significant increment. Thence,
 oversample method seems not suitable for Logistic Regression.
 
-### smote  
+### Smote  
 
 At first we define the smote PipeOps.
 ```{r}
@@ -1171,7 +1180,7 @@ smote method seems not suitable for Logistic Regression.
 
 ## KNN  
 
-### oversampling  
+### Oversampling  
 
 Since our data is highly unbalanced, we want to try two different methods to solve this issue - Smote and oversampling and see if this increases the performance of the model. 
 
@@ -1241,7 +1250,7 @@ ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend="bottom", n
 knitr::include_graphics("3_over_auc.png")
 ```
 
-### smote  
+### Smote  
 
 In this section, we will use the package **SMOTE** that is included in **mlr3**, to see whethere balancing the data with smote may improve the prediction of the model.
 
