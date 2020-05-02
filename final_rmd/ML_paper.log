@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2020.4.30)  2 MAY 2020 21:49
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2020.4.30)  2 MAY 2020 22:06
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -805,10 +805,10 @@ Overfull \hbox (15.02565pt too wide) in paragraph at lines 2666--2667
 <rf_smote.png, id=548, 903.375pt x 572.89032pt>
 File: rf_smote.png Graphic file (type png)
 <use rf_smote.png>
-Package pdftex.def Info: rf_smote.png  used on input line 2805.
+Package pdftex.def Info: rf_smote.png  used on input line 2804.
 (pdftex.def)             Requested size: 469.7577pt x 297.90468pt.
 
-Overfull \hbox (15.00269pt too wide) in paragraph at lines 2805--2811
+Overfull \hbox (15.00269pt too wide) in paragraph at lines 2804--2810
 [][]
  []
 
@@ -816,10 +816,10 @@ Overfull \hbox (15.00269pt too wide) in paragraph at lines 2805--2811
 <rf_smote_2.png, id=553, 903.375pt x 572.89032pt>
 File: rf_smote_2.png Graphic file (type png)
 <use rf_smote_2.png>
-Package pdftex.def Info: rf_smote_2.png  used on input line 2826.
+Package pdftex.def Info: rf_smote_2.png  used on input line 2825.
 (pdftex.def)             Requested size: 469.7577pt x 297.90468pt.
 
-Overfull \hbox (15.00269pt too wide) in paragraph at lines 2826--2827
+Overfull \hbox (15.00269pt too wide) in paragraph at lines 2825--2826
 [][] 
  []
 
@@ -827,10 +827,10 @@ Overfull \hbox (15.00269pt too wide) in paragraph at lines 2826--2827
 <rf_smote_3.png, id=559, 903.375pt x 572.89032pt>
 File: rf_smote_3.png Graphic file (type png)
 <use rf_smote_3.png>
-Package pdftex.def Info: rf_smote_3.png  used on input line 2855.
+Package pdftex.def Info: rf_smote_3.png  used on input line 2854.
 (pdftex.def)             Requested size: 469.7577pt x 297.90468pt.
 
-Overfull \hbox (15.00269pt too wide) in paragraph at lines 2855--2862
+Overfull \hbox (15.00269pt too wide) in paragraph at lines 2854--2861
 [][]
  []
 
@@ -838,10 +838,10 @@ Overfull \hbox (15.00269pt too wide) in paragraph at lines 2855--2862
 <rf_smote_4.png, id=565, 903.375pt x 572.89032pt>
 File: rf_smote_4.png Graphic file (type png)
 <use rf_smote_4.png>
-Package pdftex.def Info: rf_smote_4.png  used on input line 2880.
+Package pdftex.def Info: rf_smote_4.png  used on input line 2879.
 (pdftex.def)             Requested size: 469.7577pt x 297.90468pt.
 
-Overfull \hbox (15.00269pt too wide) in paragraph at lines 2880--2881
+Overfull \hbox (15.00269pt too wide) in paragraph at lines 2879--2880
 [][] 
  []
 
@@ -849,27 +849,27 @@ Overfull \hbox (15.00269pt too wide) in paragraph at lines 2880--2881
 <rf_smote_5.png, id=572, 903.375pt x 572.89032pt>
 File: rf_smote_5.png Graphic file (type png)
 <use rf_smote_5.png>
-Package pdftex.def Info: rf_smote_5.png  used on input line 2910.
+Package pdftex.def Info: rf_smote_5.png  used on input line 2909.
 (pdftex.def)             Requested size: 469.7577pt x 297.90468pt.
 
-Overfull \hbox (15.00269pt too wide) in paragraph at lines 2910--2911
+Overfull \hbox (15.00269pt too wide) in paragraph at lines 2909--2910
 [][] 
  []
 
 [49 <./rf_smote_4.png>] [50 <./rf_smote_5.png>]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 2973.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 2972.
 [51] [52 <./flowchart_overview.png>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 2973.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 2972.
 (./ML_paper.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 2973.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 2973.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 2972.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 2972.
 
 Package rerunfilecheck Info: File `ML_paper.out' has not changed.
 (rerunfilecheck)             Checksum: BCE30FC4EB55506627426279D3CD274F;6287.
 
 LaTeX Warning: There were multiply-defined labels.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 2973.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 2972.
  ) 
 Here is how much of TeX's memory you used:
  11130 strings out of 482605
@@ -901,7 +901,7 @@ pe1/public/lm/lmsy7.pfb></Users/hebailan/Library/TinyTeX/texmf-dist/fonts/type1
 /public/lm/lmtk10.pfb></Users/hebailan/Library/TinyTeX/texmf-dist/fonts/type1/p
 ublic/lm/lmtt10.pfb></Users/hebailan/Library/TinyTeX/texmf-dist/fonts/type1/pub
 lic/lm/lmtti10.pfb>
-Output written on ML_paper.pdf (52 pages, 1234957 bytes).
+Output written on ML_paper.pdf (52 pages, 1238404 bytes).
 PDF statistics:
  695 PDF objects out of 1000 (max. 8388607)
  575 compressed objects within 6 object streams

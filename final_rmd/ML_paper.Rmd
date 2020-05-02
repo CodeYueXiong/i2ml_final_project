@@ -720,9 +720,9 @@ completeData <- data %>%
 head(completeData)
 ```
 
-After the above preprocessing procedures with nominal variable addressed with one-hot encoding, the corresponding 3 datasets were generated accordingly which are named as *dl_oh_data*, *mf_oh_data* and *mice_oh_data*.
+After the above preprocessing procedures with nominal variable addressed with one-hot encoding, the corresponding 3 datasets were generated accordingly which are named as **dl_oh_data**, **mf_oh_data** and **mice_oh_data**.
 
-When finishing with the nominal variable encoding process, there are 6 datasets in general named with 2 groups: the *iv* group and the *one-hot* group. There are *dl_iv_data*, *mf_iv_data* and *mice_iv_data* included in the *iv* group while *dl_oh_data*, *mf_oh_data* and *mice_oh_data* included in the *one-hot* group.
+When finishing with the nominal variable encoding process, there are 6 datasets in general named with 2 groups: the **iv** group and the **one-hot** group. There are **dl_iv_data**, **mf_iv_data** and **mice_iv_data** included in the **iv** group while **dl_oh_data**, **mf_oh_data** and **mice_oh_data** included in the **one-hot** group.
 
 \newpage
 
@@ -735,7 +735,7 @@ $$ P=(y=1|x,\beta) = \frac{1}{1+e^{-\beta^Tx}} $$
 ## KNN  
 
 KNN (k-nearest neighbors) is a method used for classification. In simple words, to classify one specific data point, it takes k neighbors with the shortest distance. Furthermore, based on how the neighbors are classified, we will assign the new input to the most popular category in the k neighbors.  
-The **KNN** package included in **mlr3** has the following parameters: __k__ (the number of neighbors considered), __distance__ (Parameter of Minkowski distance), __kernel__ (kernel functions used to weight the neighbors). Here the number of k and the method of calculating the distances between data points are crucial. We will first evaluate how KNN performs between different data, including different encoding, and different missing value handling. Then we will explore different methods to get better results. First, we investigate them separately and then combine the knowledge to perform further fine-tuning to improve the model.  
+The **KNN** package included in **mlr3** has the following parameters: *k* (the number of neighbors considered), *distance* (Parameter of Minkowski distance), *kernel* (kernel functions used to weight the neighbors). Here the number of k and the method of calculating the distances between data points are crucial. We will first evaluate how KNN performs between different data, including different encoding, and different missing value handling. Then we will explore different methods to get better results. First, we investigate them separately and then combine the knowledge to perform further fine-tuning to improve the model.  
 
 ## SVM  
 
@@ -743,21 +743,21 @@ A Support Vector Machine (SVM) is a discriminative classifier formally defined b
 
 Correspondingly, we will use the SVM algorithm embedded in the **mlr3** learner and analyze the prediction performances with AUC (Area under the ROC Curve) values. 
 
-When it comes to model tuning for SVM, we consider the __kernel__ function, __cost__ (also known as __C-Regularization__ parameter) and __gamma__ to tune.
+When it comes to model tuning for SVM, we consider the *kernel* function, *cost* (also known as *C-Regularization* parameter) and *gamma* to tune.
 
-__kernels__: The main function of the kernel is to take low dimensional input space and transform it into a higher-dimensional space. It is mostly useful in non-linear separation problem.
+*kernels*: The main function of the kernel is to take low dimensional input space and transform it into a higher-dimensional space. It is mostly useful in non-linear separation problem.
 
-__cost (Regularisation)__: Cost is the penalty parameter, which represents misclassification or error term. The misclassification or error term tells the SVM optimisation how much error is bearable. This is how you can control the trade-off between decision boundary and misclassification term.
+*cost (Regularisation)*: Cost is the penalty parameter, which represents misclassification or error term. The misclassification or error term tells the SVM optimisation how much error is bearable. This is how you can control the trade-off between decision boundary and misclassification term.
 
-__Gamma__: It defines how far influences the calculation of plausible line of separation.
+*Gamma*: It defines how far influences the calculation of plausible line of separation.
 
 ## Random Forest  
 
 Random Forest, also known as Random Decision Forest, is an algorithm mainly used for dealing with classification problems. It consists of multiple decision trees and harnesses bagging and feature randomness in order to create an uncorrelated forest of trees whose prediction performance is more accurate than of any individual tree.
 With regards to model tuning for Random Rorest, there are mainly four variables to take into consideration.
-One of the crucial hyperparameters of RF is __mtry__, defined as how many variables to select at a node split when growing a decision tree. Generally, lower values of mtry will lead to more different, less correlated trees, arousing better stability while aggregating. As mentioned by Probst in the article Hyperparameters and tuning strategies for random forest, mtry values are sampled from the space $[0,p]$ with p being the number of predictor variables. Accordingly, we should set the range of mtry values to meet the above requirements.
-Secondly, the sample size parameter, __sample.fraction__, determines how many observations are drawn for the training of each tree. It has a similar effect as the mtry parameter. Decreasing the sample size leads to more diverse trees and thereby lower correlation between the trees, which has a positive effect on the prediction accuracy when aggregating the trees. However, the accuracy of the single trees decreases, since fewer observations are used for training. Hence, similarly to the mtry parameter, the choice of the sample size can be seen as a trade-off between stability and accuracy of the trees. Therefore, sample size values shall be sampled from $[0.2n, 0.9n]$ with n being the number of observations.
-Moreover, the nodesize parameter, __min.node.size__, specifies the minimum number of observations in a terminal node. Setting it lower leads to trees with a larger depth which means that more splits are performed until the terminal nodes. Considering tuning with it (see Hyperparameters and tuning strategies for random forest), node size values should be sampled from with higher probability (in the initial design) for smaller values by sampling $x$ from $[0, 1]$ and transforming the value by the formula $[(0.2n)^x]$.
+One of the crucial hyperparameters of RF is *mtry*, defined as how many variables to select at a node split when growing a decision tree. Generally, lower values of mtry will lead to more different, less correlated trees, arousing better stability while aggregating. As mentioned by Probst in the article Hyperparameters and tuning strategies for random forest, mtry values are sampled from the space $[0,p]$ with p being the number of predictor variables. Accordingly, we should set the range of mtry values to meet the above requirements.
+Secondly, the sample size parameter, *sample.fraction*, determines how many observations are drawn for the training of each tree. It has a similar effect as the mtry parameter. Decreasing the sample size leads to more diverse trees and thereby lower correlation between the trees, which has a positive effect on the prediction accuracy when aggregating the trees. However, the accuracy of the single trees decreases, since fewer observations are used for training. Hence, similarly to the mtry parameter, the choice of the sample size can be seen as a trade-off between stability and accuracy of the trees. Therefore, sample size values shall be sampled from $[0.2n, 0.9n]$ with n being the number of observations.
+Moreover, the nodesize parameter, *min.node.size*, specifies the minimum number of observations in a terminal node. Setting it lower leads to trees with a larger depth which means that more splits are performed until the terminal nodes. Considering tuning with it (see Hyperparameters and tuning strategies for random forest), node size values should be sampled from with higher probability (in the initial design) for smaller values by sampling $x$ from $[0, 1]$ and transforming the value by the formula $[(0.2n)^x]$.
 Last but not least, the number of trees in a forest is a parameter that is not tunable in the classical sense but should be set sufficiently high. According to measures based on the mean quadratic loss such as the mean squared error (in case of regression) or the Brier score (in case of classification), however, more trees are always better, as theoretically proved by Probst and Boulesteix (2017). Thence, we have decided to set it to be fixed with 1000 to meet the considerably latge number of obsearvations of records. Also, it can be vividly seen from the target dataset we have generated from the data preparation step that the distribution with target 1 and 0 are so imbalanced that we must train the learner with SMOTE function to get considerably balanced training data. Fortunately, in mlr3pipelines, there is a classbalancing and a smote pipe operator that can be combined with any learner. We have decided to combine the fixed tree number of learner with SMOTE function learner in order to get the optimal parameter settings for smote.K and smote.dup_size.  
 
 ## Metrics 
@@ -827,7 +827,7 @@ task_all <- list(
 ```
 
 for each model, we work the same procedures.  
-we all use **benchmark_grid** to creat design, setting with __5 folds cv__, __predict_type = "prob"__ and __measure = msr("classif.auc")__ for computing AUC. In addition, we fix random seed as __2020__ for reproducing.
+we all use **benchmark_grid** to creat design, setting with *5 folds cv*, *predict_type = "prob"* and *measure = msr("classif.auc")* for computing AUC. In addition, we fix random seed as *2020* for reproducing.
 
 ### Logistic Regression:  
 
@@ -988,8 +988,8 @@ according to the results above, **dl_iv_data** generally has the best prediction
 
 # Finetunning
 
-Based on the imbalanced target dataset we already have, it is crucial that we need to firstly address the imbalance problem. When it comes to deal with imbalanced data, there are two options to choose. The first method is the **smote**  and the other is the **oversampling**. In mlr3pipelines, there is a **classbalancing** and a **smote** pipe operator that can be combined with any learner. Note that **smote** has two hyperparameters __K__ and __dup_size__. While __K__ changes the behavior of the SMOTE algorithm, __dup_size__ will affect oversampling rate of SMOTE algorithm. As for **oversampling** oeperator, there is only one hyperparameter
-__oversample.ratio__, which determines the oversampling rate of **oversampling** operator.
+Based on the imbalanced target dataset we already have, it is crucial that we need to firstly address the imbalance problem. When it comes to deal with imbalanced data, there are two options to choose. The first method is the **smote**  and the other is the **oversampling**. In mlr3pipelines, there is a **classbalancing** and a **smote** pipe operator that can be combined with any learner. Note that **smote** has two hyperparameters *K* and *dup_size*. While *K* changes the behavior of the SMOTE algorithm, *dup_size* will affect oversampling rate of SMOTE algorithm. As for **oversampling** oeperator, there is only one hyperparameter
+*oversample.ratio*, which determines the oversampling rate of **oversampling** operator.
 
 
 To focus on the effect of the oversampling rate on the performance, we will consider different parameter settings with regards to the **oversampling** pipe operator which can be adapted to different training models.
@@ -997,9 +997,9 @@ To focus on the effect of the oversampling rate on the performance, we will cons
 when it comes to hyperparameter tuning, we need to set different learners based on the **mlr3 package** to tune tasks. The next step is to set for the hyperparameters which are used to tune with different ranges or factor levels.
 
 
-We create a list of AutoTuner classes of the 4 different learners (Random Forest, SVM, Logistic and KNN) to tune the graph (4 different model learners + imbalance data correction method) based on a 3-fold CV using the classif.AUC as the performance measure. To keep runtime low, we define the resolution with grid_search to 5. However, one can also jointly tune the hyperparameter of the learner along with the imbalance correction method by extending the search space with the learner’s hyperparameters. Note that SMOTE has two hyperparameters __K__ and __dup_size__. While __K__ changes the behavior of the SMOTE algorithm, __dup_size__ will affect oversampling rate. To focus on the effect of the oversampling rate on the performance, we will consider different parameter settings with regards to the **oversampling** pipe operator which can be adapted to different training models.
+We create a list of AutoTuner classes of the 4 different learners (Random Forest, SVM, Logistic and KNN) to tune the graph (4 different model learners + imbalance data correction method) based on a 3-fold CV using the classif.AUC as the performance measure. To keep runtime low, we define the resolution with grid_search to 5. However, one can also jointly tune the hyperparameter of the learner along with the imbalance correction method by extending the search space with the learner’s hyperparameters. Note that SMOTE has two hyperparameters *K* and *dup_size*. While *K* changes the behavior of the SMOTE algorithm, *dup_size* will affect oversampling rate. To focus on the effect of the oversampling rate on the performance, we will consider different parameter settings with regards to the **oversampling** pipe operator which can be adapted to different training models.
 
-Therefore, we will need to firstly find the optimal settings for __smote.K__ and __smote.dup_size__ to correct the imbalanced target data distribution. Hence, we use grid search with the corresponding hyperparameter configurations for the oversampling method and each SMOTE variant for tuning. The **AutoTuner** is a fully tuned graph that behaves like a usual learner. For the innner tuning, a 3-fold CV is used. Now, we use the **benchmark** function to compare the tuned class imbalance pipeline graphs based on a 3-fold CV for the outer evaluation.
+Therefore, we will need to firstly find the optimal settings for *smote.K* and *smote.dup_size* to correct the imbalanced target data distribution. Hence, we use grid search with the corresponding hyperparameter configurations for the oversampling method and each SMOTE variant for tuning. The **AutoTuner** is a fully tuned graph that behaves like a usual learner. For the innner tuning, a 3-fold CV is used. Now, we use the **benchmark** function to compare the tuned class imbalance pipeline graphs based on a 3-fold CV for the outer evaluation.
 After all these tuning procedures mentioned above, we can therefore draw different parameter combinations with **ggplot** and see what the general trend is with different parameter ranges or levels to choose the optimal hyperparameter combinations for the best prediction performance. Also one thing to mention, we would generally use the y pixel as the AUC value, x pixel as the tuning parameter and the color parameter as well to show the different tendencies if necessary.
 Ultimately, after all these step-to-step tuning procedures, we can grab the best performance (measured by AUC value) with the recommended parameter settings and therefore improve our default models.
 
@@ -1027,7 +1027,7 @@ po_over <- po("classbalancing",
 lg_over_learner <- GraphLearner$new(po_over %>>% lg_learner, predict_type = "prob")
 ```
 
-As for **classbalancing**, __oversample.ratio__ is the hyperparamter we must set, ranging from 10 to 70.
+As for **classbalancing**, *oversample.ratio* is the hyperparamter we must set, ranging from 10 to 70.
 We define the search space in order to tune the hyperparameters of the class imbalance methods. 
 We create an AutoTuner class from the learner to tune the graph based on a 3-fold CV using the classif.auc as performance measure. 
 ```{r}
@@ -1048,7 +1048,7 @@ lg_over_design <- benchmark_grid(
 )
 ```
 
-With __store_models = TRUE__ we allow the benchmark function to store each single model that was computed during tuning. Therefore, we can plot the tuning path of the best learner from the subsampling iterations:
+With *store_models = TRUE* we allow the benchmark function to store each single model that was computed during tuning. Therefore, we can plot the tuning path of the best learner from the subsampling iterations:
 
 ```{r ,eval=FALSE,results='hide', message=FALSE, warning=FALSE}
 set.seed(2020)
@@ -1092,7 +1092,7 @@ ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("over_lg.png")
 ```
 
-shown on the plots above, it is better to choose __oversample.ratio__ with value 
+shown on the plots above, it is better to choose *oversample.ratio* with value 
 40 in order to show a considerably good prediction performance measured around 0.73.  
 In comparison with defalut **dl_iv_data**, there is no significant increment. Thence,
 oversample method seems not suitable for Logistic Regression.
@@ -1106,7 +1106,7 @@ po_smote <- po("smote", dup_size = 50)
 lg_smote_learner <- GraphLearner$new(po_smote %>>% lg_learner, predict_type = "prob")
 ```
 
-As for **smote**, we set hyperparamters __smote.K__ ranging from 20 to 60 and  __smote.dup_size__ ranging from 10 to 20.
+As for **smote**, we set hyperparamters *smote.K* ranging from 20 to 60 and  *smote.dup_size* ranging from 10 to 20.
 We define the search space in order to tune the hyperparameters of the class imbalance methods. 
 other configurations remain mentioned above.
 ```{r}
@@ -1132,7 +1132,7 @@ lg_smote_design <- benchmark_grid(
 )
 ```
 
-With __store_models = TRUE__ we allow the benchmark function to store each single model that was computed during tuning. Therefore, we can plot the tuning path of the best learner from the subsampling iterations:
+With *store_models = TRUE* we allow the benchmark function to store each single model that was computed during tuning. Therefore, we can plot the tuning path of the best learner from the subsampling iterations:
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
 set.seed(2020)
@@ -1172,8 +1172,8 @@ ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("smote_lg.png")
 ```
 
-shown on the plots above, it is better to choose __smote.K__ with value 
-40 and __smote.dup_size__ with value 15 in order to show a considerably good prediction performance measured around **0.72**.  
+shown on the plots above, it is better to choose *smote.K* with value 
+40 and *smote.dup_size* with value 15 in order to show a considerably good prediction performance measured around **0.72**.  
 In comparison with defalut **dl_iv_data**, there is no significant increment. Thence,
 smote method seems not suitable for Logistic Regression.
 
@@ -1329,7 +1329,7 @@ As we can see, there is no significant improvement after trying different method
 
 ## SVM (smote)
 
-Considering the super imbalanced target dataset to process, it is also necessary to implement the **SMOTE** function to firstly balance the whole dataset. Therefore, to determine the two crucial parameters __smote.dup_size__ and __smote.K__ is the first step. With __smote.dup_size__ defined from 10 to 60 and __smote.K__ from 10 to 25, it is better to implement a __grid_search__ to figure out what is the optimal parameter settings for the 2 parameters based on the **svm** learner and the __dl_iv_data__ training task.
+Considering the super imbalanced target dataset to process, it is also necessary to implement the **SMOTE** function to firstly balance the whole dataset. Therefore, to determine the two crucial parameters *smote.dup_size* and *smote.K* is the first step. With *smote.dup_size* defined from 10 to 60 and *smote.K* from 10 to 25, it is better to implement a *grid_search* to figure out what is the optimal parameter settings for the 2 parameters based on the **svm** learner and the **dl_iv_data** training task.
 
 ```{r}
 # suppress svm package
@@ -1402,9 +1402,9 @@ ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("svm_smote.png")
 ```
 
-As can be seen from the plots above, __smote.dup_size__ is showing better prediction performance when defined as 40 and __smote.K__ shall be defined as 21 which is having more stable training performance with color blue correspondingly.
+As can be seen from the plots above, *smote.dup_size* is showing better prediction performance when defined as 40 and *smote.K* shall be defined as 21 which is having more stable training performance with color blue correspondingly.
 
-Then the next step would be to determine which __kernel__ function type to use with fixed __smote.dup_size__ and __smote.K__. Regarding the choice of suitable kernel function with SVM, there are in total four options to choose: __linear__, __polynomial__, __radial__, __sigmoid__. The default value for the mlr3 SVM learner is the __radical__ function. Thence, we need to implement the other three kernel functions on the previous training models with the __dl_iv_data__ task and again use the __grid_search__ to check which __kernel__ function will generate better prediction performance shown with higher AUC value.
+Then the next step would be to determine which *kernel* function type to use with fixed *smote.dup_size* and *smote.K*. Regarding the choice of suitable kernel function with SVM, there are in total four options to choose: *linear*, *polynomial*, *radial*, *sigmoid*. The default value for the mlr3 SVM learner is the *radical* function. Thence, we need to implement the other three kernel functions on the previous training models with the **dl_iv_data** task and again use the *grid_search* to check which *kernel* function will generate better prediction performance shown with higher AUC value.
 
 ```{r, eval=FALSE}
 # train with kernel type
@@ -1466,7 +1466,7 @@ ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("svm_kernel.png")
 ```
 
-As you can seen from the plots which refer to the comparison with different __kernel__ functions, the best performance is given by the __radial__ function for the __dl_iv_data__ task. Nevertheless, we still need to figure out the optimal choice with parameter __cost__ and __gamma__ and as for the tuning range for __cost__, the first try would be to set with 0.1, 1, 10 and 100.
+As you can seen from the plots which refer to the comparison with different *kernel* functions, the best performance is given by the *radial* function for the **dl_iv_data** task. Nevertheless, we still need to figure out the optimal choice with parameter *cost* and *gamma* and as for the tuning range for *cost*, the first try would be to set with 0.1, 1, 10 and 100.
 
 ```{r, eval=FALSE}
 svm_lrn <- lrn("classif.svm", predict_type = "prob", kernel = "radial", type = "C-classification")
@@ -1525,7 +1525,7 @@ ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("svm_cost.png")
 ```
 
-Shown on the plots above, it is better to choose __cost__ with value 0.1. Hence, the last step would be to tune __gamma__ for the __dl_iv_data__ training task. Ranging from xx to xx with __gamma__, we would like to see the trend of the tuning performance and determine for the ultimate __gamma__ accordingly.
+Shown on the plots above, it is better to choose *cost* with value 0.1. Hence, the last step would be to tune *gamma* for the **dl_iv_data** training task. Ranging from xx to xx with *gamma*, we would like to see the trend of the tuning performance and determine for the ultimate *gamma* accordingly.
 
 ```{r eval=FALSE}
 svm_lrn <- lrn("classif.svm", predict_type = "prob", kernel = "radial", cost = 0.1, type = "C-classification")
@@ -1587,7 +1587,7 @@ In conclusion, it is better to go with _radial_ kernel function, _cost_ being se
 
 ## Random Forest (smote)
 
-As mentioned in chapter 3, we fix the parameter __num.trees__ with value 1000 and set training range 30 to 60 for __smote.dup_size__ and 10 to 20 for __smote.K__ seperately in order to find the best training pairs with the two parameters, reaching the best prediction performance.
+As mentioned in chapter 3, we fix the parameter *num.trees* with value 1000 and set training range 30 to 60 for *smote.dup_size* and 10 to 20 for *smote.K* seperately in order to find the best training pairs with the two parameters, reaching the best prediction performance.
 
 ```{r eval=FALSE}
 library(ranger)
@@ -1656,7 +1656,7 @@ ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("rf_smote.png")
 ```
-We can see from the plots above, __smote.dup_size__ ranging from 37 to 53 together with __smote.k__ from 15 to 25 tends to have better AUC values. Then we need to reset the __smote.dup_size__ to 37 to 53 and __smote.k__ 5 to 25, repeating the __grid_search__ again to explore the two parameters further.
+We can see from the plots above, *smote.dup_size* ranging from 37 to 53 together with *smote.k* from 15 to 25 tends to have better AUC values. Then we need to reset the *smote.dup_size* to 37 to 53 and *smote.k* 5 to 25, repeating the *grid_search* again to explore the two parameters further.
 
 ```{r}
 # learner with fixed number of trees: 1000
@@ -1713,7 +1713,7 @@ ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("rf_smote_2.png")
 ```
 
-Shown on the plots above, we have discovered that the two parameters __smote.dup_size__ and __smote.K__ should be set to 45 and 15 seperately where the AUC distributions always tend to have a summit around dup_size value 45 and K with value 15 is much more stable with the prediction performance here at the same time. Then the next step we shall need to stay with the optimal smote parameter settings ( __smote.dup_size__ is set to 45 and __smote.K__ to 15) and take the mtry and the __num.trees__ parameters into consideration with parameters' tuning ranges set to 1-13 and 400-1700 in order to get the best pair settings with the highest AUC value.
+Shown on the plots above, we have discovered that the two parameters *smote.dup_size* and *smote.K* should be set to 45 and 15 seperately where the AUC distributions always tend to have a summit around dup_size value 45 and K with value 15 is much more stable with the prediction performance here at the same time. Then the next step we shall need to stay with the optimal smote parameter settings ( *smote.dup_size* is set to 45 and *smote.K* to 15) and take the mtry and the *num.trees* parameters into consideration with parameters' tuning ranges set to 1-13 and 400-1700 in order to get the best pair settings with the highest AUC value.
 
 
 ```{r}
@@ -1780,7 +1780,7 @@ ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("rf_smote_3.png")
 ```
-So, we would go with the combination of __num.trees__ = 1000 and __mtry__ = 7. And the next step would be to tune __min.node.size__ and __sample.fraction__ with the previous selected parameters settings. According to rangerTune algorithm, we shall try setting tuning range for __min.node.size__ from 2 to 8 and __sample.fraction__ from 0.5 to 0.8 and see the corresponding AUC performance.
+So, we would go with the combination of *num.trees* = 1000 and *mtry* = 7. And the next step would be to tune *min.node.size* and *sample.fraction* with the previous selected parameters settings. According to rangerTune algorithm, we shall try setting tuning range for *min.node.size* from 2 to 8 and *sample.fraction* from 0.5 to 0.8 and see the corresponding AUC performance.
 
 
 ```{r}
@@ -1853,7 +1853,7 @@ ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("rf_smote_4.png")
 ```
 
-We would go with __min.node.size__ = 3 as we can see the AUC value tends to reach the best performance when we set it to 3. However, it is still not clear the approximated defined range for parameter __sample.fraction.__ Next, we need to retrain the model with a wider range with parameter __sample.fraction__ from 0.45 to 0.95.
+We would go with *min.node.size* = 3 as we can see the AUC value tends to reach the best performance when we set it to 3. However, it is still not clear the approximated defined range for parameter *sample.fraction.* Next, we need to retrain the model with a wider range with parameter *sample.fraction* from 0.45 to 0.95.
 
 ```{r}
 # RF with 4 different paramSets, to analysis how to do further tuning
@@ -1928,9 +1928,9 @@ bmr_result <- bmr_smote$aggregate(msr("classif.auc"))
 knitr::include_graphics("rf_smote_5.png")
 ```
 
-When reaching the highest AUC value, __sample.fraction__ is always taking good performance values around 0.55 and 0.6 and the distributions of __min.node.size__ are showing better performance results (measured by AUC) with value 3. Therefore, we would choose the __sample.fraction__ with 0.575 and have a better AUC performance value with 0.83.
+When reaching the highest AUC value, *sample.fraction* is always taking good performance values around 0.55 and 0.6 and the distributions of *min.node.size* are showing better performance results (measured by AUC) with value 3. Therefore, we would choose the *sample.fraction* with 0.575 and have a better AUC performance value with 0.83.
 
-After the step-by-step hyperparameter tuning, we have finally managed to reach our best prediction performance with AUC value fixed at 0.83 which shows the improvement of 0.07 in comparison with the performance of Random Forest's default model with value 0.76. In conclusion, when __smote.dup_size__ being set to 45 and __smote.K__ to 15 with the SMOTE operator, the final parameter settings combination would be __num.trees__ = 1000, __mtry__ = 7, __min.node.size__ = 3 and __sample.fraction__ = 0.575, reaching an AUC level at 0.83.
+After the step-by-step hyperparameter tuning, we have finally managed to reach our best prediction performance with AUC value fixed at 0.83 which shows the improvement of 0.07 in comparison with the performance of Random Forest's default model with value 0.76. In conclusion, when *smote.dup_size* being set to 45 and *smote.K* to 15 with the SMOTE operator, the final parameter settings combination would be *num.trees* = 1000, *mtry* = 7, *min.node.size* = 3 and *sample.fraction* = 0.575, reaching an AUC level at 0.83.
 
 \newpage
 
