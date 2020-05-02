@@ -1,8 +1,9 @@
 ---
-title: "Classification of Risk Factors"
+title: "Research on Prediction of Credit Card Approval Based on Machine Learning"
 output: 
   pdf_document:
     toc: true
+    toc_depth: 4  
     number_sections: true
 ---
 
@@ -319,7 +320,7 @@ finally we get three datasets based different imputation methods: **dl_na_data**
 
 \newpage
 
-# Features Engineering
+# Feature Engineering
 ## WOE Encoding
 After running several model based on original features, we find that the positive 
 samples(y=1) are not able to be good classified. We suppose that our model are 
@@ -448,7 +449,7 @@ Since we use 3 different strategies to deal with the missing data, we now have
 three dataset and for all the datasets we will excute the same process to finish features engineering.
 Using **dl_na_data** as an example.
 
-#### Binary variables
+### Binary variables
 
 After loading data, we inspect our factory variables as mentioned above, there are 8 factory
 variables, i.e. `CODE_GENDER`, `FLAG_OWN_CAR`, `FLAG_OWN_REALTY`, `NAME_INCOME_TYPE`
@@ -717,7 +718,7 @@ When finishing with the nominal variable encoding process, there are 6 datasets 
 
 \newpage
 
-# General Introduction
+# Introduction to methods and metrices
 
 ## Logistic regression
 Logistic Regression is a Machine Learning classification algorithm that is used to predict the probability of a categorical dependent variable. In logistic regression, the dependent variable is a binary variable that contains data coded as 1 (yes, success, etc.) or 0 (no, failure, etc.). In other words, the logistic regression model predicts P(Y=1) as is shown in formular of X. 
@@ -771,7 +772,6 @@ including fbeta, ce, acc and AUC. Ingeneral, using fbeta would be ideal when fac
 
 # Choosing the training task  
 
-## Introduction  
 As for the process concerning the general model tuning, we would firstly go with the 6 different datasets corresponding to 6 training tasks and train the 4 models with default parameter settings and see which task to choose according to the ultimate performance output based on the best AUC level. By doing these, the training workload for the following tuning procedures would be tremendously decreased as we have considerably more learners to train the task with.  
 
 ## Models results  
@@ -978,9 +978,7 @@ according to the results above, **dl_iv_data** generally has the best prediction
 
 \newpage
 
-# Finetunning 
-
-## Introduction
+# Finetunning
 
 Based on the imbalanced target dataset we already have, it is crucial that we need to firstly address the imbalance problem. When it comes to deal with imbalanced data, there are two options to choose. The first method is the **smote**  and the other is the **oversampling**. In mlr3pipelines, there is a **classbalancing** and a **smote** pipe operator that can be combined with any learner. Note that **smote** has two hyperparameters __K__ and __dup_size__. While __K__ changes the behavior of the SMOTE algorithm, __dup_size__ will affect oversampling rate of SMOTE algorithm. As for **oversampling** oeperator, there is only one hyperparameter
 __oversample.ratio__, which determines the oversampling rate of **oversampling** operator.
@@ -997,13 +995,10 @@ Therefore, we will need to firstly find the optimal settings for __smote.K__ and
 After all these tuning procedures mentioned above, we can therefore draw different parameter combinations with **ggplot** and see what the general trend is with different parameter ranges or levels to choose the optimal hyperparameter combinations for the best prediction performance. Also one thing to mention, we would generally use the y pixel as the AUC value, x pixel as the tuning parameter and the color parameter as well to show the different tendencies if necessary.
 Ultimately, after all these step-to-step tuning procedures, we can grab the best performance (measured by AUC value) with the recommended parameter settings and therefore improve our default models.
 
-
-## Fintunning results  
-
-### Logistic Regression  
+## Logistic Regression  
 
 
-#### oversampling  
+### oversampling  
 
 At first we define the oversampling PipeOps.
 ```{r}
@@ -1094,7 +1089,7 @@ shown on the plots above, it is better to choose __oversample.ratio__ with value
 In comparison with defalut **dl_iv_data**, there is no significant increment. Thence,
 oversample method seems not suitable for Logistic Regression.
 
-#### smote  
+### smote  
 
 At first we define the smote PipeOps.
 ```{r}
@@ -1174,9 +1169,9 @@ shown on the plots above, it is better to choose __smote.K__ with value
 In comparison with defalut **dl_iv_data**, there is no significant increment. Thence,
 smote method seems not suitable for Logistic Regression.
 
-### KNN  
+## KNN  
 
-#### oversampling  
+### oversampling  
 
 Since our data is highly unbalanced, we want to try two different methods to solve this issue - Smote and oversampling and see if this increases the performance of the model. 
 
@@ -1246,7 +1241,7 @@ ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend="bottom", n
 knitr::include_graphics("3_over_auc.png")
 ```
 
-#### smote  
+### smote  
 
 In this section, we will use the package **SMOTE** that is included in **mlr3**, to see whethere balancing the data with smote may improve the prediction of the model.
 
@@ -1324,7 +1319,7 @@ knitr::include_graphics("3_smote_auc.png")
 
 As we can see, there is no significant improvement after trying different methods to balance the data. Since we used a binary variable to indicate whether a category is present or not, the max distance can only be 1 or 0. Moreover, other numeric variables have a more significant distance, meaning that they have a more substantial impact on the distance than the categorical data without having a significant correlation with our target variable. To get better results, it would be necessary to either use other ways to handle categorical data better for distance calculation or using different training methods to perform classification instead of KNN.
 
-### SVM(smote)
+## SVM (smote)
 
 Considering the super imbalanced target dataset to process, it is also necessary to implement the **SMOTE** function to firstly balance the whole dataset. Therefore, to determine the two crucial parameters __smote.dup_size__ and __smote.K__ is the first step. With __smote.dup_size__ defined from 10 to 60 and __smote.K__ from 10 to 25, it is better to implement a __grid_search__ to figure out what is the optimal parameter settings for the 2 parameters based on the **svm** learner and the __dl_iv_data__ training task.
 
@@ -1582,7 +1577,7 @@ knitr::include_graphics("svm_gamma.png")
 
 In conclusion, it is better to go with _radial_ kernel function, _cost_ being set to 0.1 and _gamma_ being set to 0.75 on the condition that _smote.dup_size_ is set to 40 and _smote.K_ to 21. And the ultimate prediction performance measured by AUC is therefore 0.7839 with an increase of 0.0x in regards to the previous svm model with default parameter settings.
 
-### Random Forest(smote)
+## Random Forest (smote)
 
 As mentioned in chapter 3, we fix the parameter __num.trees__ with value 1000 and set training range 30 to 60 for __smote.dup_size__ and 10 to 20 for __smote.K__ seperately in order to find the best training pairs with the two parameters, reaching the best prediction performance.
 
