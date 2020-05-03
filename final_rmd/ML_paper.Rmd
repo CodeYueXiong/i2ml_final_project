@@ -1004,9 +1004,9 @@ Ultimately, after all these step-to-step tuning procedures, we can grab the best
 ## Logistic Regression  
 
 
-### Oversampling  
+### Data balancing 
 
-At first we define the oversampling PipeOps.
+At first we define the smote PipeOps.
 ```{r}
 # load library
 library(mlr3learners)
@@ -1016,89 +1016,7 @@ library(paradox)
 task <- TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y")
 # logistic learner
 lg_learner <- lrn("classif.log_reg", predict_type = "prob")
-# po_smote = po("smote", dup_size = 6)
-po_over <- po("classbalancing",
-  id = "oversample", adjust = "minor",
-  reference = "minor", shuffle = FALSE, ratio = 6
-)
-# creat oversample
-lg_over_learner <- GraphLearner$new(po_over %>>% lg_learner, predict_type = "prob")
-```
 
-As for **classbalancing**, *oversample.ratio* is the hyperparamter we must set, ranging from 10 to 70.
-We define the search space in order to tune the hyperparameters of the class imbalance methods. 
-We create an AutoTuner class from the learner to tune the graph based on a 3-fold CV using the classif.auc as performance measure. 
-```{r}
-lg_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", lower = 10, upper = 70)))
-terms <- term("none")
-inner_rsmp <- rsmp("cv", folds = 5L)
-lg_over_auto <- AutoTuner$new(
-  learner = lg_over_learner, resampling = inner_rsmp,
-  measures = msr("classif.auc"), tune_ps = lg_over_param_set,
-  terminator = terms, tuner = tnr("grid_search", resolution = 10)
-)
-# set outer_resampling, and creat a design with it
-outer_rsmp <- rsmp("cv", folds = 3L)
-lg_over_design <- benchmark_grid(
-  tasks = task,
-  learners = lg_over_auto,
-  resamplings = outer_rsmp
-)
-```
-
-With *store_models = TRUE* we allow the benchmark function to store each single model that was computed during tuning. Therefore, we can plot the tuning path of the best learner from the subsampling iterations:
-
-```{r ,eval=FALSE,results='hide', message=FALSE, warning=FALSE}
-set.seed(2020)
-lg_over_bmr <- benchmark(lg_over_design, store_models = TRUE)
-lg_over_results <- lg_over_bmr$aggregate(measures = msr("classif.auc"))
-# inspect AUC value.
-lg_over_results$classif.auc
-
-# load library
-library(ggplot2)
-library(ggpubr)
-# plot path for each cv
-over_path1 <- lg_over_bmr$data$learner[[1]]$archive("params")
-over_gg1 <- ggplot(over_path1, aes(
-  x = oversample.ratio,
-  y = classif.auc
-)) +
-  geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
-
-over_path2 <- lg_over_bmr$data$learner[[2]]$archive("params")
-over_gg2 <- ggplot(over_path2, aes(
-  x = oversample.ratio,
-  y = classif.auc
-)) +
-  geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
-
-over_path3 <- lg_over_bmr$data$learner[[3]]$archive("params")
-over_gg3 <- ggplot(over_path3, aes(
-  x = oversample.ratio,
-  y = classif.auc
-)) +
-  geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
-# summary plots
-ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend = "bottom")
-```
-
-```{r echo=FALSE,out.width = "100%", fig.pos="h"}
-knitr::include_graphics("img/over_lg.png")
-```
-
-shown on the plots above, it is better to choose *oversample.ratio* with value 
-40 in order to show a considerably good prediction performance measured around 0.73.  
-In comparison with defalut **dl_iv_data**, there is no significant increment. Thence,
-oversample method seems not suitable for Logistic Regression.
-
-### Smote  
-
-At first we define the smote PipeOps.
-```{r}
 po_smote <- po("smote", dup_size = 50)
 # creat smote
 lg_smote_learner <- GraphLearner$new(po_smote %>>% lg_learner, predict_type = "prob")
@@ -1107,6 +1025,7 @@ lg_smote_learner <- GraphLearner$new(po_smote %>>% lg_learner, predict_type = "p
 As for **smote**, we set hyperparamters *smote.K* ranging from 20 to 60 and  *smote.dup_size* ranging from 10 to 20.
 We define the search space in order to tune the hyperparameters of the class imbalance methods. 
 other configurations remain mentioned above.
+
 ```{r}
 lg_smote_param_set <- ParamSet$new(params = list(
   ParamInt$new("smote.dup_size", lower = 20, upper = 60),
@@ -1403,6 +1322,8 @@ The first plot shows that the AUC grows as we increase the *distance* parameter 
 
 ## SVM
 
+### Data balancing 
+
 Considering the super imbalanced target dataset to process, it is also necessary to implement the **SMOTE** function to firstly balance the whole dataset. Therefore, to determine the two crucial parameters *smote.dup_size* and *smote.K* is the first step. With *smote.dup_size* defined from 10 to 60 and *smote.K* from 10 to 25, it is better to implement a *grid_search* to figure out what is the optimal parameter settings for the 2 parameters based on the **svm** learner and the *dl_iv_data* training task.
 
 ```{r}
@@ -1479,6 +1400,8 @@ knitr::include_graphics("img/svm_smote.png")
 As can be seen from the plots above, *smote.dup_size* is showing better prediction performance when defined as 40 and *smote.K* shall be defined as 21 which is having more stable training performance with color blue correspondingly.
 
 Then the next step would be to determine which *kernel* function type to use with fixed *smote.dup_size* and *smote.K*. Regarding the choice of suitable kernel function with SVM, there are in total four options to choose: *linear*, *polynomial*, *radial*, *sigmoid*. The default value for the mlr3 SVM learner is the *radical* function. Thence, we need to implement the other three kernel functions on the previous training models with the **dl_iv_data** task and again use the *grid_search* to check which *kernel* function will generate better prediction performance shown with higher AUC value.
+
+### Model tuning
 
 ```{r, eval=FALSE}
 # train with kernel type
@@ -1661,6 +1584,8 @@ In conclusion, it is better to go with _radial_ kernel function, _cost_ being se
 
 ## Random Forest
 
+### Data balancing 
+
 As mentioned in chapter 3, we fix the parameter *num.trees* with value 1000 and set training range 30 to 60 for *smote.dup_size* and 10 to 20 for *smote.K* seperately in order to find the best training pairs with the two parameters, reaching the best prediction performance.
 
 ```{r eval=FALSE}
@@ -1789,6 +1714,7 @@ knitr::include_graphics("img/rf_smote_2.png")
 
 Shown on the plots above, we have discovered that the two parameters *smote.dup_size* and *smote.K* should be set to 45 and 15 seperately where the AUC distributions always tend to have a summit around dup_size value 45 and K with value 15 is much more stable with the prediction performance here at the same time. Then the next step we shall need to stay with the optimal smote parameter settings ( *smote.dup_size* is set to 45 and *smote.K* to 15) and take the mtry and the *num.trees* parameters into consideration with parameters' tuning ranges set to 1-13 and 400-1700 in order to get the best pair settings with the highest AUC value.
 
+### Model tuning
 
 ```{r}
 # RF with 4 different paramSets, to analysis how to do further tuning
