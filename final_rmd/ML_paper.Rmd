@@ -892,7 +892,7 @@ multiplot_roc(lg_bmr)
 ```
 
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/logistic_all_task.png")
 ```
 
@@ -922,7 +922,7 @@ knn_results <- knn_bmr$aggregate(measures = msr("classif.auc"))
 multiplot_roc(knn_bmr)
 ```
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/knn_all_task.png")
 ```
 From the ROC plots above, we can see that KNN performs with no significant difference between different encoding and missing data handling methods. Moreover, To reduce our computation cost, we decided to take the task with the highest AUC value in this step, being dl_iv. Now, we will focus on the task dl_iv, and fine-tune the parameters.
@@ -947,7 +947,7 @@ svm_results <- svm_bmr$aggregate(all_measures)
 multiplot_roc(svm_bmr)
 ```
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/svm_all_task.png")
 ```
 
@@ -972,7 +972,7 @@ rf_results <- rf_bmr$aggregate(all_measures)
 multiplot_roc(rf_bmr)
 ```
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/rf_all_task.png")
 ```
 
@@ -1086,7 +1086,7 @@ over_gg3 <- ggplot(over_path3, aes(
 ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend = "bottom")
 ```
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/over_lg.png")
 ```
 
@@ -1166,7 +1166,7 @@ over_gg3 <- ggplot(over_path3, aes(
 ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend = "bottom")
 ```
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/smote_lg.png")
 ```
 
@@ -1237,26 +1237,169 @@ smote_results <- knn_smote_bmr$score() %>%
 
 ```
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/2_1_knn_smote_basic_auc.png")
 ```
 
-As we can see in the plot, we tried using **SMOTE** with different combination of *smote.K* and *smote.dup_size*. With 3 fold cross validation we see three plots, and it each plot the pink curve (*smote.K*=20)
+As we can see in the plot, we tried using **SMOTE** with different combinations of *smote.K* and *smote.dup_size*. With three-fold cross-validation, we see three plots, and in two out of three plots, the pink curve (*smote.K*=20) performs the best, specifically with *smote.dup_size* being 40. We will fix these values after further fine-tune the KNN model.
 
 ### Model tuning   
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
 
+inner_rsmp <- rsmp("cv",folds = 3L)
+outer_rsmp <- rsmp("cv", folds = 3L)
+
+# list all kernel types
+kernel_type <- c("rectangular", "triangular", "epanechnikov", "biweight"
+                , "triweight", "cos", "inv", "gaussian", "rank", "optimal")
+
+# set parameter tuning for each parameter
+para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 20, upper = 100)))
+para_dist <- ParamSet$new(params = list(ParamInt$new("classif.kknn.distance", lower = 1, upper = 5)))
+para_kernel <- ParamSet$new(params = list(ParamFct$new("classif.kknn.kernel", levels = kernel_type)))
+
+# define smote, and combine it with knn learner
+po_smote_tuned <- po("smote", dup_size = 40, K = 15)
+knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", predict_type = "prob"), predict_type = "prob")
+
+# tune distance
+knn_smote_dist <- AutoTuner$new(
+  learner = knn_smote_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = para_dist,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5))
+
+design_smote_dist <- benchmark_grid(
+  tasks = task,
+  learners = knn_smote_dist,
+  resamplings = outer_rsmp
+)
+
+bmr_smote_dist <- run_benchmark(design_smote_dist)
+
+
+# tune kernel with selected distance
+knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=3), predict_type = "prob")
+knn_smote_kernel <- AutoTuner$new(
+  learner = knn_smote_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = para_kernel,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 10))
+
+design_smote_kernel <- benchmark_grid(
+  tasks = task,
+  learners = knn_smote_kernel,
+  resamplings = outer_rsmp
+)
+
+bmr_smote_kern <- run_benchmark(design_smote_kernel)
+
+# tune k with selected distance and kernel
+selected_kern <- c("rectangular", "triangular", "gaussian")
+para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 20, upper = 100), 
+                                     ParamFct$new("classif.kknn.kernel", levels = selected_kern)))
+
+knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=3), predict_type = "prob")
+knn_smote_k <- AutoTuner$new(
+  learner = knn_smote_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = para_k,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5))
+
+design_smote_k <- benchmark_grid(
+  
+  tasks = task,
+  learners = knn_smote_k,
+  resamplings = outer_rsmp
+)
+
+bmr_smote_k <- run_benchmark(design_smote_k)
+
+# --- start ploting
+
+# dist
+
+smote_dist_path1 = bmr_smote_dist$data$learner[[1]]$archive("params")
+smote_dist_gg1 = ggplot(smote_dist_path1, aes(
+  x = classif.kknn.distance,
+  y = classif.auc)) +
+  geom_point(size = 3) +
+  geom_line()
+
+smote_dist_path2 = bmr_smote_dist$data$learner[[2]]$archive("params")
+smote_dist_gg2 = ggplot(smote_dist_path2, aes(
+  x = classif.kknn.distance,
+  y = classif.auc)) +
+  geom_point(size = 3) +
+  geom_line()
+
+smote_dist_path3 = bmr_smote_dist$data$learner[[3]]$archive("params")
+smote_dist_gg3 = ggplot(smote_dist_path3, aes(
+  x = classif.kknn.distance,
+  y = classif.auc)) +
+  geom_point(size = 3) +
+  geom_line()
+
+ggarrange(smote_dist_gg1, smote_dist_gg2, smote_dist_gg3, common.legend = TRUE, legend="bottom")
+
+# kernel
+
+thm = theme(axis.text.x = element_text(angle = 45, hjust = 1))
+smote_kern_path1 = bmr_smote_kern$data$learner[[1]]$archive("params")
+smote_kern_gg1 = ggplot(smote_kern_path1, aes(
+  x = classif.kknn.kernel,
+  y = classif.auc)) +
+  geom_point(size = 3) +
+  geom_line() + thm
+
+smote_kern_path2 = bmr_smote_kern$data$learner[[2]]$archive("params")
+smote_kern_gg2 = ggplot(smote_kern_path2, aes(
+  x = classif.kknn.kernel,
+  y = classif.auc)) +
+  geom_point(size = 3) +
+  geom_line() + thm
+
+smote_kern_path3 = bmr_smote_kern$data$learner[[3]]$archive("params")
+smote_kern_gg3 = ggplot(smote_kern_path3, aes(
+  x = classif.kknn.kernel,
+  y = classif.auc)) +
+  geom_point(size = 3) +
+  geom_line() + thm
+
+ggarrange(smote_kern_gg1, smote_kern_gg2, smote_kern_gg3, common.legend = TRUE, legend="bottom")
+
+# k and selected kernel
+
+smote_k_path1 = bmr_smote_k$data$learner[[1]]$archive("params")
+smote_k_gg1 = ggplot(smote_k_path1, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = classif.kknn.kernel)) +
+  geom_point(size = 3) +
+  geom_line()
+
+smote_k_path2 = bmr_smote_k$data$learner[[2]]$archive("params")
+smote_k_gg2 = ggplot(smote_k_path2, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = classif.kknn.kernel)) +
+  geom_point(size = 3) +
+  geom_line()
+
+smote_k_path3 = bmr_smote_k$data$learner[[3]]$archive("params")
+smote_k_gg3 = ggplot(smote_k_path3, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = classif.kknn.kernel)) +
+  geom_point(size = 3) +
+  geom_line()
+
+ggarrange(smote_k_gg1, smote_k_gg2, smote_k_gg3, common.legend = TRUE, legend="bottom")
 
 ```
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/2_2_knn_smote_dist.png")
 knitr::include_graphics("img/2_3_knn_smote_kern.png")
 knitr::include_graphics("img/2_4_knn_smote_k_kern.png")
 ```
 
-As we can see, there is no significant improvement after trying different methods to balance the data. Since we used a binary variable to indicate whether a category is present or not, the max distance can only be 1 or 0. Moreover, other numeric variables have a more significant distance, meaning that they have a more substantial impact on the distance than the categorical data without having a significant correlation with our target variable. To get better results, it would be necessary to either use other ways to handle categorical data better for distance calculation or using different training methods to perform classification instead of KNN.
+The first plot shows that the AUC grows as we increase the *distance* parameter in KNN, but after 3, there is no significant increase. We fix distance to 3 for further tuning. Based on the fixed distance, we compare results from different kernels in the second plot. Here, there is no clear winner, so we simply take the best from each cross-validation step, being *rectangular*, *triangular* and *gaussian*. And in the next plot, we can directly eliminate *rectangular*, as it has the lowest AUC in also cases. *triangular* and *gaussian* have very similar performance in terms of AUC and *gaussian* is slightly better in most cases.
 
 ## SVM
 
@@ -1329,7 +1472,7 @@ ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 
 ```
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/svm_smote.png")
 ```
 
@@ -1393,7 +1536,7 @@ ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 ```
 
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/svm_kernel.png")
 ```
 
@@ -1584,7 +1727,7 @@ rf_ggp3 <- ggplot(smote_path3, aes(
 ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 ```
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/rf_smote.png")
 ```
 We can see from the plots above, *smote.dup_size* ranging from 37 to 53 together with *smote.k* from 15 to 25 tends to have better AUC values. Then we need to reset the *smote.dup_size* to 37 to 53 and *smote.k* 5 to 25, repeating the *grid_search* again to explore the two parameters further.
@@ -1640,7 +1783,7 @@ rf_ggp3 <- ggplot(smote_path3, aes(
 ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 ```
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/rf_smote_2.png")
 ```
 
@@ -1708,7 +1851,7 @@ rf_ggp3 <- ggplot(nt_mtry_path3, aes(
 ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 ```
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/rf_smote_3.png")
 ```
 So, we would go with the combination of *num.trees* = 1000 and *mtry* = 7. And the next step would be to tune *min.node.size* and *sample.fraction* with the previous selected parameters settings. According to rangerTune algorithm, we shall try setting tuning range for *min.node.size* from 2 to 8 and *sample.fraction* from 0.5 to 0.8 and see the corresponding AUC performance.
@@ -1780,7 +1923,7 @@ rf_ggp3 <- ggplot(mns_sf_path3, aes(
 ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 ```
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/rf_smote_4.png")
 ```
 
@@ -1855,7 +1998,7 @@ ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 bmr_result <- bmr_smote$aggregate(msr("classif.auc"))
 ```
 
-```{r echo=FALSE,out.width = "80%", fig.pos="h"}
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/rf_smote_5.png")
 ```
 
