@@ -1118,7 +1118,7 @@ inner_rsmp <- rsmp("cv", folds = 3L)
 lg_smote_auto <- AutoTuner$new(
   learner = lg_smote_learner, resampling = inner_rsmp,
   measures = msr("classif.auc"), tune_ps = lg_smote_param_set,
-  terminator = terms, tuner = tnr("grid_search", resolution = 5)
+  terminator = terms, tuner = tnr("grid_search", lution = 5)
 )
 
 # set outer_resampling, and creat a design with it
@@ -1199,7 +1199,7 @@ terms <- term("none")
 inner_rsmp <- rsmp("cv",folds = 5L)
 knn_auto <- AutoTuner$new(learner = lrn_over, resampling = inner_rsmp, 
                           measures = msr("classif.auc"), tune_ps = knn_param_set,
-                          terminator = terms, tuner = tnr("grid_search", resolution = 6))
+                          terminator = terms, tuner = tnr("grid_search", lution = 6))
 
 # set outer_resampling, and creat a design with it
 outer_rsmp <- rsmp("cv", folds = 3L)
@@ -1276,7 +1276,7 @@ terms <- term("none")
 knn_auto <- AutoTuner$new(learner = lrn_smote, resampling = inner_rsmp, 
                           measures = msr("classif.auc"), tune_ps = knn_param_set,
                           terminator = terms, 
-                          tuner = tnr("grid_search", resolution = 6))
+                          tuner = tnr("grid_search", lution = 6))
 
 # set outer_resampling, and creat a design with it
 outer_rsmp <- rsmp("cv", folds = 3L)
@@ -1348,7 +1348,7 @@ svm_smote_lrn <- GraphLearner$new(po_smote %>>% svm_lrn, predict_type = "prob")
 svm_auto_smote <- AutoTuner$new(
   learner = svm_smote_lrn, resampling = inner_rsmp,
   measures = msr("classif.auc"), tune_ps = param_smote,
-  terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
+  terminator = term("none"), tuner = tnr("grid_search", lution = 5)
 )
 ```
 
@@ -1415,7 +1415,7 @@ svm_smote_lrn <- GraphLearner$new(po_smote %>>% svm_lrn, predict_type = "prob")
 svm_auto_kernel <- AutoTuner$new(
   learner = svm_smote_lrn, resampling = inner_rsmp,
   measures = msr("classif.auc"), tune_ps = param_kernel,
-  terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
+  terminator = term("none"), tuner = tnr("grid_search", lution = 5)
 )
 ```
 
@@ -1480,7 +1480,7 @@ svm_smote_lrn <- GraphLearner$new(po_smote %>>% svm_lrn, predict_type = "prob")
 svm_auto_smote <- AutoTuner$new(
   learner = svm_smote_lrn, resampling = inner_rsmp,
   measures = msr("classif.auc"), tune_ps = param_cost,
-  terminator = term("none"), tuner = tnr("grid_search", resolution = 3)
+  terminator = term("none"), tuner = tnr("grid_search", lution = 3)
 )
 ```
 
