@@ -347,9 +347,12 @@ relation to the dependent variable.
 
 * Steps of Calculating WOE  
 1. For a continuous variable, split data into several parts.
-2. Calculate the number of events and non-events in each group (bin)  
-3. Calculate the % of events and % of non-events in each group.  
-4. Calculate WOE by taking natural log of division of % of non-events and % of events.  
+2. Calculate the number of events and non-events in each group. For example, a binary variable has two values(0,1),
+we calculate the number of positive sample and negative sample with different values of the variable.
+3. Calculate the %of events and %of non-events for each variable value. In the example above, %of events of binary variable 1(binary value is 1), represents the proportion of sample that both target(y) value and variable value are 1 to the sample that target value is 1. $$\%of\ events(a\ variable\ type) = \frac{\#sample(target=1,variable=1)}{\#sample(target=1)}$$
+and %of nonevents represents the proportion of sample that  target(y) value is 0 and variable value are 1 to the sample that target value is 0. $$\%of\ nonevents(a\ variable\ type) = \frac{\#sample(target=0,variable=1)}{\#sample(target=0)}$$.
+has 
+4. Calculate WOE for a variable type by taking natural log of division of % of non-events and % of events.  
 
 $$
 WOE = ln \frac{\%of\ nonevents}{\%of\ events}
@@ -471,7 +474,8 @@ glimpse(binary_data)
 ```
 
 
-As for binary factor variables, we write a function **convert_binary_variable** to  convert them into binary numeric type for next modelling.
+As for binary factor variables, we write a function **convert_binary_variable** to  convert them into binary numeric type for next modelling. After converting, nominal values in the three variables `CODE_GENDER`, `FLAG_OWN_CAR`, `FLAG_OWN_REALTY`  are replaced by values `1` or `2`. 
+As for `CODE_GENDER`, value "`1`" represents the original type "`F`" and "`2`" represents the original type "`M`". As for `FLAG_OWN_CAR` and `FLAG_OWN_REALTY`, value "`1`" represents the original type "`N`" and value "`2`" represents the original type "`Y`".
 ```{r, message=FALSE, warning=FALSE}
 # function to convert binary variable into numeric.
 convert_binary_variable <- function(feature) {
@@ -490,7 +494,7 @@ converted_binary_data <- binary_data %>% mutate_if(is.factor, convert_binary_var
 glimpse(converted_binary_data)
 ```
 
-##### Categorical variables 
+### Categorical variables 
 After converting binary factor variables, five Categorical variables are remained, i.e.
 `NAME_INCOME_TYPE`, `NAME_EDUCATION_TYPE`, `NAME_FAMILY_STATUS`, `NAME_HOUSING_TYPE`, `OCCUPATION_TYPE`,
 ```{r, message=FALSE, warning=FALSE}
@@ -623,7 +627,7 @@ glimpse(oh_data)
 And we discretizate the continuous variables with the help of **woebin** function from **scorecard** package.
 When using the **woebin** function, there is one parameter **method** that need to be configured, desiged for which method will based on to discretizate variables. **method** has two options, **tree** and **chimerge**. We choose **chimerge** because we 
 noticed it brings better performance for modelling.
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, results=FALSE}
 # Binning continuous variable to improve performance.
 dl_bin <- woebin(converted_data,
   y = "y",
@@ -632,10 +636,11 @@ dl_bin <- woebin(converted_data,
 )
 ```
 
-Now we inspect the Binning variables.
-As for `CNT_CHILDREN` , we notice that it is discretizated into 3 categories, i.e.
-`[-inf, 1)`,`[1,2)`,`[2, inf)`. and the bad ratios for categories is linear, which means 
-this binnning is good.
+Now we inspect the Binning variables.  
+
+The bart chart below illustrates how the variable is discretizated into categories.
+As for variable `CNT_CHILDREN` we notice that there are 3 categories, i.e. `[-inf, 1)`,`[1,2)`,`[2, inf)`(shown as horizontal axis). The color "`bad`" and "`good`" represent the sample with target variable(y) value "1" and "0". The height of each bar represents the sample proportion, whose target value is "`bad`"(1), to the whole sample (shown as right vertical axis "Bad probability") and the sample proportion of each category to the whole sample (shown as left vertical axis "Bin count distribution"). The numbers written at the top of each bar show the percentage of each category. The most important ratios, bad ratios, representing the proportion of "`bad`" samples to "`good`" samples in each category, are shown inside of the bar. We notice the bad ratios for categories are linear, which means this binning is good.
+
 ```{r, message=FALSE, warning=FALSE, fig.height=4}
 # plot binning variable
 plotlist <- woebin_plot(dl_bin)
@@ -644,7 +649,7 @@ plotlist[1]
   
   
 As for `AMT_INCOME_TOTAL` , we notice that it is discretizated into several categories,
-although the bad ratios for categories is not strictly linear, this binning has second highest IV 0.1368.
+although the bad ratios for categories are not strictly linear, this binning has second highest IV 0.1368.
 ```{r, message=FALSE, warning=FALSE}
 # plot binning variable
 plotlist <- woebin_plot(dl_bin)
@@ -652,7 +657,7 @@ plotlist[2]
 ```
   
 As for `DAYS_BIRTH` , we notice that it is discretizated into 7 categories, i.e.
-`[-inf, -19000]`,`[-19000, -175000]` etc.  and the bad ratios for categories is linear, which means 
+`[-inf, -19000]`,`[-19000, -175000]` etc.  and the bad ratios for categories are linear, which means 
 this binnning is good.
 ```{r, message=FALSE, warning=FALSE}
 # plot binning variable
@@ -661,7 +666,7 @@ plotlist[3]
 ```
   
 As for `DAYS_EMPLOYED` , we notice that it is discretizated into several categories,
-although the bad ratios for categories is not strictly linear, this binning has  highest IV 0.2815.
+although the bad ratios for categories are not strictly linear, this binning has  highest IV 0.2815.
 ```{r, message=FALSE, warning=FALSE}
 # plot binning variable
 plotlist <- woebin_plot(dl_bin)
@@ -896,7 +901,7 @@ multiplot_roc(lg_bmr)
 knitr::include_graphics("img/logistic_all_task.png")
 ```
 
-From the ROC plots above, we can see that as for different encoding methods, tasks tackled with WOE encoding generally perform 0.05 better with the AUC score than the corresbonding counterpart binary encoding group, as for different missing data handling methods, Logistic Regression has better prediction performance on datasets by deleting missing values with whole row, i.e. **dl_iv_data**, **dl_oh_data**. Above all, we choose **dl_iv_data** as final datasets.  
+From the ROC plots above, we can see that as for different encoding methods, tasks tackled with WOE encoding generally perform 0.05 better with the AUC score than the corresponding counterpart binary encoding group, as for different missing data handling methods, Logistic Regression has better prediction performance on datasets by deleting missing values with whole row, i.e. **dl_iv_data**, **dl_oh_data**. Above all, we choose **dl_iv_data** as final datasets.  
 
 
 ### KNN  
@@ -963,19 +968,16 @@ design <- benchmark_grid(
 )
 # set measure
 all_measures <- msr("classif.auc")
-
 # run the benchmark to  train the model
 rf_bmr <- benchmark(design, store_models = TRUE)
 # save the results
 rf_results <- rf_bmr$aggregate(all_measures)
-
 multiplot_roc(rf_bmr)
 ```
 
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/rf_all_task.png")
 ```
-
 Similarly, we go with the **dl_iv_data** training task.
 
 
@@ -989,11 +991,9 @@ according to the results above, **dl_iv_data** generally has the best prediction
 Based on the imbalanced target dataset we already have, it is crucial that we need to firstly address the imbalance problem. When it comes to deal with imbalanced data, there are two options to choose. The first method is the **smote**  and the other is the **oversampling**. In mlr3pipelines, there is a **classbalancing** and a **smote** pipe operator that can be combined with any learner. Note that **smote** has two hyperparameters *K* and *dup_size*. While *K* changes the behavior of the SMOTE algorithm, *dup_size* will affect oversampling rate of SMOTE algorithm. As for **oversampling** oeperator, there is only one hyperparameter
 *oversample.ratio*, which determines the oversampling rate of **oversampling** operator.
 
-
 To focus on the effect of the oversampling rate on the performance, we will consider different parameter settings with regards to the **oversampling** pipe operator which can be adapted to different training models.
 
 when it comes to hyperparameter tuning, we need to set different learners based on the **mlr3 package** to tune tasks. The next step is to set for the hyperparameters which are used to tune with different ranges or factor levels.
-
 
 We create a list of AutoTuner classes of the 4 different learners (Random Forest, SVM, Logistic and KNN) to tune the graph (4 different model learners + imbalance data correction method) based on a 3-fold CV using the classif.AUC as the performance measure. To keep runtime low, we define the resolution with grid_search to 5. However, one can also jointly tune the hyperparameter of the learner along with the imbalance correction method by extending the search space with the learner’s hyperparameters. Note that SMOTE has two hyperparameters *K* and *dup_size*. While *K* changes the behavior of the SMOTE algorithm, *dup_size* will affect oversampling rate. To focus on the effect of the oversampling rate on the performance, we will consider different parameter settings with regards to the **oversampling** pipe operator which can be adapted to different training models.
 
@@ -1016,7 +1016,6 @@ library(paradox)
 task <- TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y")
 # logistic learner
 lg_learner <- lrn("classif.log_reg", predict_type = "prob")
-
 po_smote <- po("smote", dup_size = 50)
 # creat smote
 lg_smote_learner <- GraphLearner$new(po_smote %>>% lg_learner, predict_type = "prob")
@@ -1196,7 +1195,6 @@ design_smote_dist <- benchmark_grid(
 
 bmr_smote_dist <- run_benchmark(design_smote_dist)
 
-
 # tune kernel with selected distance
 knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=3), predict_type = "prob")
 knn_smote_kernel <- AutoTuner$new(
@@ -1235,7 +1233,6 @@ bmr_smote_k <- run_benchmark(design_smote_k)
 # --- start ploting
 
 # dist
-
 smote_dist_path1 = bmr_smote_dist$data$learner[[1]]$archive("params")
 smote_dist_gg1 = ggplot(smote_dist_path1, aes(
   x = classif.kknn.distance,
@@ -1260,7 +1257,6 @@ smote_dist_gg3 = ggplot(smote_dist_path3, aes(
 ggarrange(smote_dist_gg1, smote_dist_gg2, smote_dist_gg3, common.legend = TRUE, legend="bottom")
 
 # kernel
-
 thm = theme(axis.text.x = element_text(angle = 45, hjust = 1))
 smote_kern_path1 = bmr_smote_kern$data$learner[[1]]$archive("params")
 smote_kern_gg1 = ggplot(smote_kern_path1, aes(
@@ -1286,7 +1282,6 @@ smote_kern_gg3 = ggplot(smote_kern_path3, aes(
 ggarrange(smote_kern_gg1, smote_kern_gg2, smote_kern_gg3, common.legend = TRUE, legend="bottom")
 
 # k and selected kernel
-
 smote_k_path1 = bmr_smote_k$data$learner[[1]]$archive("params")
 smote_k_gg1 = ggplot(smote_k_path1, aes(
   x = classif.kknn.k,
@@ -1482,7 +1477,6 @@ svm_auto_smote <- AutoTuner$new(
   terminator = term("none"), tuner = tnr("grid_search", resolution = 3)
 )
 ```
-
 
 ```{r echo=FALSE,eval=FALSE}
 # design for smote
@@ -1764,14 +1758,14 @@ nt_mtry_path2 <- bmr_smote$data$learner[[2]]$archive("params")
 rf_ggp2 <- ggplot(nt_mtry_path2, aes(
   x = classif.ranger.num.trees,
   y = classif.auc, col = factor(classif.ranger.mtry)
-)) +
+)) + 
   geom_point(size = 3) +
   geom_line() #+ theme(legend.position = "none")
 nt_mtry_path3 <- bmr_smote$data$learner[[3]]$archive("params")
 rf_ggp3 <- ggplot(nt_mtry_path3, aes(
   x = classif.ranger.num.trees,
   y = classif.auc, col = factor(classif.ranger.mtry)
-)) +
+)) + 
   geom_point(size = 3) +
   geom_line() #+ theme(legend.position = "none")
 ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
@@ -1792,13 +1786,10 @@ param_mns_sf <- ParamSet$new(params = list(
   ParamInt$new("classif.ranger.min.node.size", lower = 2, upper = 8),
   ParamDbl$new("classif.ranger.sample.fraction", lower = 0.5, upper = 0.8)
 ))
-
 po_smote <- po("smote", dup_size = 45, K = 15)
 # create smote learner fixed in rf_lrn
 rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
 ```
-
-
 
 ```{r eval=FALSE,echo=FALSE}
 # create Autolearner for rf_learner
@@ -1807,7 +1798,6 @@ rf_auto_smote <- AutoTuner$new(
   measures = msr("classif.auc"), tune_ps = param_mns_sf,
   terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
 )
-
 # outer resampling set
 outer_rsmp <- rsmp("cv", folds = 3L)
 # design for smote
@@ -1836,7 +1826,7 @@ mns_sf_path2 <- bmr_smote$data$learner[[1]]$archive("params")
 rf_ggp2 <- ggplot(mns_sf_path2, aes(
   x = classif.ranger.sample.fraction,
   y = classif.auc, col = factor(classif.ranger.min.node.size)
-)) +
+)) + 
   geom_point(size = 3) +
   geom_line() #+ theme(legend.position = "none")
 mns_sf_path3 <- bmr_smote$data$learner[[1]]$archive("params")
@@ -1868,14 +1858,10 @@ param_sf <- ParamSet$new(params = list(ParamDbl$new("classif.ranger.sample.fract
 )))
 # inner resampling set
 inner_rsmp <- rsmp("cv", folds = 3)
-
 po_smote <- po("smote", dup_size = 45, K = 15)
-
 # create smote learner fixed in rf_lrn
 rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
 ```
-
-
 
 ```{r eval=FALSE,echo=FALSE}
 # create Autolearner for rf_learner
@@ -1943,9 +1929,3 @@ Based on our previous work, there are still many aspects can be improved in our 
 On the other hand, there are still a lot of cutting-edge models we haven't used,
 e.g. lightGBM(not included in mlr3 yet), Deep learning method(require high computational power).
 Last but not least, there are still areas to explore in our feature engineering procedure. For example, dimension reduction methods such as PCA, MDS and Factor analysis (included in mlr3 filters) can also be used.
-
-
-
-
-
-
