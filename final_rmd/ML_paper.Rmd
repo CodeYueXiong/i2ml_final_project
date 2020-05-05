@@ -349,9 +349,9 @@ relation to the dependent variable.
 1. For a continuous variable, split data into several parts.
 2. Calculate the number of events and non-events in each group. For example, a binary variable has two values(0,1),
 we calculate the number of positive sample and negative sample with different values of the variable.
+
 3. Calculate the %of events and %of non-events for each variable value. In the example above, %of events of binary variable 1(binary value is 1), represents the proportion of sample that both target(y) value and variable value are 1 to the sample that target value is 1. $$\%of\ events(a\ variable\ type) = \frac{\#sample(target=1,variable=1)}{\#sample(target=1)}$$
 and %of nonevents represents the proportion of sample that  target(y) value is 0 and variable value are 1 to the sample that target value is 0. $$\%of\ nonevents(a\ variable\ type) = \frac{\#sample(target=0,variable=1)}{\#sample(target=0)}$$.
-has 
 4. Calculate WOE for a variable type by taking natural log of division of % of non-events and % of events.  
 
 $$
@@ -639,7 +639,7 @@ dl_bin <- woebin(converted_data,
 Now we inspect the Binning variables.  
 
 The bart chart below illustrates how the variable is discretizated into categories.
-As for variable `CNT_CHILDREN` we notice that there are 3 categories, i.e. `[-inf, 1)`,`[1,2)`,`[2, inf)`(shown as horizontal axis). The color "`bad`" and "`good`" represent the sample with target variable(y) value "1" and "0". The height of each bar represents the sample proportion, whose target value is "`bad`"(1), to the whole sample (shown as right vertical axis "Bad probability") and the sample proportion of each category to the whole sample (shown as left vertical axis "Bin count distribution"). The numbers written at the top of each bar show the percentage of each category. The most important ratios, bad ratios, representing the proportion of "`bad`" samples to "`good`" samples in each category, are shown inside of the bar. We notice the bad ratios for categories are linear, which means this binning is good.
+As for variable `CNT_CHILDREN` we notice that there are 3 categories, i.e. `[-inf, 1)`,`[1,2)`,`[2, inf)`(shown as horizontal axis). The color "`bad`" and "`good`" represent the sample with target variable(y) value "1" and "0". The height of each bar represents the sample proportion, whose target value is "`bad`"(1), to the whole sample (shown as right vertical axis "Bad probability") and the sample proportion of each category to the whole sample (shown as left vertical axis "Bin count distribution"). The numbers written at the top of each bar show the percentage of each category, i.e. 63.3%(15908) of samples are categorized to [-inf, 1), 24.3%(6118) of samples are categorized to [1, 2) and the rest 12.4% are categorized to [2, -inf) . The most important ratios, bad ratios, representing the proportion of "`bad`" samples to "`good`" samples in each category, are shown inside of the bar. We notice the bad ratios for categories are linear, which means this binning is good.
 
 ```{r, message=FALSE, warning=FALSE, fig.height=4}
 # plot binning variable
@@ -830,11 +830,12 @@ task_all <- list(
 ```
 
 for each model, we work the same procedures.  
-we all use **benchmark_grid** to creat design, setting with *5 folds cv*, *predict_type = "prob"* and *measure = msr("classif.auc")* for computing AUC. In addition, we fix random seed as *2020* for reproducing.
+
+We all use **benchmark_grid** to creat design, setting with *5 folds cv*, *predict_type = "prob"* and *measure = msr("classif.auc")* for computing AUC. In addition, we fix random seed as *2020* for reproducing.
 
 ### Logistic Regression:  
 
-We will first evaluate how Logistic Regression performs between different data, including different encoding, and different missing value handling. As mentioned above, we pass arguments to **benchmark** function from **mlr3** to train logsitic regression.
+We will first evaluate how Logistic Regression performs between different data, including different encoding, and different missing value handling. As mentioned above, we pass arguments to **benchmark** function from **mlr3** to train logsitic regression. To train a logistic regression model, we set *lrn("classif.log_reg")* and use **aggregate** function from **mlr3** to extract the results.
 ```{r eval=FALSE, results='hide', warning=FALSE}
 # load library
 library(mlr3learners)
@@ -856,7 +857,7 @@ lg_bmr <- benchmark(design, store_models = TRUE)
 # save the results
 lg_results <- lg_bmr$aggregate(measures = msr("classif.auc"))
 ```
-For better comparing with each task, we write **multiplot_roc** function to plots results.
+For better comparing with each task, we write **multiplot_roc** function with the help of **mlr3viz** package to plots results.
 ```{r eval =FALSE}
 library(mlr3viz)
 
@@ -906,7 +907,7 @@ From the ROC plots above, we can see that as for different encoding methods, tas
 
 ### KNN  
 
-We will first evaluate how KNN performs between different data, including different encoding, and different missing value handling. Then we will explore different methods to get better results.
+We will first evaluate how KNN performs between different data, including different encoding, and different missing value handling. Then we will explore different methods to get better results. We set *lr("classif.kknn")* to train KNN model.
 
 ```{r eval=FALSE, results='hide', warning=FALSE}
 # creat a benchmark
@@ -930,15 +931,16 @@ multiplot_roc(knn_bmr)
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/knn_all_task.png")
 ```
-From the ROC plots above, we can see that KNN performs with no significant difference between different encoding and missing data handling methods. Moreover, To reduce our computation cost, we decided to take the task with the highest AUC value in this step, being dl_iv. Now, we will focus on the task dl_iv, and fine-tune the parameters.
+From the ROC plots above, we can see that KNN performs with no significant difference between different encoding and missing data handling methods. Moreover, To reduce our computation cost, we decided to take the task with the highest AUC value in this step, being **dl_iv_data**. Now, we will focus on the task **dl_iv_data**, and fine-tune the parameters.
 
 ### SVM 
 
+We set *lrn("classif.svm")* to train SVM model.
 ```{r eval=FALSE}
 # create a benchmark to train a list of tasks with default hyperparameter settings
 design <- benchmark_grid(
   tasks = task_all,
-  learners = lrn("classif.svm", predict_type = "prob", kernel = "linear"),
+  learners = lrn("classif.svm", predict_type = "prob"),
   resampling = rsmp("cv", folds = 5L)
 )
 # set measure
@@ -959,6 +961,8 @@ knitr::include_graphics("img/svm_all_task.png")
 Similarly, we go with the **dl_iv_data** training task.
 
 ### Random Forest  
+
+We set *lrn("classif.ranger")* to train Random Forest model.
 ```{r eval=FALSE}
 # create a benchmark to train a list of tasks with default hyperparameter settings
 design <- benchmark_grid(
