@@ -19,12 +19,11 @@ The credit card business has entered a fast-rising development stage after an in
 
 \newpage
 
-```{r figs,message=FALSE, echo=FALSE, fig.cap="\\label{fig:figs} Flowchart: process of experiment", fig.pos="h",out.width = '105%'}
+The flowchart below (Figure \ref{fig:figs}) illustrates the process of our experiment. First, we prepare the data and define the target variable. Afterwards, we need to take care of the missing values in our data set. Here, we will try three different methods to deal with missing values - Listwise deletion, MICE and missForest. Then we have to encode the nominal variable to a numeric format so that we can use it for training. We first compare the results of all data set between different learner without fine-tuning. Subsequently, we will select one data set and perform further fine-tuning on it. In the end, we will compare the final results of all, and conclude with one method.
+
+```{r figs,message=FALSE, echo=FALSE, fig.cap="\\label{fig:figs} Flowchart: process of experiment", fig.pos="h",out.width = '100%'}
 knitr::include_graphics("img/flowchart_overview.png")
 ```
-
-
-The flowchart above (See Figure \ref{fig:figs}) illustrates the process of our experiment. First, we prepare the data and define the target variable. Afterwards, we need to take care of the missing values in our data set. Here, we will try three different methods to deal with missing values - Listwise deletion, MICE and missForest. Then we have to encode the nominal variable to a numeric format so that we can use it for training. We first compare the results of all data set between different learner without fine-tuning. Subsequently, we will select one data set and perform further fine-tuning on it. In the end, we will compare the final results of all, and conclude with one method.
 
 # Data
 
@@ -1102,8 +1101,62 @@ smote method seems not suitable for Logistic Regression.
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
 
-# oversampling code (KNN)
+knn_learner <- lrn("classif.kknn", predict_type = "prob")
 
+po_over = po("classbalancing",
+             id = "oversample", adjust = "minor",
+             reference = "minor", shuffle = FALSE, ratio = 5)
+
+lrn_over <- GraphLearner$new(po_over %>>% knn_learner, predict_type = "prob")
+
+# setting the tunning for parameters, and terminator
+knn_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", lower = 10, upper = 70)))
+
+
+knn_over_auto <- AutoTuner$new(learner = lrn_over, resampling = inner_rsmp, 
+                               measures = msr("classif.auc"), tune_ps = knn_over_param_set,
+                               terminator = term("none"), tuner = tnr("grid_search", resolution = 5))
+
+# set outer_resampling, and creat a design with it
+
+design_over = benchmark_grid(
+  tasks = task,
+  learners = knn_over_auto,
+  resamplings = outer_rsmp
+)
+
+# run the benchmark, save the results afterwards
+knn_over_bmr <- run_benchmark(design_over)
+
+# plot basic
+over_path1 = knn_over_bmr$data$learner[[1]]$archive("params")
+over_gg1 = ggplot(over_path1, aes(
+  x = oversample.ratio,
+  y = classif.auc)) +
+  geom_point(size = 3) +
+  geom_line()
+
+over_path2 = knn_over_bmr$data$learner[[2]]$archive("params")
+over_gg2 = ggplot(over_path2, aes(
+  x = oversample.ratio,
+  y = classif.auc)) +
+  geom_point(size = 3) +
+  geom_line()
+
+over_path3 = knn_over_bmr$data$learner[[3]]$archive("params")
+over_gg3 = ggplot(over_path3, aes(
+  x = oversample.ratio,
+  y = classif.auc)) +
+  geom_point(size = 3) +
+  geom_line()
+
+library(ggpubr)
+ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend="bottom")
+
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("img/2_1_knn_over_basic_auc.png")
 ```
 
 
@@ -1179,14 +1232,69 @@ As we can see in the plot, we tried using **SMOTE** with different combinations 
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
 
-# oversampling code (KNN)
+po_over_tuned <- po("classbalancing",
+                    id = "oversample", adjust = "minor",
+                    reference = "minor", shuffle = FALSE, ratio = 25)
+knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_type = "prob"), predict_type = "prob")
+
+
+knn_over_dist <- AutoTuner$new(
+  learner = knn_over_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = para_dist,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5))
+
+design_over_dist <- benchmark_grid(
+  tasks = task,
+  learners = knn_over_dist,
+  resamplings = outer_rsmp
+)
+
+bmr_over_dist <- run_benchmark(design_over_dist)
+over_dist_para <- bmr_over_dist$score() %>%
+    pull(learner) %>%
+    map(pluck(c(function(x) x$tuning_result)))
+
+
+
+knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=1), predict_type = "prob")
+
+knn_over_kernel <- AutoTuner$new(
+  learner = knn_over_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = para_kernel,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 10))
+
+design_over_kernel <- benchmark_grid(
+  tasks = task,
+  learners = knn_over_kernel,
+  resamplings = outer_rsmp
+)
+
+bmr_over_kern <- run_benchmark(design_over_kernel)
+over_kern_para <- bmr_over_kern$score() %>%
+  pull(learner) %>%
+  map(pluck(c(function(x) x$tuning_result)))
+
+
+knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=1, kernel="biweight"), predict_type = "prob")
+knn_over_k <- AutoTuner$new(
+  learner = knn_over_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = para_k,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5))
+
+design_over_k = benchmark_grid(
+  tasks = task,
+  learners = knn_over_k,
+  resamplings = outer_rsmp
+)
+
+bmr_over_k <- run_benchmark(design_over_k)
 
 ```
 
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
-#knitr::include_graphics("img/2_2_knn_smote_dist.png")
-#knitr::include_graphics("img/2_3_knn_smote_kern.png")
-#knitr::include_graphics("img/2_4_knn_smote_k_kern.png")
+knitr::include_graphics("img/2_2_knn_over_dist.png")
+knitr::include_graphics("img/2_3_knn_over_kern.png")
+knitr::include_graphics("img/2_4_knn_over_k.png")
 ```
 
 **Fine-tuning (SMOTE)**

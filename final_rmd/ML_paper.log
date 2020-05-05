@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7300 64-bit) (preloaded format=pdflatex 2020.2.17)  5 MAY 2020 16:23
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7300 64-bit) (preloaded format=pdflatex 2020.2.17)  5 MAY 2020 16:29
 entering extended mode
 **./ML_paper.tex
 (ML_paper.tex
@@ -547,16 +547,11 @@ File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 \openout5 = `ML_paper.toc'.
 
 [2] [3]
-<img/flowchart_overview.png, id=268, 2063.71pt x 949.5475pt>
+<img/flowchart_overview.png, id=269, 2063.71pt x 949.5475pt>
 File: img/flowchart_overview.png Graphic file (type png)
 <use img/flowchart_overview.png>
-Package pdftex.def Info: img/flowchart_overview.png  used on input line 177.
-(pdftex.def)             Requested size: 493.22221pt x 226.93979pt.
-
-Overfull \hbox (23.4672pt too wide) in paragraph at lines 177--177
-[][] 
- []
-
+Package pdftex.def Info: img/flowchart_overview.png  used on input line 188.
+(pdftex.def)             Requested size: 469.73094pt x 216.13106pt.
 LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 2
 18.
 ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\t1lmtt.fd"
@@ -924,7 +919,7 @@ rogram Files/MiKTeX 2.9/fonts/type1/public/lm/lmsy7.pfb><C:/Program Files/MiKTe
 X 2.9/fonts/type1/public/lm/lmtk10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1
 /public/lm/lmtt10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmtti1
 0.pfb>
-Output written on ML_paper.pdf (54 pages, 1271740 bytes).
+Output written on ML_paper.pdf (54 pages, 1271757 bytes).
 PDF statistics:
  731 PDF objects out of 1000 (max. 8388607)
  167 named destinations out of 1000 (max. 500000)
