@@ -19,11 +19,11 @@ The credit card business has entered a fast-rising development stage after an in
 
 \newpage
 
-```{r figs, echo=FALSE,fig.cap="\\label{fig:figs} Flowchart: process of experiment", fig.pos="h"}
+```{r flowchart, echo=FALSE,fig.cap="Flowchart: process of experiment", fig.pos="h"}
 knitr::include_graphics("img/flowchart_overview.png")
 ```
 
-The flowchart above illustrates the process of our experiment. First, we prepare the data and define the target variable. Afterwards, we need to take care of the missing values in our data set. Here, we will try three different methods to deal with missing values - Listwise deletion, MICE and missForest. Then we have to encode the nominal variable to a numeric format so that we can use it for training. We first compare the results of all data set between different learner without fine-tuning. Subsequently, we will select one data set and perform further fine-tuning on it. In the end, we will compare the final results of all, and conclude with one method.
+The flowchart above (See Figure 1) illustrates the process of our experiment. First, we prepare the data and define the target variable. Afterwards, we need to take care of the missing values in our data set. Here, we will try three different methods to deal with missing values - Listwise deletion, MICE and missForest. Then we have to encode the nominal variable to a numeric format so that we can use it for training. We first compare the results of all data set between different learner without fine-tuning. Subsequently, we will select one data set and perform further fine-tuning on it. In the end, we will compare the final results of all, and conclude with one method.
 
 # Data
 
