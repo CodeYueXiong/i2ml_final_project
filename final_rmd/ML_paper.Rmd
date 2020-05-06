@@ -743,17 +743,24 @@ The **KNN** package included in **mlr3** has the following parameters: *k* (the 
 
 ## SVM  
 
-A Support Vector Machine (SVM) is a discriminative classifier formally defined by a separating hyperplane. In other words, given labeled training data (supervised learning), the algorithm outputs an optimal hyperplane which categorizes new examples. In two dimentional space this hyperplane is a line dividing a plane in two parts where in each class lay in either side.
+Support Vector Machine (SVM) is generally considered as a classification approach while it can be harnessed in both types of classification and regression related problems. The reason why we choose SVM as one of the training models regarding the credit card approval decision is that it is rather easy to handle multiple binary variables (e.g. "CODE_GENDER"), categorical variables (e.g. “OCCUPATION_TYPE”) and continuous variables (e.g. "AMT_INCOME_TOTAL") with SVM. 
 
-Correspondingly, we will use the SVM algorithm embedded in the **mlr3** learner and analyze the prediction performances with AUC (Area under the ROC Curve) values. 
+To explain SVM further, there are three core elements included in SVM, which are support Vectors, hyperplane and margin. Support vectors are the data points, which are closest to the hyperplane. These points will define the separating line better by calculating the corresponding margins. These points are more relevant to the construction of the classifier. In addition, a hyperplane is a decision plane which can separate between a set of objects having different class memberships. Last but not least, a margin is a gap between the two lines on the closest class points. This is calculated as the perpendicular distance from the line to support vectors or closest points and the larger the margin is, the better the classification job is done with the dataset.
 
-When it comes to model tuning for SVM, we consider the *kernel* function, *cost* (also known as *C-Regularization* parameter) and *gamma* to tune.
 
-*kernels*: The main function of the kernel is to take low dimensional input space and transform it into a higher-dimensional space. It is mostly useful in non-linear separation problem.
+With regards to the purpose of classification, SVM would construct a hyperplane in multidimensional space intended to seperate for different classes. Afterwards, SVM will generate the optimal hyperplane in an iterative manner, that is used to minimize the classification error. In general, the core idea of this model is to find the maximum marginal hyperplane (MMH) which could best divide the whole dataset (data collected with potential customers who want to apply for the credit cards)into different classes, referred as our ultimate target variable y (0 and 1, meaning different approval group type) in this case.
 
-*cost (Regularisation)*: Cost is the penalty parameter, which represents misclassification or error term. The misclassification or error term tells the SVM optimisation how much error is bearable. This is how you can control the trade-off between decision boundary and misclassification term.
 
-*Gamma*: It defines how far influences the calculation of plausible line of separation.
+Correspondingly, we will use the SVM algorithm embedded in the mlr3 learner and analyze the prediction performances with AUC (Area under the ROC Curve) values regarding the approval decision about the issuance of credit card to make. 
+
+Besides the basic model training with SVM with default parameter settings, we still need to tune the model further in order to get a better prediction performance, which is corresponeded to the AUC value, with the approval decision. When it comes to model tuning for SVM, we generally onsider the kernel function, cost (also known as C- Regularization parameter) and gamma to tune. (**reference**)
+
+**Kernels**: A kernel is playing a role in transforming an input data space into the required form. SVM uses a technique called the kernel trick to take a low-dimensional input space and transforms it into a higher dimensional space. In other words, you can say that it converts nonseparable problem to separable problems by adding more dimension to it. It is most useful in non-linear separation problem. Kernel trick helps you to build a more accurate classifier and therefore can reduce the classification error.
+
+
+**Cost** (Regularisation): Cost is the penalty parameter, which represents misclassification or error term. The misclassification or error term tells the SVM optimisation how much error is bearable. This is how you can control the trade-off between decision boundary and misclassification term.
+
+**Gamma**: Gamma is a parameter, which ranges from 0 to 1. A higher value of gamma will perfectly fit the training dataset, which causes over-fitting. Gamma=0.1 is considered to be a good default value. The value of gamma needs to be manually specified in the learning algorithm.
 
 ## Random Forest  
 
@@ -814,7 +821,7 @@ mice_oh_data <- read.csv("./data/mice_oh_data.csv") %>%
   mutate(y = as.factor(y))
 ```
 
-then we creat and combine all the tasks into a list.
+then we create and combine all the tasks into a list.
 ```{r}
 library(mlr3)
 # creat task for all the data
@@ -1580,6 +1587,8 @@ In conclusion, it is better to go with _radial_ kernel function, _cost_ being se
 
 ### Data balancing 
 
+#### SMOTE
+
 As mentioned in chapter 3, we fix the parameter *num.trees* with value 1000 and set training range 30 to 60 for *smote.dup_size* and 10 to 20 for *smote.K* seperately in order to find the best training pairs with the two parameters, reaching the best prediction performance.
 
 ```{r eval=FALSE}
@@ -1708,215 +1717,77 @@ knitr::include_graphics("img/rf_smote_2.png")
 
 Shown on the plots above, we have discovered that the two parameters *smote.dup_size* and *smote.K* should be set to 45 and 15 seperately where the AUC distributions always tend to have a summit around dup_size value 45 and K with value 15 is much more stable with the prediction performance here at the same time. Then the next step we shall need to stay with the optimal smote parameter settings ( *smote.dup_size* is set to 45 and *smote.K* to 15) and take the mtry and the *num.trees* parameters into consideration with parameters' tuning ranges set to 1-13 and 400-1700 in order to get the best pair settings with the highest AUC value.
 
-### Model tuning
+#### Oversampling
 
-```{r}
-# RF with 4 different paramSets, to analysis how to do further tuning
-# tuning for best num.trees and mtry pairs
-rf_lrn <- lrn("classif.ranger", predict_type = "prob")
-# train with ranger function's 2 parameters
-param_nt_mtry <- ParamSet$new(params = list(
-  ParamInt$new("classif.ranger.num.trees", lower = 400, upper = 1700),
-  ParamInt$new("classif.ranger.mtry", lower = 1, upper = 13)
-))
-po_smote <- po("smote", dup_size = 45, K = 15)
-# create smote learner fixed in rf_lrn
-rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
-```
+As mentioned in chapter 3, we fix the parameter *num.trees* with value 1000 and set training range 30 to 60 for *smote.dup_size* and 10 to 20 for *smote.K* seperately in order to find the best training pairs with the two parameters, reaching the best prediction performance.
 
-```{r eval=FALSE,echo=FALSE}
-# create Autolearner for rf_learner
-rf_auto_smote <- AutoTuner$new(
-  learner = rf_smote_lrn, resampling = inner_rsmp,
-  measures = msr("classif.auc"), tune_ps = param_nt_mtry,
-  terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
-)
-# design for smote
-design_smote <- benchmark_grid(
-  tasks = task,
-  learners = rf_auto_smote,
-  resampling = outer_rsmp
-)
+```{r eval=FALSE}
+library(ranger) # load the required package "Ranger" for Random Forest
+## tune for best matches with oversampling's parameter
 
-# run benchmark
-run_benchmark <- function(design) {
-  set.seed(2020)
-  tic()
-  bmr <- benchmark(design, store_models = TRUE)
-  toc()
-  run_benchmark <- bmr
-}
-bmr_smote <- benchmark(design_smote, store_models = TRUE)
-nt_mtry_path1 <- bmr_smote$data$learner[[1]]$archive("params")
-rf_ggp1 <- ggplot(nt_mtry_path1, aes(
-  x = classif.ranger.num.trees,
-  y = classif.auc, col = factor(classif.ranger.mtry)
-)) +
-  geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
-nt_mtry_path2 <- bmr_smote$data$learner[[2]]$archive("params")
-rf_ggp2 <- ggplot(nt_mtry_path2, aes(
-  x = classif.ranger.num.trees,
-  y = classif.auc, col = factor(classif.ranger.mtry)
-)) + 
-  geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
-nt_mtry_path3 <- bmr_smote$data$learner[[3]]$archive("params")
-rf_ggp3 <- ggplot(nt_mtry_path3, aes(
-  x = classif.ranger.num.trees,
-  y = classif.auc, col = factor(classif.ranger.mtry)
-)) + 
-  geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
-ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
-```
+# set learner with fixed number of trees: 1000 as suggested by algorithm "tuneRanger"
+rf_lrn <- lrn("classif.ranger", predict_type = "prob", num.trees = 1000)
+# train with oversampling function's parameter
+po_over = po("classbalancing",
+  id = "oversample", adjust = "minor",
+  reference = "minor", shuffle = FALSE, ratio = 6)
 
-```{r echo=FALSE,out.width = "100%", fig.pos="h"}
-knitr::include_graphics("img/rf_smote_3.png")
-```
-So, we would go with the combination of *num.trees* = 1000 and *mtry* = 7. And the next step would be to tune *min.node.size* and *sample.fraction* with the previous selected parameters settings. According to rangerTune algorithm, we shall try setting tuning range for *min.node.size* from 2 to 8 and *sample.fraction* from 0.5 to 0.8 and see the corresponding AUC performance.
+# inner resampling set
+inner_rsmp <- rsmp("cv", folds = 3)
 
+# create oversampling learner fixed in rf_trees_lrn
+rf_over_lrn <- GraphLearner$new(po_over %>>% rf_lrn, predict_type = "prob")
 
-```{r}
-# RF with 4 different paramSets, to analysis how to do further tuning
-## tuning for best min.node.size and sample.fraction pairs
-rf_lrn <- lrn("classif.ranger", predict_type = "prob", num.trees = 1000, mtry = 7)
-# train with smote function's 2 parameters
-param_mns_sf <- ParamSet$new(params = list(
-  ParamInt$new("classif.ranger.min.node.size", lower = 2, upper = 8),
-  ParamDbl$new("classif.ranger.sample.fraction", lower = 0.5, upper = 0.8)
-))
-po_smote <- po("smote", dup_size = 45, K = 15)
-# create smote learner fixed in rf_lrn
-rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
-```
+# single parameter to train with oversampling，sample size
+param_over = ParamSet$new(list(ParamDbl$new("oversample.ratio", lower = 30, upper = 60)))
 
-```{r eval=FALSE,echo=FALSE}
-# create Autolearner for rf_learner
-rf_auto_smote <- AutoTuner$new(
-  learner = rf_smote_lrn, resampling = inner_rsmp,
-  measures = msr("classif.auc"), tune_ps = param_mns_sf,
-  terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
+# create Autolearner
+rf_auto_over <- AutoTuner$new(
+  learner = rf_over_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = param_over,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 30)
 )
 # outer resampling set
 outer_rsmp <- rsmp("cv", folds = 3L)
-# design for smote
-design_smote <- benchmark_grid(
+# design for oversampling
+design_over <- benchmark_grid(
   tasks = task,
-  learners = rf_auto_smote,
+  learners = rf_auto_over,
   resampling = outer_rsmp
 )
+# set seed
+set.seed(2020)
 # run benchmark
-run_benchmark <- function(design) {
-  set.seed(2020)
-  tic()
-  bmr <- benchmark(design, store_models = TRUE)
-  toc()
-  run_benchmark <- bmr
-}
-bmr_smote <- benchmark(design_smote, store_models = TRUE)
-mns_sf_path1 <- bmr_smote$data$learner[[1]]$archive("params")
-rf_ggp1 <- ggplot(mns_sf_path1, aes(
-  x = classif.ranger.sample.fraction,
-  y = classif.auc, col = factor(classif.ranger.min.node.size)
+bmr_over <- benchmark(design_over, store_models = TRUE)
+# plot path, there will be 3 plots in all cuz the existence of a 3-fold CV
+over_path1 <- bmr_over$data$learner[[1]]$archive("params")
+rf_ggp1 <- ggplot(over_path1, aes(
+  x = oversample.ratio,
+  y = classif.auc
 )) +
   geom_point(size = 3) +
   geom_line() #+ theme(legend.position = "none")
-mns_sf_path2 <- bmr_smote$data$learner[[1]]$archive("params")
-rf_ggp2 <- ggplot(mns_sf_path2, aes(
-  x = classif.ranger.sample.fraction,
-  y = classif.auc, col = factor(classif.ranger.min.node.size)
-)) + 
-  geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
-mns_sf_path3 <- bmr_smote$data$learner[[1]]$archive("params")
-rf_ggp3 <- ggplot(mns_sf_path3, aes(
-  x = classif.ranger.sample.fraction,
-  y = classif.auc, col = factor(classif.ranger.min.node.size)
+over_path2 <- bmr_over$data$learner[[2]]$archive("params")
+rf_ggp2 <- ggplot(over_path2, aes(
+  x = oversample.ratio,
+  y = classif.auc
 )) +
   geom_point(size = 3) +
   geom_line() #+ theme(legend.position = "none")
+over_path3 <- bmr_over$data$learner[[3]]$archive("params")
+rf_ggp3 <- ggplot(over_path3, aes(
+  x = oversample.ratio,
+  y = classif.auc
+)) +
+  geom_point(size = 3) +
+  geom_line() #+ theme(legend.position = "none")
+# load the required package for plotting the performance of comparison pics
+library(ggpubr)
 ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 ```
-
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
-knitr::include_graphics("img/rf_smote_4.png")
+knitr::include_graphics("img/rf_over_1.png")
 ```
-
-We would go with *min.node.size* = 3 as we can see the AUC value tends to reach the best performance when we set it to 3. However, it is still not clear the approximated defined range for parameter *sample.fraction* Next, we need to retrain the model with a wider range with parameter *sample.fraction* from 0.45 to 0.95.
-
-```{r}
-# RF with 4 different paramSets, to analysis how to do further tuning
-## tuning for best sample.fraction
-rf_lrn <- lrn("classif.ranger",
-  predict_type = "prob", num.trees = 1000,
-  mtry = 7, min.node.size = 3
-)
-# train with smote function's 2 parameters
-param_sf <- ParamSet$new(params = list(ParamDbl$new("classif.ranger.sample.fraction",
-  lower = 0.45, upper = 0.95
-)))
-# inner resampling set
-inner_rsmp <- rsmp("cv", folds = 3)
-po_smote <- po("smote", dup_size = 45, K = 15)
-# create smote learner fixed in rf_lrn
-rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
-```
-
-```{r eval=FALSE,echo=FALSE}
-# create Autolearner for rf_learner
-rf_auto_smote <- AutoTuner$new(
-  learner = rf_smote_lrn, resampling = inner_rsmp,
-  measures = msr("classif.auc"), tune_ps = param_sf,
-  terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
-)
-# design for smote
-design_smote <- benchmark_grid(
-  tasks = task,
-  learners = rf_auto_smote,
-  resampling = outer_rsmp
-)
-# run benchmark
-run_benchmark <- function(design) {
-  set.seed(2020)
-  tic()
-  bmr <- benchmark(design, store_models = TRUE)
-  toc()
-  run_benchmark <- bmr
-}
-bmr_smote <- benchmark(design_smote, store_models = TRUE)
-mns_sf_path1 <- bmr_smote$data$learner[[1]]$archive("params")
-rf_ggp1 <- ggplot(mns_sf_path1, aes(
-  x = classif.ranger.sample.fraction,
-  y = classif.auc
-)) +
-  geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
-mns_sf_path2 <- bmr_smote$data$learner[[1]]$archive("params")
-rf_ggp2 <- ggplot(mns_sf_path2, aes(
-  x = classif.ranger.sample.fraction,
-  y = classif.auc
-)) +
-  geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
-mns_sf_path3 <- bmr_smote$data$learner[[1]]$archive("params")
-rf_ggp3 <- ggplot(mns_sf_path3, aes(
-  x = classif.ranger.sample.fraction,
-  y = classif.auc
-)) +
-  geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
-ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
-bmr_result <- bmr_smote$aggregate(msr("classif.auc"))
-```
-
-```{r echo=FALSE,out.width = "100%", fig.pos="h"}
-knitr::include_graphics("img/rf_smote_5.png")
-```
-
-When reaching the highest AUC value, *sample.fraction* is always taking good performance values around 0.55 and 0.6 and the distributions of *min.node.size* are showing better performance results (measured by AUC) with value 3. Therefore, we would choose the *sample.fraction* with 0.575 and have a better AUC performance value with 0.83.
-
-After the step-by-step hyperparameter tuning, we have finally managed to reach our best prediction performance with AUC value fixed at 0.83 which shows the improvement of 0.07 in comparison with the performance of Random Forest's default model with value 0.76. In conclusion, when *smote.dup_size* being set to 45 and *smote.K* to 15 with the SMOTE operator, the final parameter settings combination would be *num.trees* = 1000, *mtry* = 7, *min.node.size* = 3 and *sample.fraction* = 0.575, reaching an AUC level at 0.83.
 
 \newpage
 
