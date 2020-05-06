@@ -1409,7 +1409,7 @@ ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend="bottom")
 knitr::include_graphics("img/2_1_knn_over_basic_auc.png")
 ```
 
-In the plot above, it is clearly shown that...... PLOT WRONG?
+In the plots above, we see apart from the second plot, the other two plots have the highest AUC at the value at *oversample.ratio*=25. However, if we take a closer look at the y-axis, we notice that the scale is rather small. Thus, it is hard to say whether oversampling is improving the results or not. We will need to do further fine-tuning to find out. Here, we will fix *oversample.ratio* to 25 as it is slightly better, as shown in the plots.
 
 **Balancing with SMOTE**
 
