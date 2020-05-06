@@ -6,7 +6,7 @@ header-includes:
 output: 
   pdf_document:
     toc: true
-    toc_depth: 4  
+    toc_depth: 5
     number_sections: true
 indent: true
 ---
@@ -19,7 +19,17 @@ The credit card business has entered a fast-rising development stage after an in
 
 \newpage
 
-The flowchart below (Figure \ref{fig:figs}) illustrates the process of our experiment. First, we prepare the data and define the target variable. Afterwards, we need to take care of the missing values in our data set. Here, we will try three different methods to deal with missing values - Listwise deletion, MICE and missForest. Then we have to encode the nominal variable to a numeric format so that we can use it for training. We first compare the results of all data set between different learner without fine-tuning. Subsequently, we will select one data set and perform further fine-tuning on it. In the end, we will compare the final results of all, and conclude with one method.
+<!-- The flowchart below (Figure \ref{fig:figs}) illustrates the process of our experiment. First, we prepare the data and define the target variable. Afterwards, we need to take care of the missing values in our data set. Here, we will try three different methods to deal with missing values - Listwise deletion, MICE and missForest. Then we have to encode the nominal variable to a numeric format so that we can use it for training. We first compare the results of all data set between different learner without fine-tuning. Subsequently, we will select one data set and perform further fine-tuning on it. In the end, we will compare the final results of all, and conclude with one method. -->
+
+The flowchart below (Figure 1) illustrates the process of our experiment. It is steps are as following:
+
+1. We prepare the data and define the target variable
+2. Try different methods to deal with missing values
+3. Encode nominal variable into a numeric variable
+4. train all datasets with multiple models
+5. select one dataset for fine-tuning
+6. Fine-tune all models with the selected dataset
+
 
 ```{r figs,message=FALSE, echo=FALSE, fig.cap="\\label{fig:figs} Flowchart: process of experiment", fig.pos="h",out.width = '100%'}
 knitr::include_graphics("img/flowchart_overview.png")
@@ -1163,6 +1173,7 @@ ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend="bottom")
 knitr::include_graphics("img/2_1_knn_over_basic_auc.png")
 ```
 
+In the plot above, it is clearly shown that 
 
 **Balancing with SMOTE**
 
@@ -1228,7 +1239,7 @@ smote_results <- knn_smote_bmr$score() %>%
 knitr::include_graphics("img/2_1_knn_smote_basic_auc.png")
 ```
 
-As we can see in the plot, we tried using **SMOTE** with different combinations of *smote.K* and *smote.dup_size*. With three-fold cross-validation, we see three plots, and in two out of three plots, the pink curve (*smote.K*=20) performs the best, specifically with *smote.dup_size* being 40. We will fix these values after further fine-tune the KNN model.
+As we can see in the plot, we tried using **SMOTE** with different combinations of *smote.K* and *smote.dup_size*. Using three-fold cross-validation, we see three plots, and here we do not have a clear winner that outperforms all, but if we take a closer look at the pink curve (*smote.K*=20), we see that it is on top having *smote.dup_size* in the range of 40-50. Based on the trend, we will fix *smote.K* to 20 and *smote.dup_size* to 40 for further fine-tuning.
 
 ### Model tuning
 
@@ -1236,11 +1247,13 @@ As we can see in the plot, we tried using **SMOTE** with different combinations 
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
 
+# dist
+
 po_over_tuned <- po("classbalancing",
                     id = "oversample", adjust = "minor",
                     reference = "minor", shuffle = FALSE, ratio = 25)
 knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_type = "prob"), predict_type = "prob")
-
+para_dist <- ParamSet$new(params = list(ParamInt$new("classif.kknn.distance", lower = 1, upper = 5)))
 
 knn_over_dist <- AutoTuner$new(
   learner = knn_over_lrn, resampling = inner_rsmp,
@@ -1254,13 +1267,23 @@ design_over_dist <- benchmark_grid(
 )
 
 bmr_over_dist <- run_benchmark(design_over_dist)
+
 over_dist_para <- bmr_over_dist$score() %>%
     pull(learner) %>%
     map(pluck(c(function(x) x$tuning_result)))
 
+```
 
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("img/2_2_knn_over_dist.png")
+```
 
+```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
+# kern
+kernel_type <- c("rectangular", "triangular", "epanechnikov", "biweight"
+                , "triweight", "cos", "inv", "gaussian", "rank", "optimal")
 knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=1), predict_type = "prob")
+para_kernel <- ParamSet$new(params = list(ParamFct$new("classif.kknn.kernel", levels = kernel_type)))
 
 knn_over_kernel <- AutoTuner$new(
   learner = knn_over_lrn, resampling = inner_rsmp,
@@ -1279,7 +1302,25 @@ over_kern_para <- bmr_over_kern$score() %>%
   map(pluck(c(function(x) x$tuning_result)))
 
 
-knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=1, kernel="biweight"), predict_type = "prob")
+selected_kernel <- c(over_kern_para[[1]]$params$classif.kknn.kernel,
+over_kern_para[[2]]$params$classif.kknn.kernel,
+over_kern_para[[3]]$params$classif.kknn.kernel)
+
+selected_kernel
+# print c("triangular", "biweight", "epanechnikov")
+```
+
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("img/2_3_knn_over_kern.png")
+```
+
+```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
+# k + kern
+knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=1), predict_type = "prob")
+para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 20, upper = 100), 
+                                     ParamFct$new("classif.kknn.kernel", levels = selected_kern)))
+
 knn_over_k <- AutoTuner$new(
   learner = knn_over_lrn, resampling = inner_rsmp,
   measures = msr("classif.auc"), tune_ps = para_k,
@@ -1295,10 +1336,10 @@ bmr_over_k <- run_benchmark(design_over_k)
 
 ```
 
+
+
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
-knitr::include_graphics("img/2_2_knn_over_dist.png")
-knitr::include_graphics("img/2_3_knn_over_kern.png")
-knitr::include_graphics("img/2_4_knn_over_k.png")
+knitr::include_graphics("img/2_4_knn_over_k_kern.png")
 ```
 
 **Fine-tuning (SMOTE)**
@@ -1335,41 +1376,6 @@ design_smote_dist <- benchmark_grid(
 
 bmr_smote_dist <- run_benchmark(design_smote_dist)
 
-# tune kernel with selected distance
-knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=3), predict_type = "prob")
-knn_smote_kernel <- AutoTuner$new(
-  learner = knn_smote_lrn, resampling = inner_rsmp,
-  measures = msr("classif.auc"), tune_ps = para_kernel,
-  terminator = term("none"), tuner = tnr("grid_search", resolution = 10))
-
-design_smote_kernel <- benchmark_grid(
-  tasks = task,
-  learners = knn_smote_kernel,
-  resamplings = outer_rsmp
-)
-
-bmr_smote_kern <- run_benchmark(design_smote_kernel)
-
-# tune k with selected distance and kernel
-selected_kern <- c("rectangular", "triangular", "gaussian")
-para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 20, upper = 100), 
-                                     ParamFct$new("classif.kknn.kernel", levels = selected_kern)))
-
-knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=3), predict_type = "prob")
-knn_smote_k <- AutoTuner$new(
-  learner = knn_smote_lrn, resampling = inner_rsmp,
-  measures = msr("classif.auc"), tune_ps = para_k,
-  terminator = term("none"), tuner = tnr("grid_search", resolution = 5))
-
-design_smote_k <- benchmark_grid(
-  
-  tasks = task,
-  learners = knn_smote_k,
-  resamplings = outer_rsmp
-)
-
-bmr_smote_k <- run_benchmark(design_smote_k)
-
 # ploting - 3-fold cross validation
 
 # distance v.s. AUC
@@ -1396,6 +1402,31 @@ smote_dist_gg3 = ggplot(smote_dist_path3, aes(
 
 ggarrange(smote_dist_gg1, smote_dist_gg2, smote_dist_gg3, common.legend = TRUE, legend="bottom")
 
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("img/2_2_knn_smote_dist.png")
+```
+
+First, we only tune the parameter *distance* with all other parameters fixed to default to evaluate the influence of the parameter *distance*. In the plot above, we can see that the AUC grows as we increase the value of *distance*. Still, after 3, there is no significant improvement and even declines in one plot. Based on this, we will fix the value to 3 to perform further fine-tuning.
+
+```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
+# tune kernel with selected distance
+knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=3), predict_type = "prob")
+knn_smote_kernel <- AutoTuner$new(
+  learner = knn_smote_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = para_kernel,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 10))
+
+design_smote_kernel <- benchmark_grid(
+  tasks = task,
+  learners = knn_smote_kernel,
+  resamplings = outer_rsmp
+)
+
+bmr_smote_kern <- run_benchmark(design_smote_kernel)
+
+
 # kernel v.s. AUC
 thm = theme(axis.text.x = element_text(angle = 45, hjust = 1))
 smote_kern_path1 = bmr_smote_kern$data$learner[[1]]$archive("params")
@@ -1420,6 +1451,35 @@ smote_kern_gg3 = ggplot(smote_kern_path3, aes(
   geom_line() + thm
 
 ggarrange(smote_kern_gg1, smote_kern_gg2, smote_kern_gg3, common.legend = TRUE, legend="bottom")
+
+```
+
+```{r echo=FALSE,out.width = "100%", fig.pos="h"}
+knitr::include_graphics("img/2_3_knn_smote_kern.png")
+```
+
+Now with the *distance* fixed to 3, we compare how each kernel influences the AUC. As we can see, the scale of the y-axis is considerably small, meaning that there is no vast difference between kernels. But to reduce the computation cost, we will the one with the highest AUC in each plot, being: *rectangular*, *triangular*, and we will additionally take *gaussian* for comparison.
+
+```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
+# tune k with selected distance and kernel
+selected_kern <- c("rectangular", "triangular", "gaussian")
+para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 20, upper = 100), 
+                                     ParamFct$new("classif.kknn.kernel", levels = selected_kern)))
+
+knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=3), predict_type = "prob")
+knn_smote_k <- AutoTuner$new(
+  learner = knn_smote_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = para_k,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5))
+
+design_smote_k <- benchmark_grid(
+  
+  tasks = task,
+  learners = knn_smote_k,
+  resamplings = outer_rsmp
+)
+
+bmr_smote_k <- run_benchmark(design_smote_k)
 
 # k and selected kernel v.s AUC
 smote_k_path1 = bmr_smote_k$data$learner[[1]]$archive("params")
@@ -1448,12 +1508,12 @@ ggarrange(smote_k_gg1, smote_k_gg2, smote_k_gg3, common.legend = TRUE, legend="b
 ```
 
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
-knitr::include_graphics("img/2_2_knn_smote_dist.png")
-knitr::include_graphics("img/2_3_knn_smote_kern.png")
 knitr::include_graphics("img/2_4_knn_smote_k_kern.png")
 ```
 
-The first plot shows that the AUC grows as we increase the *distance* parameter in KNN, but after 3, there is no significant increase. We fix distance to 3 for further tuning. Based on the fixed distance, we compare results from different kernels in the second plot. Here, there is no clear winner, so we simply take the best from each cross-validation step, being *rectangular*, *triangular* and *gaussian*. And in the next plot, we can directly eliminate *rectangular*, as it has the lowest AUC in also cases. *triangular* and *gaussian* have very similar performance in terms of AUC and *gaussian* is slightly better in most cases.
+In the final step, we tuned *k* and *kernel* together. Here, we can see that *rectangular* falls behind both other kernels. Between *gaussian* and *triangular*, there is no obvious winner. The default value of *k* is 7, and here we selected our range 20-100 by experimenting with our data before tuning. In the previous plot (Default: *k*=7), we see there is no significant difference in the AUC between kernels. 
+
+Furthermore, the plot above shows as *k* increase the difference between kernels becomes larger. This suggests that it would be meaningful to tune all *kernel* among *k*. However, since there is no enormous improvement in AUC and the limitation of computation power, we only tuned 3 in our experiment.
 
 ## SVM
 
