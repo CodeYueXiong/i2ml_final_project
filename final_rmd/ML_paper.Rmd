@@ -51,9 +51,10 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 
 ```{r warning=FALSE,message=FALSE}
 library(readr)
-set.seed(2020)
-application_data <- read_csv("./data/application_record.csv") # the first data set
-record <- read_csv("./data/credit_record.csv") # the second data set
+
+# read dataset
+application_data <- read_csv("./data/application_record.csv") 
+record <- read_csv("./data/credit_record.csv")
 ```
 
 
@@ -62,15 +63,17 @@ record <- read_csv("./data/credit_record.csv") # the second data set
 The following code describes the process of defining the response variable with the name **y**. For some operations we rely on the **dplyr** package.
 
 ```{r warning=FALSE,message=FALSE}
-
 library(dplyr)
 
+
+
+# we first group all data from the credit record by "ID"
+# then extract the minimum snapshot date indictating when an account is opened
 opentime_data <- record %>%
   group_by(ID) %>%
-  # extract the snapshot date when an account is opened
   filter(MONTHS_BALANCE == min(MONTHS_BALANCE)) %>%
   select(ID, MONTHS_BALANCE) %>%
-  rename(opentime = MONTHS_BALANCE) # rename the snapshot date as "opentime"
+  rename(opentime = MONTHS_BALANCE) 
 
 # merge two dataset based on the common variable "ID"
 data_with_day <- left_join(application_data, opentime_data, by = "ID")
@@ -113,12 +116,15 @@ The following code shows how to define the target varible **y** by using the pre
 
 ```{r}
 library(purrr)
+
 # compute variable "target" with function "create_target", and save it in new_record
 new_record <- record %>% mutate(target = map_dbl(record$STATUS, create_target))
+
 # sum the value of variable "target" for each group(grouped by ID).
 data_target <- new_record %>%
   group_by(ID) %>%
   summarise(y = sum(target))
+
 # for each ID, if the target value >0, means there is at least one TRUE under the ID number,
 # if an ID has one TURE, means this person has been overdue at least 60 days.
 # then we mark this ID as 1,means we will not approve the application.
@@ -135,17 +141,19 @@ The above result shows that only 1% of records are classified as risk users. Fro
 ```{r}
 # merge two data with method inner_join.
 data <- inner_join(data_with_day, data_target, by = "ID")
+
 # convert all character data into facotr datatype.
 final_data <- data %>%
   mutate_if(is.character, as.factor) %>%
   mutate(y = as.factor(y))
+
 # check data
 str(final_data)
-# remove useless variable
-# ID used to identify applications from indivuduals
-# All values of "FLAG_MOBIL" are 1, which plays no role for training the model.
+
+# remove irrelevant variable "ID" and "FLAG_MOBIL"
 final_data <- final_data %>% select(-ID, -FLAG_MOBIL)
 
+# print dimension of the data (number of entries, number of variables)
 dim(final_data)
 ```
 
@@ -155,6 +163,7 @@ After performing the above code, we can get a final data set with 36,457 observa
 # turnning the data into data frame
 to_imp_data <- final_data %>% as.data.frame()
 
+# list all variables (column name)
 names(final_data)
 ```
 
@@ -263,6 +272,7 @@ In order to choose an appropriate method to deal with missing values, it is nece
 
 ```{r}
 library(mice)
+
 # check the missing pattern by using md.pattern function
 mice::md.pattern(to_imp_data, plot = TRUE)
 ```
@@ -281,8 +291,9 @@ The above figure and result illustrate that the corresponding missing pattern is
 In this section, we simply delete the missing values by using the **na.omit()** function. With this function, we would delete the whole row where the missing values appear.
 
 ```{r, eval=FALSE}
-# by using na.omit, we reomve the whole row in which the missing data is included
+# remove rows with missing values
 completeData <- na.omit(final_data)
+
 # check the dataset after deleting
 str(completeData)
 ```
@@ -302,14 +313,16 @@ When using the **MICE** function, there are 2 prime parameters that need to be c
 
 
 ```{r, eval=FALSE}
-### imputed data with mice function
+# imputed data with mice function
 tempData <- mice(to_imp_data, m = 1, meth = "polyreg", seed = 2020)
+
 # to extract the imputed data with the assigned column name "OCCUPATION_TYPE"
 tempData$imp$OCCUPATION_TYPE
 ```
 In order to get a whole dataset, we can complete the data frame with the imputed ones.
 
 ```{r, eval=FALSE}
+# TODO: what does complete mean???
 # complete the whole dataset with the imputed data
 completeData <- complete(tempData)
 ```
@@ -322,15 +335,14 @@ In MICE, parametric regression models are needed and assumptions about the distr
 Regarding the prime parameter selection, there are three parameters that need to be taken into consideration. Firstly, the dataset with missing values **xmins**. Then, **maxiter**, which helps decide the number of iterations that need to be done during the imputation. The last parameter is **ntree** which implies the number of random trees to grow in each forest. 
 
 ```{r, eval=FALSE}
-### Missing value imputation with missForest
-
 library(missForest)
-# generate final data after imputation while using missForest
+
+# Missing value imputation with missForest
 imputed_Data <- missForest(to_imp_data)
-# check imputation with OCCUPATION_TYPE
-imputed_Data$ximp$OCCUPATION_TYPE
-# get complete data with the imputed data inserted in
+
+# save data and check imputation with OCCUPATION_TYPE
 completeData <- imputed_Data$ximp
+completeData$OCCUPATION_TYPE
 ```
 
 finally we get three datasets based different imputation methods: **dl_na_data**, **mf_na_data** and **mice_na_data**.
@@ -398,7 +410,6 @@ of feature with respect to target is not rapidly changed, we can accept this mer
 ### Implementation
 ```{r echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(fig.height = 3)
-# load library
 library(tidyverse)
 library(data.table)
 library(mltools)
@@ -407,7 +418,8 @@ library(scorecard)
 ```
 
 ```{r echo=FALSE}
-set.seed(2020)
+# TODO: combine comments, explain what the fuction does.
+
 # calc_iv function compute the "information value" of a variable.
 calc_iv <- function(feature) {
   # how many rows we need.
@@ -475,7 +487,6 @@ variables, i.e. `CODE_GENDER`, `FLAG_OWN_CAR`, `FLAG_OWN_REALTY`, `NAME_INCOME_T
 only  `CODE_GENDER`, `FLAG_OWN_CAR`, `FLAG_OWN_REALTY` are binary factory variables.
 
 ```{r, message=FALSE, warning=FALSE}
-# load final_data
 dl_data <- read.csv2("./data/dl_na_data.csv")
 final_data <- dl_data
 binary_data <- final_data %>% select_if(is.factor)
@@ -486,8 +497,10 @@ glimpse(binary_data)
 As for binary factor variables, we write a function **convert_binary_variable** to  convert them into binary numeric type for next modelling. After converting, nominal values in the three variables `CODE_GENDER`, `FLAG_OWN_CAR`, `FLAG_OWN_REALTY`  are replaced by values `1` or `2`. 
 As for `CODE_GENDER`, value "`1`" represents the original type "`F`" and "`2`" represents the original type "`M`". As for `FLAG_OWN_CAR` and `FLAG_OWN_REALTY`, value "`1`" represents the original type "`N`" and value "`2`" represents the original type "`Y`".
 ```{r, message=FALSE, warning=FALSE}
+
 # function to convert binary variable into numeric.
 convert_binary_variable <- function(feature) {
+  # TODO: what does this mean? maybe leave this out, and explain it in the text in detail
   # save condition for succinct expression
   # check for defensive programm
   if (check_class(feature, "factor") & nlevels(feature) == 2) {
@@ -496,8 +509,10 @@ convert_binary_variable <- function(feature) {
     return(feature)
   }
 }
+
 # convert all binary variable into binary number
 converted_data <- final_data %>% mutate_if(is.factor, convert_binary_variable)
+
 # inspect binary variables
 converted_binary_data <- binary_data %>% mutate_if(is.factor, convert_binary_variable)
 glimpse(converted_binary_data)
@@ -507,12 +522,13 @@ glimpse(converted_binary_data)
 After converting binary factor variables, five Categorical variables are remained, i.e.
 `NAME_INCOME_TYPE`, `NAME_EDUCATION_TYPE`, `NAME_FAMILY_STATUS`, `NAME_HOUSING_TYPE`, `OCCUPATION_TYPE`,
 ```{r, message=FALSE, warning=FALSE}
+
 # find which variables have several values
 dif_variable <- setdiff(names(final_data), names(converted_data))
 dif_variable
 ```
 
-As for `NAME_INCOME_TYPE`, we write the function **calc_iv** to inspect its WOE and IV.
+As for `NAME_INCOME_TYPE`, we wrote the function **calc_iv** to inspect its WOE and IV.
 ```{r, message=FALSE, warning=FALSE}
 calc_iv(dif_variable[1])
 ```
@@ -543,6 +559,7 @@ IV slightly decreases from **0.01043881** to **0.00935902**, which we can accpet
 final_data["less_factor_edu"] <- final_data %>%
   pull(dif_variable[[2]]) %>%
   recode("Higher education" = "Incomplete higher")
+
 # analyse how the IV of the variable has been changed.
 calc_iv("less_factor_edu")
 ```
@@ -551,6 +568,7 @@ We noticed `NAME_FAMILY_STATUS` feature is relatively balanced, no need to chang
 ```{r, message=FALSE, warning=FALSE}
 # analyse the details of third multi-factors variable
 calc_iv(dif_variable[3])
+
 final_data["less_factor_status"] <- final_data %>% pull(dif_variable[3])
 # found this variable seems relatively balanced, no need to change.
 ```
@@ -570,6 +588,7 @@ After merge `Co-op apartment` into `Office apartment`, IV slightly decreases fro
 final_data["less_factor_house"] <- final_data %>%
   pull(dif_variable[[4]]) %>%
   recode("Co-op apartment" = "Office apartment")
+
 # analyse how the IV of the variable has been changed.
 calc_iv("less_factor_house")
 ```
@@ -613,22 +632,23 @@ final_data["less_factor_work"] <- final_data %>%
     "High skill tech staff" = "higher",
     "IT staff" = "higher"
   )
-# analyse how the IV of the variable has been changed.
 
+# analyse how the IV of the variable has been changed.
 calc_iv("less_factor_work")
 ```
 
 Then encode multi-factors variables as one-hot variables.
 ```{r, message=FALSE, warning=FALSE}
-########
 # encode multi-factors variables into one-hot
 factor_data <- final_data %>%
   select(starts_with("less")) %>%
   as.data.table()
 oh_data <- one_hot(factor_data, dropCols = T)
+
 # cbind oh_data with converted_data
 converted_data <- final_data %>% mutate_if(is.factor, convert_binary_variable)
 converted_data <- converted_data %>% add_column(oh_data)
+
 # print oh_data
 glimpse(oh_data)
 ```
@@ -695,6 +715,7 @@ Finally we combine binning variables, binary factor variables, and category vari
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # cbind dl_bin with dl_iv_data
 dl_iv_data <- woebin_ply(converted_data, rbindlist(dl_bin))
+
 # save dl_iv_data
 dl_iv_data$y <- as.factor(dl_iv_data$y)
 colnames(dl_iv_data) <- make.names(colnames(dl_iv_data), unique = T)
@@ -808,11 +829,9 @@ As for the process concerning the general model tuning, we would firstly go with
 first we load all the datasets. As the requests of **mlr3**, all integer numeric should be converted as double numeric, and
 target **y** should be converted as type factor.
 ```{r}
-# loading library
 library(tidyverse)
-# set seed
-set.seed(2020)
-# load data
+
+# load all data sets
 dl_iv_data <- read.csv2("./data/dl_iv_data.csv") %>%
   mutate_if(is.integer, as.numeric) %>%
   mutate(y = as.factor(y))
@@ -836,8 +855,8 @@ mice_oh_data <- read.csv("./data/mice_oh_data.csv") %>%
 then we create and combine all the tasks into a list.
 ```{r}
 library(mlr3)
-# create task for all the data
-# create task without dm
+
+# create tasks from all the data
 task_all <- list(
   TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y"),
   TaskClassif$new("mf_iv", backend = mf_iv_data, target = "y"),
@@ -856,7 +875,6 @@ We all use **benchmark_grid** to create design, setting with *5 folds cv*, *pred
 
 We will first evaluate how Logistic Regression performs between different data, including different encoding, and different missing value handling. As mentioned above, we pass arguments to **benchmark** function from **mlr3** to train logsitic regression. To train a logistic regression model, we set *lrn("classif.log_reg")* and use **aggregate** function from **mlr3** to extract the results.
 ```{r eval=FALSE, results='hide', warning=FALSE}
-# load library
 library(mlr3learners)
 library(mlr3tuning)
 library(paradox)
@@ -868,13 +886,22 @@ design <- benchmark_grid(
   resampling = rsmp("cv", folds = 5L)
 )
 
-# set measure
+# set global measure
 all_measures <- msr("classif.auc")
-# run the benchmark
-set.seed(2020)
-lg_bmr <- benchmark(design, store_models = TRUE)
-# save the results
-lg_results <- lg_bmr$aggregate(measures = msr("classif.auc"))
+
+# define function to start benchmark with fixed seed
+# save the result, and print training time
+# tictoc is used to measure the duration of the training
+library(tictoc)
+run_benchmark <- function(design){
+  set.seed(2020)
+  bmr <- benchmark(design, store_models = TRUE)
+  run_benchmark <- bmr
+}
+
+# run benchmark and save the results
+lg_bmr <- run_benchmark(design)
+lg_results <- lg_bmr$aggregate(measures = all_measures)
 ```
 For better comparing with each task, we write **multiplot_roc** function with the help of **mlr3viz** package to plots results.
 ```{r eval =FALSE}
@@ -882,13 +909,13 @@ library(mlr3viz)
 
 # plot for the 6 data tasks
 multiplot_roc <- function(models, type = "roc") {
-  # set a null list
+  # set a null list to colect all plots
   plots <- list()
-  # clone results
+  
+  # filter model with task id, and the corresponding AUC value
+  # then plot the ROC curve
   model <- models$clone()$filter(task_id = "dl_iv")
-  # format AUC
   auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
-  # plot
   plots[[1]] <- autoplot(model, type = type) + ggtitle(paste("dl_iv:", auc))
 
   model <- models$clone()$filter(task_id = "mf_iv")
@@ -910,9 +937,12 @@ multiplot_roc <- function(models, type = "roc") {
   model <- models$clone()$filter(task_id = "mice_oh")
   auc <- round(model$aggregate(msr("classif.auc"))[[7]], 4)
   plots[[6]] <- autoplot(model, type = type) + ggtitle(paste("mice_oh", auc))
-
+  
+  # merge all plots in the list
   do.call("grid.arrange", plots)
 }
+
+# plot roc curve of all tasks
 multiplot_roc(lg_bmr)
 ```
 
@@ -936,14 +966,11 @@ design <- benchmark_grid(
   resampling = rsmp("cv", folds = 5L)
 )
 
-# set measure
-all_measures <- msr("classif.auc")
-# run the benchmark
-set.seed(2020)
-knn_bmr <- benchmark(design, store_models = TRUE)
-# save the results
-knn_results <- knn_bmr$aggregate(measures = msr("classif.auc"))
+# run the benchmark, and save the results
+knn_bmr <- run_benchmark(design)
+knn_results <- knn_bmr$aggregate(measures = all_measures)
 
+# plot roc curve of all tasks
 multiplot_roc(knn_bmr)
 ```
 
@@ -962,14 +989,12 @@ design <- benchmark_grid(
   learners = lrn("classif.svm", predict_type = "prob"),
   resampling = rsmp("cv", folds = 5L)
 )
-# set measure
-all_measures <- msr("classif.auc")
 
-# run the benchmark to  train the model
-svm_bmr <- benchmark(design, store_models = TRUE)
-# save the results
+# run the benchmark, and save the result
+svm_bmr <- run_benchmark(design)
 svm_results <- svm_bmr$aggregate(all_measures)
 
+# plot roc curve of all tasks
 multiplot_roc(svm_bmr)
 ```
 
@@ -989,12 +1014,12 @@ design <- benchmark_grid(
   learners = lrn("classif.ranger", predict_type = "prob"),
   resampling = rsmp("cv", folds = 5L)
 )
-# set measure
-all_measures <- msr("classif.auc")
-# run the benchmark to  train the model
-rf_bmr <- benchmark(design, store_models = TRUE)
-# save the results
+
+# run the benchmark, and save the result
+rf_bmr <- run_benchmark(design)
 rf_results <- rf_bmr$aggregate(all_measures)
+
+# plot roc curve of all tasks
 multiplot_roc(rf_bmr)
 ```
 
@@ -1041,13 +1066,15 @@ library(mlr3tuning)
 library(mlr3pipelines)
 library(paradox)
 task <- TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y")
+
 # logistic learner
 lg_learner <- lrn("classif.log_reg", predict_type = "prob")
-# po_smote = po("smote", dup_size = 6)
+
 po_over <- po("classbalancing",
   id = "oversample", adjust = "minor",
   reference = "minor", shuffle = FALSE, ratio = 6
 )
+
 # create oversample
 lg_over_learner <- GraphLearner$new(po_over %>>% lg_learner, predict_type = "prob")
 ```
@@ -1055,18 +1082,19 @@ lg_over_learner <- GraphLearner$new(po_over %>>% lg_learner, predict_type = "pro
 As for *classbalancing*, *oversample.ratio* is the hyperparamter we neet to configurate. For a better exploration of *oversample.ratio*, we set a large ranging from 10 to 70.
 
 ```{r}
-#set parameter
+# define parameter
 lg_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", lower = 10, upper = 70)))
-# reset term
-terms <- term("none")
-# set inner_rsmp
+
+# set inner resampling
 inner_rsmp <- rsmp("cv", folds = 5L)
-#create autotuner
+
+# create autotuner
 lg_over_auto <- AutoTuner$new(
   learner = lg_over_learner, resampling = inner_rsmp,
   measures = msr("classif.auc"), tune_ps = lg_over_param_set,
-  terminator = terms, tuner = tnr("grid_search", resolution = 12)
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 12)
 )
+
 # set outer_resampling, and create a design with it
 outer_rsmp <- rsmp("cv", folds = 3L)
 lg_over_design <- benchmark_grid(
@@ -1079,16 +1107,24 @@ lg_over_design <- benchmark_grid(
 With *store_models = TRUE* we allow the benchmark function to store each single model that was computed during tuning. Therefore, we can plot the tuning path of the best learner from the subsampling iterations:
 
 ```{r ,eval=FALSE,results='hide', message=FALSE, warning=FALSE}
-#set.seed
 set.seed(2020)
-#create benchmark
+
+# create benchmark
 lg_over_bmr <- benchmark(lg_over_design, store_models = TRUE)
-#aggregate to get results of model
+
+# aggregate to get results of model
+# run the benchmark, and save the result
+lg_over_bmr <- run_benchmark(lg_over_design)
+
+# aggregate to get results of model
 lg_over_results <- lg_over_bmr$aggregate(measures = msr("classif.auc"))
-#inspect auc value.
+
+# inspect auc value.
 lg_over_results$classif.auc
 # lg_over_results = 0.7159998
 
+
+# plot oversample ratio vs AUC
 library(ggplot2)
 over_path1 <- lg_over_bmr$data$learner[[1]]$archive("params")
 over_gg1 <- ggplot(over_path1, aes(
@@ -1096,7 +1132,7 @@ over_gg1 <- ggplot(over_path1, aes(
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
 
 over_path2 <- lg_over_bmr$data$learner[[2]]$archive("params")
 over_gg2 <- ggplot(over_path2, aes(
@@ -1104,7 +1140,7 @@ over_gg2 <- ggplot(over_path2, aes(
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
 
 over_path3 <- lg_over_bmr$data$learner[[3]]$archive("params")
 over_gg3 <- ggplot(over_path3, aes(
@@ -1112,8 +1148,9 @@ over_gg3 <- ggplot(over_path3, aes(
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line() 
 
+# combine all plots in one
 library(ggpubr)
 ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend = "bottom")
 ```
@@ -1125,14 +1162,16 @@ knitr::include_graphics("./img/lg_over.png")
 We can see from the plots above, logistic regression seems to get better performance when the value of *oversample.ratio* is round 20 and 40. We can not determine the final value of this hyperparameter. Otherwise, we proceed another search with ranging from 15 to 45 to find the best value of *oversample.ratio*. 
  
 ```{r}
-#set parameter
+# set oversample.ratio tuning range
 lg_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", lower = 5, upper = 45)))
-#create autotuner
+
+# create autotuner
 lg_over_auto <- AutoTuner$new(
   learner = lg_over_learner, resampling = inner_rsmp,
   measures = msr("classif.auc"), tune_ps = lg_over_param_set,
-  terminator = terms, tuner = tnr("grid_search", resolution = 7)
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 7)
 )
+
 # set outer_resampling, and create a design with it
 outer_rsmp <- rsmp("cv", folds = 3L)
 lg_over_design <- benchmark_grid(
@@ -1143,16 +1182,18 @@ lg_over_design <- benchmark_grid(
 ```
 
 ```{r ,eval=FALSE,results='hide', message=FALSE, warning=FALSE}
-#set.seed
-set.seed(2020)
-#create benchmark
-lg_over_bmr <- benchmark(lg_over_design, store_models = TRUE)
-#aggregate to get results of model
+
+# run benchmark, and save result
+lg_over_bmr <- run_benchmark(lg_over_design)
+
+# aggregate to get results of model
 lg_over_results <- lg_over_bmr$aggregate(measures = msr("classif.auc"))
-#inspect auc value.
+
+# inspect auc value.
 lg_over_results$classif.auc
 # lg_over_results = 0.7212002
 
+# plot oversample.ratio v.s. AUC
 library(ggplot2)
 over_path1 <- lg_over_bmr$data$learner[[1]]$archive("params")
 over_gg1 <- ggplot(over_path1, aes(
@@ -1160,7 +1201,7 @@ over_gg1 <- ggplot(over_path1, aes(
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
 
 over_path2 <- lg_over_bmr$data$learner[[2]]$archive("params")
 over_gg2 <- ggplot(over_path2, aes(
@@ -1168,7 +1209,7 @@ over_gg2 <- ggplot(over_path2, aes(
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
 
 over_path3 <- lg_over_bmr$data$learner[[3]]$archive("params")
 over_gg3 <- ggplot(over_path3, aes(
@@ -1176,8 +1217,10 @@ over_gg3 <- ggplot(over_path3, aes(
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
 library(ggpubr)
+
+# combine all plots in one
 ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend = "bottom")
 ```
 
@@ -1195,16 +1238,18 @@ We want to determine which method is suitable for our dataset.
 We define the smote PipeOps by using the **po** function of **mlr3pipelines** package and set parameter as *smote*.
 
 ```{r}
-# load library
 library(mlr3learners)
 library(mlr3tuning)
 library(mlr3pipelines)
 library(paradox)
+
 task <- TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y")
+
 # logistic learner
 lg_learner <- lrn("classif.log_reg", predict_type = "prob")
-po_smote <- po("smote", dup_size = 50)
+
 # create smote
+po_smote <- po("smote", dup_size = 50)
 lg_smote_learner <- GraphLearner$new(po_smote %>>% lg_learner, predict_type = "prob")
 ```
 
@@ -1215,13 +1260,13 @@ lg_smote_param_set <- ParamSet$new(params = list(
   ParamInt$new("smote.dup_size", lower = 20, upper = 60),
   ParamInt$new("smote.K", lower = 10, upper = 20)
 ))
+
 # set outer_resampling, and create a design with it
-terms <- term("none")
 inner_rsmp <- rsmp("cv", folds = 3L)
 lg_smote_auto <- AutoTuner$new(
   learner = lg_smote_learner, resampling = inner_rsmp,
   measures = msr("classif.auc"), tune_ps = lg_smote_param_set,
-  terminator = terms, tuner = tnr("grid_search", resolution = 5)
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
 )
 
 # set outer_resampling, and create a design with it
@@ -1236,19 +1281,22 @@ lg_smote_design <- benchmark_grid(
 With *store_models = TRUE* we allow the benchmark function to store each single model that was computed during tuning. Therefore, we can plot the tuning path of the best learner from the subsampling iterations:
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
-set.seed(2020)
-# run benchmark
-lg_smote_bmr <- benchmark(lg_smote_design, store_models = TRUE)
+
+# run benchmark, and save result
+lg_smote_bmr <- run_benchmark(lg_smote_design)
+
 lg_smote_results <- lg_smote_bmr$aggregate(measures = msr("classif.auc"))
 lg_smote_results$classif.auc
-# plot path
+
+# plot smote parameters v.s. AUC
+
 over_path1 <- lg_smote_bmr$data$learner[[1]]$archive("params")
 over_gg1 <- ggplot(over_path1, aes(
   x = smote.dup_size,
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
 
 over_path2 <- lg_smote_bmr$data$learner[[2]]$archive("params")
 over_gg2 <- ggplot(over_path2, aes(
@@ -1256,7 +1304,7 @@ over_gg2 <- ggplot(over_path2, aes(
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
 
 over_path3 <- lg_smote_bmr$data$learner[[3]]$archive("params")
 over_gg3 <- ggplot(over_path3, aes(
@@ -1264,7 +1312,9 @@ over_gg3 <- ggplot(over_path3, aes(
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
+# combine all plots in one
 library(ggpubr)
 ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend = "bottom")
 ```
@@ -1277,18 +1327,21 @@ As shown on the plots above, the green line has the best performance on average,
 *smote.dup_size* equals 40. hence, it is better to choose *smote.K* with value 15. As for *smote.dup_size*, we will proceed another serach with ranging from 25 to 55 to obtain a considerably better prediction performance.
 
 ```{r}
-po_smote <- po("smote", K = 15)
+
 # create smote
+po_smote <- po("smote", K = 15)
 lg_smote_learner <- GraphLearner$new(po_smote %>>% lg_learner, predict_type = "prob")
-#set parameter
+
+# set range for tuning smote.dup_size
 lg_smote_param_set <- ParamSet$new(params = list(
   ParamInt$new("smote.dup_size", lower = 25, upper = 50)
 ))
+
 # set outer_resampling, and create a design with it
 lg_smote_auto <- AutoTuner$new(
   learner = lg_smote_learner, resampling = inner_rsmp,
   measures = msr("classif.auc"), tune_ps = lg_smote_param_set,
-  terminator = terms, tuner = tnr("grid_search", resolution = 5)
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
 )
 
 # set outer_resampling, and create a design with it
@@ -1302,20 +1355,21 @@ lg_smote_design <- benchmark_grid(
 
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
-set.seed(2020)
-# run benchmark
-lg_smote_bmr <- benchmark(lg_smote_design, store_models = TRUE)
+# run benchmark, and save the result
+lg_smote_bmr <- run_benchmark(lg_smote_design)
+
 lg_smote_results <- lg_smote_bmr$aggregate(measures = msr("classif.auc"))
 lg_smote_results$classif.auc
-#0.7253
-# plot path
+# 0.7253
+
+# plot smote parameters v.s. AUC
 over_path1 <- lg_smote_bmr$data$learner[[1]]$archive("params")
 over_gg1 <- ggplot(over_path1, aes(
   x = smote.dup_size,
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
 
 over_path2 <- lg_smote_bmr$data$learner[[2]]$archive("params")
 over_gg2 <- ggplot(over_path2, aes(
@@ -1323,7 +1377,7 @@ over_gg2 <- ggplot(over_path2, aes(
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
 
 over_path3 <- lg_smote_bmr$data$learner[[3]]$archive("params")
 over_gg3 <- ggplot(over_path3, aes(
@@ -1331,8 +1385,9 @@ over_gg3 <- ggplot(over_path3, aes(
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
 
+# combine all plots in one
 library(ggpubr)
 ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend = "bottom")
 ```
@@ -1358,13 +1413,13 @@ After using two different method to balance target variable, the prediction perf
 
 knn_learner <- lrn("classif.kknn", predict_type = "prob")
 
+# create oversampling, and combine it with current learner
 po_over = po("classbalancing",
              id = "oversample", adjust = "minor",
              reference = "minor", shuffle = FALSE, ratio = 5)
-
 lrn_over <- GraphLearner$new(po_over %>>% knn_learner, predict_type = "prob")
 
-# setting the tunning for parameters, and terminator
+# setting oversample.ratio tuning range
 knn_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", lower = 10, upper = 70)))
 
 
@@ -1372,8 +1427,8 @@ knn_over_auto <- AutoTuner$new(learner = lrn_over, resampling = inner_rsmp,
                                measures = msr("classif.auc"), tune_ps = knn_over_param_set,
                                terminator = term("none"), tuner = tnr("grid_search", resolution = 5))
 
-# set outer_resampling, and create a design with it
 
+# set outer_resampling, and create a design with it
 design_over = benchmark_grid(
   tasks = task,
   learners = knn_over_auto,
@@ -1383,7 +1438,8 @@ design_over = benchmark_grid(
 # run the benchmark, save the results afterwards
 knn_over_bmr <- run_benchmark(design_over)
 
-# plot basic
+
+# plot oversample.ratio v.s. AUC
 over_path1 = knn_over_bmr$data$learner[[1]]$archive("params")
 over_gg1 = ggplot(over_path1, aes(
   x = oversample.ratio,
@@ -1405,6 +1461,7 @@ over_gg3 = ggplot(over_path3, aes(
   geom_point(size = 3) +
   geom_line()
 
+# combine all plots in one
 library(ggpubr)
 ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend="bottom")
 
@@ -1423,10 +1480,11 @@ In this section, we will use the package **SMOTE** that is included in **mlr3**,
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
 knn_learner <- lrn("classif.kknn", predict_type = "prob")
 
+# create smote, and combine it with the current learner
 po_smote = po("smote", dup_size = 50)
 lrn_smote <- GraphLearner$new(po_smote %>>% knn_learner, predict_type = "prob")
 
-# setting the tunning for parameters, and terminator
+# setting smote parameters' tuning range
 knn_smote_param_set <- ParamSet$new(params = list(ParamInt$new("smote.dup_size", lower = 20, upper = 60),
                                             ParamInt$new("smote.K", lower = 10, upper = 20)))
 
@@ -1447,6 +1505,8 @@ design_smote = benchmark_grid(
 # run the benchmark, save the results afterwards
 knn_smote_bmr <- run_benchmark(design_smote)
 
+
+# plot smote parameters v.s. AUC
 smote_path1 = knn_smote_bmr$data$learner[[1]]$archive("params")
 smote_gg1 = ggplot(smote_path1, aes(
   x = smote.dup_size,
@@ -1468,8 +1528,10 @@ smote_gg3 = ggplot(smote_path3, aes(
   geom_point(size = 3) +
   geom_line()
 
+# combine all plots in one
 ggarrange(smote_gg1, smote_gg2, smote_gg3, common.legend = TRUE, legend="bottom")
 
+# extract final tuned parameters
 smote_results <- knn_smote_bmr$score() %>%
   pull(learner) %>%
   map(pluck(c(function(x) x$tuning_result)))
@@ -1488,13 +1550,16 @@ As we can see in the plot, we tried using **SMOTE** with different combinations 
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
 
-# dist
-
+# create oversampling with previously tuned value
 po_over_tuned <- po("classbalancing",
                     id = "oversample", adjust = "minor",
                     reference = "minor", shuffle = FALSE, ratio = 25)
-knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_type = "prob"), predict_type = "prob")
+knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", 
+                          predict_type = "prob"), predict_type = "prob")
+
+# set distance range for tuning
 para_dist <- ParamSet$new(params = list(ParamInt$new("classif.kknn.distance", lower = 1, upper = 5)))
+
 
 knn_over_dist <- AutoTuner$new(
   learner = knn_over_lrn, resampling = inner_rsmp,
@@ -1509,6 +1574,33 @@ design_over_dist <- benchmark_grid(
 
 bmr_over_dist <- run_benchmark(design_over_dist)
 
+# plot distance v.s. AUC
+over_dist_path1 = bmr_over_dist$data$learner[[1]]$archive("params")
+over_dist_gg1 = ggplot(over_dist_path1, aes(
+  x = classif.kknn.distance,
+  y = classif.auc)) +
+  geom_point(size = 3) +
+  geom_line()
+
+over_dist_path2 = bmr_over_dist$data$learner[[2]]$archive("params")
+over_dist_gg2 = ggplot(over_dist_path2, aes(
+  x = classif.kknn.distance,
+  y = classif.auc)) +
+  geom_point(size = 3) +
+  geom_line()
+
+over_dist_path3 = bmr_over_dist$data$learner[[3]]$archive("params")
+over_dist_gg3 = ggplot(over_dist_path3, aes(
+  x = classif.kknn.distance,
+  y = classif.auc)) +
+  geom_point(size = 3) +
+  geom_line()
+
+# combine all plots into one
+ggarrange(over_dist_gg1, over_dist_gg2, over_dist_gg3, common.legend = TRUE, legend="bottom")
+
+
+# extract final tuned parameters
 over_dist_para <- bmr_over_dist$score() %>%
     pull(learner) %>%
     map(pluck(c(function(x) x$tuning_result)))
@@ -1522,9 +1614,10 @@ knitr::include_graphics("img/2_2_knn_over_dist.png")
 In this part, we first tune the parameter *distance* from KNN, and we can see that all three sections of the data have very similar. It has the highest AUC at *distance*=1, and gradually declines till *distance*=3. After 3 the AUC performs differently but does not surpass the value with the setting *distance*=1. Furthermore, here we will fix the parameter to 1, and explore other parameters in detail.
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
-# kern
+# list all kernel from KNN
 kernel_type <- c("rectangular", "triangular", "epanechnikov", "biweight"
                 , "triweight", "cos", "inv", "gaussian", "rank", "optimal")
+
 knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=1), predict_type = "prob")
 para_kernel <- ParamSet$new(params = list(ParamFct$new("classif.kknn.kernel", levels = kernel_type)))
 
@@ -1544,13 +1637,14 @@ over_kern_para <- bmr_over_kern$score() %>%
   pull(learner) %>%
   map(pluck(c(function(x) x$tuning_result)))
 
-
+# extract top kernels from 3-fold cv
 selected_kernel <- c(over_kern_para[[1]]$params$classif.kknn.kernel,
 over_kern_para[[2]]$params$classif.kknn.kernel,
 over_kern_para[[3]]$params$classif.kknn.kernel)
 
+# list selected top kernel
 selected_kernel
-# print c("triangular", "biweight", "epanechnikov")
+
 ```
 
 
@@ -1563,8 +1657,9 @@ In this section, we explore the parameter *kernel* from KNN. From the plot shown
 
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
-# k + kern
-knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=1), predict_type = "prob")
+# tune k with selected kernels
+knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", 
+                      predict_type = "prob", distance=1), predict_type = "prob")
 para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 20, upper = 100), 
                                      ParamFct$new("classif.kknn.kernel", levels = selected_kern)))
 
@@ -1580,6 +1675,31 @@ design_over_k = benchmark_grid(
 )
 
 bmr_over_k <- run_benchmark(design_over_k)
+
+# plot k v.s. AUC (with kernel colored)
+over_k_path1 = bmr_over_k$data$learner[[1]]$archive("params")
+over_k_gg1 = ggplot(over_k_path1, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = classif.kknn.kernel)) +
+  geom_point(size = 3) +
+  geom_line()
+
+over_k_path2 = bmr_over_k$data$learner[[2]]$archive("params")
+over_k_gg2 = ggplot(over_k_path2, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = classif.kknn.kernel)) +
+  geom_point(size = 3) +
+  geom_line()
+
+over_k_path3 = bmr_over_k$data$learner[[3]]$archive("params")
+over_k_gg3 = ggplot(over_k_path3, aes(
+  x = classif.kknn.k,
+  y = classif.auc, col = classif.kknn.kernel)) +
+  geom_point(size = 3) +
+  geom_line()
+
+# combine all plots into one
+ggarrange(over_k_gg1, over_k_gg2, over_k_gg3, common.legend = TRUE, legend="bottom")
 
 ```
 
@@ -1609,7 +1729,8 @@ para_kernel <- ParamSet$new(params = list(ParamFct$new("classif.kknn.kernel", le
 
 # define smote, and combine it with knn learner
 po_smote_tuned <- po("smote", dup_size = 40, K = 15)
-knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", predict_type = "prob"), predict_type = "prob")
+knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", 
+                      predict_type = "prob"), predict_type = "prob")
 
 # tune distance
 knn_smote_dist <- AutoTuner$new(
@@ -1625,9 +1746,7 @@ design_smote_dist <- benchmark_grid(
 
 bmr_smote_dist <- run_benchmark(design_smote_dist)
 
-# ploting - 3-fold cross validation
-
-# distance v.s. AUC
+# plot distance v.s. AUC
 smote_dist_path1 = bmr_smote_dist$data$learner[[1]]$archive("params")
 smote_dist_gg1 = ggplot(smote_dist_path1, aes(
   x = classif.kknn.distance,
@@ -1660,8 +1779,10 @@ knitr::include_graphics("img/2_2_knn_smote_dist.png")
 First, we only tune the parameter *distance* with all other parameters fixed to default to evaluate the influence of the parameter *distance*. In the plot above, we can see that the AUC grows as we increase the value of *distance*. Still, after 3, there is no significant improvement and even declines in one plot. Based on this, we will fix the value to 3 to perform further fine-tuning.
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
+
 # tune kernel with selected distance
-knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=3), predict_type = "prob")
+knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", 
+                  predict_type = "prob", distance=3), predict_type = "prob")
 knn_smote_kernel <- AutoTuner$new(
   learner = knn_smote_lrn, resampling = inner_rsmp,
   measures = msr("classif.auc"), tune_ps = para_kernel,
@@ -1675,8 +1796,7 @@ design_smote_kernel <- benchmark_grid(
 
 bmr_smote_kern <- run_benchmark(design_smote_kernel)
 
-
-# kernel v.s. AUC
+# plot kernel v.s. AUC
 thm = theme(axis.text.x = element_text(angle = 45, hjust = 1))
 smote_kern_path1 = bmr_smote_kern$data$learner[[1]]$archive("params")
 smote_kern_gg1 = ggplot(smote_kern_path1, aes(
@@ -1715,7 +1835,8 @@ selected_kern <- c("rectangular", "triangular", "gaussian")
 para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 20, upper = 100), 
                                      ParamFct$new("classif.kknn.kernel", levels = selected_kern)))
 
-knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=3), predict_type = "prob")
+knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", 
+                    predict_type = "prob", distance=3), predict_type = "prob")
 knn_smote_k <- AutoTuner$new(
   learner = knn_smote_lrn, resampling = inner_rsmp,
   measures = msr("classif.auc"), tune_ps = para_k,
@@ -1783,18 +1904,23 @@ With _smote.dup_size_ defined from 10 to 60 and _smote.K_ from 10 to 25, it is b
 ```{r}
 # suppress svm package
 suppressPackageStartupMessages(library(e1071))
+
 ## test for best matches with smote function's parameter with SVM learner
 svm_lrn <- lrn("classif.svm", predict_type = "prob")
+
 # train with smote function's 2 parameters
 param_smote <- ParamSet$new(params = list(
   ParamInt$new("smote.dup_size", lower = 10, upper = 60),
   ParamInt$new("smote.K", lower = 10, upper = 25)
 ))
+
 # inner resampling set
 inner_rsmp <- rsmp("cv", folds = 3L)
 po_smote <- po("smote", dup_size = 50)
+
 # create smote learner fixed in svm learner
 svm_smote_lrn <- GraphLearner$new(po_smote %>>% svm_lrn, predict_type = "prob")
+
 # create Autolearner
 svm_auto_smote <- AutoTuner$new(
   learner = svm_smote_lrn, resampling = inner_rsmp,
@@ -1805,44 +1931,42 @@ svm_auto_smote <- AutoTuner$new(
 
 ```{r echo=FALSE,eval=FALSE}
 # outer resampling set
-
 outer_rsmp <- rsmp("cv", folds = 3L)
+
 # design for smote
 design_smote <- benchmark_grid(
   tasks = task,
   learners = svm_auto_smote,
   resampling = outer_rsmp
 )
-# run benchmark
-run_benchmark <- function(design) {
-  set.seed(2020)
-  tic()
-  bmr <- benchmark(design, store_models = TRUE)
-  toc()
-  run_benchmark <- bmr
-}
+
 bmr_smote <- benchmark(design_smote, store_models = TRUE)
+
+# plot smote parameters v.s. AUC
 smote_path1 <- bmr_smote$data$learner[[1]]$archive("params")
 svm_ggp1 <- ggplot(smote_path1, aes(
   x = smote.dup_size,
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 smote_path2 <- bmr_smote$data$learner[[2]]$archive("params")
 svm_ggp2 <- ggplot(smote_path2, aes(
   x = smote.dup_size,
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line() 
+
 smote_path3 <- bmr_smote$data$learner[[2]]$archive("params")
 svm_ggp3 <- ggplot(smote_path3, aes(
   x = smote.dup_size,
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line() 
+
 ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 
 ```
@@ -1868,8 +1992,10 @@ Regarding the choice of suitable kernel function with SVM, there are in total fo
 kernel_type <- c("linear", "polynomial", "radial", "sigmoid")
 param_kernel <- ParamSet$new(params = list(ParamFct$new("classif.svm.kernel", levels = kernel_type)))
 po_smote <- po("smote", dup_size = 45, K = 21)
+
 # create smote learner fixed in rf_trees_fixed_lrn
 svm_smote_lrn <- GraphLearner$new(po_smote %>>% svm_lrn, predict_type = "prob")
+
 # create Autolearner for step 1
 svm_auto_kernel <- AutoTuner$new(
   learner = svm_smote_lrn, resampling = inner_rsmp,
@@ -1885,28 +2011,34 @@ design_kernel <- benchmark_grid(
   learners = svm_auto_kernel,
   resampling = outer_rsmp
 )
+
 bmr_kernel <- benchmark(design_kernel, store_models = TRUE)
+
+# plot kernel v.s. AUC
 kernel_path1 <- bmr_kernel$data$learner[[1]]$archive("params")
 svm_ggp1 <- ggplot(kernel_path1, aes(
   x = classif.svm.kernel,
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line() 
+
 kernel_path2 <- bmr_kernel$data$learner[[2]]$archive("params")
 svm_ggp2 <- ggplot(kernel_path2, aes(
   x = classif.svm.kernel,
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line() 
+
 kernel_path3 <- bmr_kernel$data$learner[[3]]$archive("params")
 svm_ggp3 <- ggplot(kernel_path3, aes(
   x = classif.svm.kernel,
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line() 
+
 ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 ```
 
@@ -1919,14 +2051,18 @@ As can seen from the plots which refer to the comparison with different *kernel*
 
 ```{r, eval=FALSE}
 svm_lrn <- lrn("classif.svm", predict_type = "prob", kernel = "radial", type = "C-classification")
+
 # train with different set with parameter cost
 param_cost <- ParamSet$new(params = list(ParamDbl$new("classif.svm.cost", lower = 0, upper = 3)))
+
 param_cost$trafo = function(x, param_set){
   x$classif.svm.cost = 10**(x$classif.svm.cost)/10
   x
 }
+
 # create smote learner fixed un svm learner
 svm_smote_lrn <- GraphLearner$new(po_smote %>>% svm_lrn, predict_type = "prob")
+
 # create Autolearner
 svm_auto_smote <- AutoTuner$new(
   learner = svm_smote_lrn, resampling = inner_rsmp,
@@ -1944,27 +2080,33 @@ design_cost <- benchmark_grid(
 )
 
 bmr_cost <- benchmark(design_cost, store_models = TRUE)
+
+
+# plot svm.cost v.s. AUC
 cost_path1 <- bmr_cost$data$learner[[1]]$archive("params")
 svm_ggp1 <- ggplot(cost_path1, aes(
   x = classif.svm.cost,
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line() 
+
 cost_path2 <- bmr_cost$data$learner[[2]]$archive("params")
 svm_ggp2 <- ggplot(cost_path2, aes(
   x = classif.svm.cost,
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line() 
+
 cost_path3 <- bmr_cost$data$learner[[3]]$archive("params")
 svm_ggp3 <- ggplot(cost_path3, aes(
   x = classif.svm.cost,
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line() 
+
 ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 ```
 
@@ -1977,15 +2119,20 @@ Shown on the three plots above, two of them are suggesting that by setting _clas
 
 ```{r eval=FALSE}
 svm_lrn <- lrn("classif.svm", predict_type = "prob", kernel = "radial", cost = 0.1, type = "C-classification")
+
 # train with gamm
 param_gamma <- ParamSet$new(params = list(ParamDbl$new("classif.svm.gamma", lower = 0, upper = 3)))
+
 param_cost$trafo = function(x, param_set){
   x$classif.svm.gamma = 10 ** (x$classif.svm.gamma) / 10**3
   x
 }
+
 po_smote <- po("smote", dup_size = 45, K = 21)
+
 # create smote learner
 svm_smote_lrn <- GraphLearner$new(po_smote %>>% svm_lrn, predict_type = "prob")
+
 # create Autolearner for step 1
 svm_auto_smote <- AutoTuner$new(
   learner = svm_smote_lrn, resampling = inner_rsmp,
@@ -2001,29 +2148,35 @@ design_gamma <- benchmark_grid(
   learners = svm_auto_smote,
   resampling = outer_rsmp
 )
+
 bmr_gamma <- benchmark(design_gamma, store_models = TRUE)
 bmr_gamma_result <- bmr_gamma$aggregate(msr("classif.auc"))
+
+# plot svm.gamma v.s. AUC
 gamma_path1 <- bmr_gamma$data$learner[[1]]$archive("params")
 svm_ggp1 <- ggplot(gamma_path1, aes(
   x = classif.svm.gamma,
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line() 
+
 gamma_path2 <- bmr_gamma$data$learner[[2]]$archive("params")
 svm_ggp2 <- ggplot(gamma_path2, aes(
   x = classif.svm.gamma,
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line() 
+
 gamma_path3 <- bmr_gamma$data$learner[[3]]$archive("params")
 svm_ggp3 <- ggplot(gamma_path3, aes(
   x = classif.svm.gamma,
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line() 
+
 ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 ```
 
@@ -2049,65 +2202,70 @@ As mentioned in chapter 3, we fix the parameter *num.trees* with value 1000 as s
 
 ```{r eval=FALSE}
 library(ranger)
+
 # step 1: test for best matches with smote function's parameter
 # learner with fixed number of trees: 1000
 rf_lrn <- lrn("classif.ranger", predict_type = "prob", num.trees = 1000)
+
 # train with smote function's 2 parameters
 param_smote <- ParamSet$new(params = list(
   ParamInt$new("smote.dup_size", lower = 30, upper = 60),
   ParamInt$new("smote.K", lower = 10, upper = 20)
 ))
+
 # inner resampling set
 inner_rsmp <- rsmp("cv", folds = 3)
 po_smote <- po("smote", dup_size = 50)
+
 # create smote learner fixed in rf_trees_fixed_lrn
 rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
+
 # create Autolearner for step 1
 rf_auto_smote <- AutoTuner$new(
   learner = rf_smote_lrn, resampling = inner_rsmp,
   measures = msr("classif.auc"), tune_ps = param_smote,
   terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
 )
+
 # outer resampling set
 outer_rsmp <- rsmp("cv", folds = 3L)
+
 # design for smote
 design_smote <- benchmark_grid(
   tasks = task,
   learners = rf_auto_smote,
   resampling = outer_rsmp
 )
-# create benchmark
-run_benchmark <- function(design) {
-  set.seed(2020)
-  tic()
-  bmr <- benchmark(design, store_models = TRUE)
-  toc()
-  run_benchmark <- bmr
-}
+
+
 # run benchmark
 bmr_smote <- ren_benchmark(design_smote, store_models = TRUE)
-# plot path
+
+# plot smote parameters v.s. AUC
 smote_path1 <- bmr_smote$data$learner[[1]]$archive("params")
 rf_ggp1 <- ggplot(smote_path1, aes(
   x = smote.dup_size,
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 smote_path2 <- bmr_smote$data$learner[[2]]$archive("params")
 rf_ggp2 <- ggplot(smote_path2, aes(
   x = smote.dup_size,
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 smote_path3 <- bmr_smote$data$learner[[2]]$archive("params")
 rf_ggp3 <- ggplot(smote_path3, aes(
   x = smote.dup_size,
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 ```
 
@@ -2120,11 +2278,13 @@ We can see from the three plots above, two plots is showing that *smote.dup_size
 ```{r}
 # learner with fixed number of trees: 1000
 rf_lrn <- lrn("classif.ranger", predict_type = "prob", num.trees = 1000)
+
 # train with smote function's 2 parameters
 param_smote <- ParamSet$new(params = list(
   ParamInt$new("smote.dup_size", lower = 37, upper = 53),
   ParamInt$new("smote.K", lower = 5, upper = 25)
 ))
+
 # create smote learner fixed in rf_trees_fixed_lrn
 rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
 ```
@@ -2137,34 +2297,41 @@ rf_auto_smote <- AutoTuner$new(
   tune_ps = param_smote,
   terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
 )
+
 # design for smote
 design_smote <- benchmark_grid(
   tasks = task,
   learners = rf_auto_smote,
   resampling = outer_rsmp
 )
+
 bmr_smote <- benchmark(design_smote, store_models = TRUE)
+
+# plot smote parameters v.s. AUC
 smote_path1 <- bmr_smote$data$learner[[1]]$archive("params")
 rf_ggp1 <- ggplot(smote_path1, aes(
   x = smote.dup_size,
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 smote_path2 <- bmr_smote$data$learner[[2]]$archive("params")
 rf_ggp2 <- ggplot(smote_path2, aes(
   x = smote.dup_size,
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 smote_path3 <- bmr_smote$data$learner[[3]]$archive("params")
 rf_ggp3 <- ggplot(smote_path3, aes(
   x = smote.dup_size,
   y = classif.auc, col = factor(smote.K)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 ```
 
@@ -2182,25 +2349,30 @@ When it comes to use the oversampling method to address the imbalance distributi
 ```{r}
 # random forest learner
 rf_learner <- lrn("classif.ranger", predict_type = "prob")
+
 # set oversampling method
 po_over <- po("classbalancing",
   id = "oversample", adjust = "minor",
   reference = "minor", shuffle = FALSE, ratio = 6
 )
+
 # create oversample fixed in learner
 rf_over_learner <- GraphLearner$new(po_over %>>% rf_learner, predict_type = "prob")
+
 # set oversampling parameter for rf
 rf_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", lower = 30, upper = 60)))
-# reset term
-terms <- term("none")
+
+
 # set inner_rsmp
 inner_rsmp <- rsmp("cv", folds = 5L)
-#create autotuner
+
+# create autotuner
 rf_over_auto <- AutoTuner$new(
   learner = rf_over_learner, resampling = inner_rsmp,
   measures = msr("classif.auc"), tune_ps = rf_over_param_set,
-  terminator = terms, tuner = tnr("grid_search", resolution = 12)
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 12)
 )
+
 # set outer_resampling, and create a design with it
 outer_rsmp <- rsmp("cv", folds = 3L)
 rf_over_design <- benchmark_grid(
@@ -2213,21 +2385,20 @@ rf_over_design <- benchmark_grid(
 With *store_models = TRUE* we allow the benchmark function to store each single model that was computed during tuning. Therefore, we can plot the tuning path of the best learner from the subsampling iterations:
 
 ```{r ,eval=FALSE,results='hide', message=FALSE, warning=FALSE}
-#set.seed
-set.seed(2020)
-#create benchmark
-rf_over_bmr <- benchmark(rf_over_design, store_models = TRUE)
-#aggregate to get results of model
+
+rf_over_bmr <- run_benchmark(rf_over_design)
+
+# aggregate to get results of model
 rf_over_results <- rf_over_bmr$aggregate(measures = msr("classif.auc"))
 
-library(ggplot2)
+# plot oversample.ratio v.s. AUC
 over_path1 <- rf_over_bmr$data$learner[[1]]$archive("params")
 over_gg1 <- ggplot(over_path1, aes(
   x = oversample.ratio,
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
 
 over_path2 <- rf_over_bmr$data$learner[[2]]$archive("params")
 over_gg2 <- ggplot(over_path2, aes(
@@ -2235,7 +2406,7 @@ over_gg2 <- ggplot(over_path2, aes(
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
 
 over_path3 <- rf_over_bmr$data$learner[[3]]$archive("params")
 over_gg3 <- ggplot(over_path3, aes(
@@ -2243,8 +2414,8 @@ over_gg3 <- ggplot(over_path3, aes(
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
-# load the required package required for plotting
+  geom_line()
+
 library(ggpubr)
 ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend = "bottom")
 ```
@@ -2263,12 +2434,15 @@ Thence, we will focus on using the already tuned parameter settings for the **SM
 # RF with 4 different paramSets, to analysis how to do further tuning
 # tuning for best num.trees and mtry pairs
 rf_lrn <- lrn("classif.ranger", predict_type = "prob")
+
 # train with ranger function's 2 parameters
 param_nt_mtry <- ParamSet$new(params = list(
   ParamInt$new("classif.ranger.num.trees", lower = 400, upper = 1700),
   ParamInt$new("classif.ranger.mtry", lower = 1, upper = 13)
 ))
+
 po_smote <- po("smote", dup_size = 45, K = 15)
+
 # create smote learner fixed in rf_lrn
 rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
 ```
@@ -2280,6 +2454,7 @@ rf_auto_smote <- AutoTuner$new(
   measures = msr("classif.auc"), tune_ps = param_nt_mtry,
   terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
 )
+
 # design for smote
 design_smote <- benchmark_grid(
   tasks = task,
@@ -2295,28 +2470,34 @@ run_benchmark <- function(design) {
   toc()
   run_benchmark <- bmr
 }
+
 bmr_smote <- benchmark(design_smote, store_models = TRUE)
+
+# plot ranger.num.tree v.s. AUC
 nt_mtry_path1 <- bmr_smote$data$learner[[1]]$archive("params")
 rf_ggp1 <- ggplot(nt_mtry_path1, aes(
   x = classif.ranger.num.trees,
   y = classif.auc, col = factor(classif.ranger.mtry)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 nt_mtry_path2 <- bmr_smote$data$learner[[2]]$archive("params")
 rf_ggp2 <- ggplot(nt_mtry_path2, aes(
   x = classif.ranger.num.trees,
   y = classif.auc, col = factor(classif.ranger.mtry)
 )) + 
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 nt_mtry_path3 <- bmr_smote$data$learner[[3]]$archive("params")
 rf_ggp3 <- ggplot(nt_mtry_path3, aes(
   x = classif.ranger.num.trees,
   y = classif.auc, col = factor(classif.ranger.mtry)
 )) + 
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line() 
+
 ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 ```
 
@@ -2329,14 +2510,17 @@ So, we would go with the combination of _num.trees_ = 1000 and _mtry_ = 7. And t
 
 ```{r}
 # RF with 4 different paramSets, to analysis how to do further tuning
-## tuning for best min.node.size and sample.fraction pairs
+# tuning for best min.node.size and sample.fraction pairs
 rf_lrn <- lrn("classif.ranger", predict_type = "prob", num.trees = 1000, mtry = 7)
+
 # train with smote function's 2 parameters
 param_mns_sf <- ParamSet$new(params = list(
   ParamInt$new("classif.ranger.min.node.size", lower = 2, upper = 8),
   ParamDbl$new("classif.ranger.sample.fraction", lower = 0.5, upper = 0.8)
 ))
+
 po_smote <- po("smote", dup_size = 45, K = 15)
+
 # create smote learner fixed in rf_lrn
 rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
 ```
@@ -2348,44 +2532,44 @@ rf_auto_smote <- AutoTuner$new(
   measures = msr("classif.auc"), tune_ps = param_mns_sf,
   terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
 )
+
 # outer resampling set
 outer_rsmp <- rsmp("cv", folds = 3L)
+
 # design for smote
 design_smote <- benchmark_grid(
   tasks = task,
   learners = rf_auto_smote,
   resampling = outer_rsmp
 )
-# run benchmark
-run_benchmark <- function(design) {
-  set.seed(2020)
-  tic()
-  bmr <- benchmark(design, store_models = TRUE)
-  toc()
-  run_benchmark <- bmr
-}
-bmr_smote <- benchmark(design_smote, store_models = TRUE)
+
+bmr_smote <- run_benchmark(design_smote)
+
+# plot ranger.sample.fraction v.s. AUC (with ranger.min.node.siz colored)
 mns_sf_path1 <- bmr_smote$data$learner[[1]]$archive("params")
 rf_ggp1 <- ggplot(mns_sf_path1, aes(
   x = classif.ranger.sample.fraction,
   y = classif.auc, col = factor(classif.ranger.min.node.size)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 mns_sf_path2 <- bmr_smote$data$learner[[1]]$archive("params")
 rf_ggp2 <- ggplot(mns_sf_path2, aes(
   x = classif.ranger.sample.fraction,
   y = classif.auc, col = factor(classif.ranger.min.node.size)
 )) + 
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 mns_sf_path3 <- bmr_smote$data$learner[[1]]$archive("params")
 rf_ggp3 <- ggplot(mns_sf_path3, aes(
   x = classif.ranger.sample.fraction,
   y = classif.auc, col = factor(classif.ranger.min.node.size)
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 ```
 
@@ -2402,13 +2586,16 @@ rf_lrn <- lrn("classif.ranger",
   predict_type = "prob", num.trees = 1000,
   mtry = 7, min.node.size = 3
 )
+
 # train with smote function's 2 parameters
 param_sf <- ParamSet$new(params = list(ParamDbl$new("classif.ranger.sample.fraction",
   lower = 0.45, upper = 0.95
 )))
+
 # inner resampling set
 inner_rsmp <- rsmp("cv", folds = 3)
 po_smote <- po("smote", dup_size = 45, K = 15)
+
 # create smote learner fixed in rf_lrn
 rf_smote_lrn <- GraphLearner$new(po_smote %>>% rf_lrn, predict_type = "prob")
 ```
@@ -2420,44 +2607,44 @@ rf_auto_smote <- AutoTuner$new(
   measures = msr("classif.auc"), tune_ps = param_sf,
   terminator = term("none"), tuner = tnr("grid_search", resolution = 5)
 )
+
 # design for smote
 design_smote <- benchmark_grid(
   tasks = task,
   learners = rf_auto_smote,
   resampling = outer_rsmp
 )
-# run benchmark
-run_benchmark <- function(design) {
-  set.seed(2020)
-  tic()
-  bmr <- benchmark(design, store_models = TRUE)
-  toc()
-  run_benchmark <- bmr
-}
-bmr_smote <- benchmark(design_smote, store_models = TRUE)
+
+bmr_smote <- run_benchmark(design_smote)
+bmr_result <- bmr_smote$aggregate(msr("classif.auc"))
+
+# plot ranger.sample.fraction v.s. AUC
 mns_sf_path1 <- bmr_smote$data$learner[[1]]$archive("params")
 rf_ggp1 <- ggplot(mns_sf_path1, aes(
   x = classif.ranger.sample.fraction,
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 mns_sf_path2 <- bmr_smote$data$learner[[1]]$archive("params")
 rf_ggp2 <- ggplot(mns_sf_path2, aes(
   x = classif.ranger.sample.fraction,
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 mns_sf_path3 <- bmr_smote$data$learner[[1]]$archive("params")
 rf_ggp3 <- ggplot(mns_sf_path3, aes(
   x = classif.ranger.sample.fraction,
   y = classif.auc
 )) +
   geom_point(size = 3) +
-  geom_line() #+ theme(legend.position = "none")
+  geom_line()
+
 ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
-bmr_result <- bmr_smote$aggregate(msr("classif.auc"))
+
 ```
 
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
