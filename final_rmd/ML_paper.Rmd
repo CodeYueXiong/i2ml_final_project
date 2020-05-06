@@ -322,8 +322,7 @@ tempData$imp$OCCUPATION_TYPE
 In order to get a whole dataset, we can complete the data frame with the imputed ones.
 
 ```{r, eval=FALSE}
-# TODO: what does complete mean???
-# complete the whole dataset with the imputed data
+# complete the whole dataset with the imputed variable
 completeData <- complete(tempData)
 ```
 
@@ -418,53 +417,54 @@ library(scorecard)
 ```
 
 ```{r echo=FALSE}
-# TODO: combine comments, explain what the fuction does.
 
-# calc_iv function compute the "information value" of a variable.
+# calc_iv function compute the "information value" of each category of variables.
 calc_iv <- function(feature) {
   # how many rows we need.
   number_row <- length(unique(final_data[[feature]]))
+  
   # initialize the tibble
   inner_iv_table <- tibble(feature = 0, val = 0, all = 0, good = 0, bad = 0)
+  
   # for each level, we calculate their information value
   for (i in seq(number_row)) {
     # mark which level is computed
     val <- unique(final_data[[feature]])[[i]]
+    
     # conver data as "data.table" for the convenience of select.
     final_data <- data.table(final_data)
+    
     # compute how many simples within this level
     all <- nrow(final_data[final_data[[feature]] == val])
-    # the number of good people within this level
+    
+    # compute and store the number of positive and negative sample within this level
     good <- nrow(final_data[final_data[[feature]] == val & final_data$y == 0])
-    # the number of bad people within this level
     bad <- nrow(final_data[final_data[[feature]] == val & final_data$y == 1])
-    # store as a tibble
     inner_tibble <- tibble(feature, val, all, good, bad)
-    # rbind "inner_tibble" with "inner_iv_table
     inner_iv_table <- rbind(inner_iv_table, inner_tibble)
   }
+  
   # delet our initial rows.
   inner_iv_table <- inner_iv_table[-1, ]
 
   # compute IV
   inner_iv_table <- inner_iv_table %>%
+    
     # compute the proportion for each level,
     mutate(share = all / sum(all)) %>%
-    # compute bad rate
+    
+    # compute bad rate, distributions and woe
     mutate(bad_rate = bad / all) %>%
-    # compute good distribution
     mutate(good_dis = (all - bad) / (sum(all) - sum(bad))) %>%
-    # compute bad distribution
     mutate(bad_dis = bad / sum(bad)) %>%
-    # compute woe
     mutate(woe = log(good_dis / bad_dis))
+  
   # deal with the extreme situation
   inner_iv_table$woe[is.infinite(inner_iv_table$woe)] <- 0
-  # compute IV
+  
+  # compute IV and store iv in iv_table 
   iv_table <- inner_iv_table %>% mutate(iv = woe * (good_dis - bad_dis))
-  # return value of IV
   print(sum(iv_table$iv))
-  # return "iv_table"
   return(iv_table)
 }
 ```
@@ -500,9 +500,8 @@ As for `CODE_GENDER`, value "`1`" represents the original type "`F`" and "`2`" r
 
 # function to convert binary variable into numeric.
 convert_binary_variable <- function(feature) {
-  # TODO: what does this mean? maybe leave this out, and explain it in the text in detail
-  # save condition for succinct expression
-  # check for defensive programm
+  
+  # select binary banary variables.
   if (check_class(feature, "factor") & nlevels(feature) == 2) {
     levels(feature) <- seq(nlevels(feature))
     feature <- as.numeric(feature)
