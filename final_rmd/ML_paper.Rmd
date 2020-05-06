@@ -1409,7 +1409,7 @@ ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend="bottom")
 knitr::include_graphics("img/2_1_knn_over_basic_auc.png")
 ```
 
-In the plot above, it is clearly shown that 
+In the plot above, it is clearly shown that...... PLOT WRONG?
 
 **Balancing with SMOTE**
 
@@ -1514,6 +1514,8 @@ over_dist_para <- bmr_over_dist$score() %>%
 knitr::include_graphics("img/2_2_knn_over_dist.png")
 ```
 
+In this part, we first tune the parameter *distance* from KNN, and we can see that all three sections of the data have very similar. It has the highest AUC at *distance*=1, and gradually declines till *distance*=3. After 3 the AUC performs differently but does not surpass the value with the setting *distance*=1. Furthermore, here we will fix the parameter to 1, and explore other parameters in detail.
+
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
 # kern
 kernel_type <- c("rectangular", "triangular", "epanechnikov", "biweight"
@@ -1549,7 +1551,11 @@ selected_kernel
 
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/2_3_knn_over_kern.png")
+print(c("triangular", "biweight", "epanechnikov"))
 ```
+
+In this section, we explore the parameter *kernel* from KNN. From the plot shown above, there is no apparent difference between different kernels, except *triweight* being the lowest in all three plots. To reduce the computational cost and perform further fine-tuning, we will select the top kernel from each plot, being *triangular*, *biweight*, and *epanechnikov*, and tune *k* with these selected kernels.
+
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
 # k + kern
@@ -1577,6 +1583,8 @@ bmr_over_k <- run_benchmark(design_over_k)
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/2_4_knn_over_k_kern.png")
 ```
+
+Finally, we want to tune *k* with kernels we selected in the previous section. Beside *epanechnikov* being lowest in all plot, there is no straightforward winner between *triangular* and *biweight*. We can see that AUC is the highest in the range of 40 to 80. If we take a closer look in this range, we notice that *triangular* is slightly better. Based on the trend of the 3 plots above, it is reasonable to select *triangular* as our kernel, with *k* set to 80.
 
 **Fine-tuning (SMOTE)**
 

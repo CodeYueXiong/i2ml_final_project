@@ -32,21 +32,19 @@ task <- TaskClassif$new("dl_iv", backend = dl_iv_data, target = "y")
 # knn learner
 knn_learner <- lrn("classif.kknn", predict_type = "prob")
 
-po_smote = po("smote", dup_size = 50)
 po_over = po("classbalancing",
              id = "oversample", adjust = "minor",
              reference = "minor", shuffle = FALSE, ratio = 6)
 
 lrn_over <- GraphLearner$new(po_over %>>% knn_learner, predict_type = "prob")
-lrn_smote <- GraphLearner$new(po_smote %>>% knn_learner, predict_type = "prob")
+
+
+
 
 # setting the tunning for parameters, and terminator
 knn_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", lower = 10, upper = 70)))
 
 
-knn_smote_param_set <- ParamSet$new(params = list(ParamInt$new("smote.dup_size", lower = 20, upper = 60),
-                                            ParamInt$new("smote.K", lower = 10, upper = 20)
-))
 
 terms <- term("none")
 
@@ -59,10 +57,6 @@ knn_over_auto <- AutoTuner$new(learner = lrn_over, resampling = inner_rsmp,
                                measures = msr("classif.auc"), tune_ps = knn_over_param_set,
                                terminator = terms, tuner = tnr("grid_search", resolution = 5))
 
-knn_smote_auto <- AutoTuner$new(learner = lrn_smote, resampling = inner_rsmp, 
-                               measures = msr("classif.auc"), tune_ps = knn_smote_param_set,
-                               terminator = terms, tuner = tnr("grid_search", resolution = 5))
-
 # set outer_resampling, and creat a design with it
 
 design_over = benchmark_grid(
@@ -71,17 +65,28 @@ design_over = benchmark_grid(
   resamplings = outer_rsmp
 )
 
-design_smote = benchmark_grid(
-  tasks = task,
-  learners = knn_smote_auto,
-  resamplings = outer_rsmp
-)
+
 
 # set seed before traing, then run the benchmark
 # save the results afterwards
 
 set.seed(2020)
 knn_over_bmr <- benchmark(design_over, store_models = TRUE)
+
+po_smote = po("smote", dup_size = 50)
+lrn_smote <- GraphLearner$new(po_smote %>>% knn_learner, predict_type = "prob")
+knn_smote_param_set <- ParamSet$new(params = list(ParamInt$new("smote.dup_size", lower = 20, upper = 60),
+                                                  ParamInt$new("smote.K", lower = 10, upper = 20)
+))
+knn_smote_auto <- AutoTuner$new(learner = lrn_smote, resampling = inner_rsmp, 
+                                measures = msr("classif.auc"), tune_ps = knn_smote_param_set,
+                                terminator = terms, tuner = tnr("grid_search", resolution = 5))
+
+design_smote = benchmark_grid(
+  tasks = task,
+  learners = knn_smote_auto,
+  resamplings = outer_rsmp
+)
 knn_smote_bmr <- benchmark(design_smote, store_models = TRUE)
 # knn_results <- knn_bmr$aggregate(measures = msr("classif.auc"))
 
@@ -163,6 +168,24 @@ para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 20, 
 para_dist <- ParamSet$new(params = list(ParamInt$new("classif.kknn.distance", lower = 1, upper = 5)))
 para_kernel <- ParamSet$new(params = list(ParamFct$new("classif.kknn.kernel", levels = kernel_type)))
 
+selected_kern <- c("triangular", "biweight", "epanechnikov")
+knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=1), predict_type = "prob")
+para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 20, upper = 100), 
+                                     ParamFct$new("classif.kknn.kernel", levels = selected_kern)))
+
+knn_over_k <- AutoTuner$new(
+  learner = knn_over_lrn, resampling = inner_rsmp,
+  measures = msr("classif.auc"), tune_ps = para_k,
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5))
+
+design_over_k = benchmark_grid(
+  tasks = task,
+  learners = knn_over_k,
+  resamplings = outer_rsmp
+)
+
+bmr_over_k <- run_benchmark(design_over_k)
+
 
 # ----------- benchmark
 
@@ -182,7 +205,7 @@ run_benchmark <- function(design){
 po_over_tuned <- po("classbalancing",
                     id = "oversample", adjust = "minor",
                     reference = "minor", shuffle = FALSE, ratio = 25)
-knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_type = "prob"), predict_type = "prob")
+knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=1), predict_type = "prob")
 
 
 knn_over_dist <- AutoTuner$new(
@@ -208,7 +231,7 @@ knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_
 knn_over_kernel <- AutoTuner$new(
   learner = knn_over_lrn, resampling = inner_rsmp,
   measures = msr("classif.auc"), tune_ps = para_kernel,
-  terminator = term("none"), tuner = tnr("grid_search", resolution = 10))
+  terminator = term("none"), tuner = tnr("grid_search", resolution = 5))
 
 design_over_kernel <- benchmark_grid(
   tasks = task,
@@ -273,6 +296,7 @@ design_smote_kernel <- benchmark_grid(
 bmr_smote_kern <- run_benchmark(design_smote_kernel)
 
 selected_kern <- c("rectangular", "triangular", "gaussian")
+selected_kern_over <- c("triangular", "biweight", "epanechnikov")
 para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 20, upper = 100), 
                                      ParamFct$new("classif.kknn.kernel", levels = selected_kern)))
 
@@ -298,24 +322,28 @@ bmr_smote_k <- run_benchmark(design_smote_k)
 
 # k
 
+para_results <- bmr_over_k$score() %>% 
+  pull(learner) %>%
+  map(pluck(c(function(x) x$tuning_result)))
+
 over_k_path1 = bmr_over_k$data$learner[[1]]$archive("params")
 over_k_gg1 = ggplot(over_k_path1, aes(
   x = classif.kknn.k,
-  y = classif.auc)) +
+  y = classif.auc, col = classif.kknn.kernel)) +
   geom_point(size = 3) +
   geom_line()
 
 over_k_path2 = bmr_over_k$data$learner[[2]]$archive("params")
 over_k_gg2 = ggplot(over_k_path2, aes(
   x = classif.kknn.k,
-  y = classif.auc)) +
+  y = classif.auc, col = classif.kknn.kernel)) +
   geom_point(size = 3) +
   geom_line()
 
 over_k_path3 = bmr_over_k$data$learner[[3]]$archive("params")
 over_k_gg3 = ggplot(over_k_path3, aes(
   x = classif.kknn.k,
-  y = classif.auc)) +
+  y = classif.auc, col = classif.kknn.kernel)) +
   geom_point(size = 3) +
   geom_line()
 
@@ -371,6 +399,10 @@ over_kern_gg3 = ggplot(over_kern_path3, aes(
   geom_line() + thm
 
 ggarrange(over_kern_gg1, over_kern_gg2, over_kern_gg3, common.legend = TRUE, legend="bottom")
+
+para_results <- bmr_over_kern$score() %>% 
+    pull(learner) %>%
+    map(pluck(c(function(x) x$tuning_result)))
 
 
 # --- smote
