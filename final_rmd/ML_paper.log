@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7300 64-bit) (preloaded format=pdflatex 2020.2.17)  6 MAY 2020 23:34
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 2.9.7300 64-bit) (preloaded format=pdflatex 2020.2.17)  7 MAY 2020 20:15
 entering extended mode
 **./ML_paper.tex
 (ML_paper.tex
@@ -380,16 +380,19 @@ Package: grffile 2019/11/11 v2.1 Extended file name support for graphics (legac
 y)
 Package grffile Info: This package is an empty stub for compatibility on input 
 line 40.
-) (C:\Users\user\AppData\Roaming\MiKTeX\2.9\tex/latex/titling\titling.sty
+) (C:\Users\user\AppData\Roaming\MiKTeX\2.9\tex/latex/parskip\parskip.sty
+Package: parskip 2020-01-22 v2.0d non-zero parskip adjustments
+("C:\Program Files\MiKTeX 2.9\tex/latex/etoolbox\etoolbox.sty"
+Package: etoolbox 2019/09/21 v2.5h e-TeX tools for LaTeX (JAW)
+\etb@tempcnta=\count280
+)) (C:\Users\user\AppData\Roaming\MiKTeX\2.9\tex/latex/titling\titling.sty
 Package: titling 2009/09/04 v2.1d maketitle typesetting
 \thanksmarkwidth=\skip59
 \thanksmargin=\skip60
 \droptitle=\skip61
-) ("C:\Program Files\MiKTeX 2.9\tex/latex/tools\indentfirst.sty"
-Package: indentfirst 1995/11/23 v1.03 Indent first paragraph (DPC)
 ) ("C:\Program Files\MiKTeX 2.9\tex/latex/l3backend\l3backend-pdfmode.def"
 File: l3backend-pdfmode.def 2020-02-03 L3 backend support: PDF mode
-\l__kernel_color_stack_int=\count280
+\l__kernel_color_stack_int=\count281
 \l__pdf_internal_box=\box52
 ) (ML_paper.aux
 
@@ -398,32 +401,32 @@ LaTeX Warning: Label `fig:figs' multiply defined.
 )
 \openout1 = `ML_paper.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 123.
-LaTeX Font Info:    ... okay on input line 123.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 123.
-LaTeX Font Info:    ... okay on input line 123.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 123.
-LaTeX Font Info:    ... okay on input line 123.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 123.
-LaTeX Font Info:    ... okay on input line 123.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 123.
-LaTeX Font Info:    ... okay on input line 123.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 123.
-LaTeX Font Info:    ... okay on input line 123.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 123.
-LaTeX Font Info:    ... okay on input line 123.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 123.
-LaTeX Font Info:    ... okay on input line 123.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 123.
-LaTeX Font Info:    ... okay on input line 123.
-LaTeX Info: Redefining \microtypecontext on input line 123.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 128.
+LaTeX Font Info:    ... okay on input line 128.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 128.
+LaTeX Font Info:    ... okay on input line 128.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 128.
+LaTeX Font Info:    ... okay on input line 128.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 128.
+LaTeX Font Info:    ... okay on input line 128.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 128.
+LaTeX Font Info:    ... okay on input line 128.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 128.
+LaTeX Font Info:    ... okay on input line 128.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 128.
+LaTeX Font Info:    ... okay on input line 128.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 128.
+LaTeX Font Info:    ... okay on input line 128.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 128.
+LaTeX Font Info:    ... okay on input line 128.
+LaTeX Info: Redefining \microtypecontext on input line 128.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using protrusion set `basicmath'.
 Package microtype Info: Automatic font expansion enabled (level 2),
 (microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
 Package microtype Info: Using default expansion set `basictext'.
-LaTeX Info: Redefining \showhyphens on input line 123.
+LaTeX Info: Redefining \showhyphens on input line 128.
 Package microtype Info: No adjustment of tracking.
 Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
@@ -466,7 +469,7 @@ File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
 \AtBeginShipoutBox=\box53
-Package hyperref Info: Link coloring OFF on input line 123.
+Package hyperref Info: Link coloring OFF on input line 128.
 ("C:\Program Files\MiKTeX 2.9\tex/latex/hyperref\nameref.sty"
 Package: nameref 2019/09/16 v2.46 Cross-referencing by name of section
 (C:\Users\user\AppData\Roaming\MiKTeX\2.9\tex/latex/refcount\refcount.sty
@@ -476,27 +479,27 @@ Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
 ring.sty
 Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
-\c@section@level=\count281
+\c@section@level=\count282
 )
-LaTeX Info: Redefining \ref on input line 123.
-LaTeX Info: Redefining \pageref on input line 123.
-LaTeX Info: Redefining \nameref on input line 123.
+LaTeX Info: Redefining \ref on input line 128.
+LaTeX Info: Redefining \pageref on input line 128.
+LaTeX Info: Redefining \nameref on input line 128.
 (ML_paper.out) (ML_paper.out)
 \@outlinefile=\write4
 \openout4 = `ML_paper.out'.
 
 ("C:\Program Files\MiKTeX 2.9\tex/context/base/mkii\supp-pdf.mkii"
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count282
+\scratchcounter=\count283
 \scratchdimen=\dimen177
 \scratchbox=\box54
-\nofMPsegments=\count283
-\nofMParguments=\count284
+\nofMPsegments=\count284
+\nofMParguments=\count285
 \everyMPshowfont=\toks26
-\MPscratchCnt=\count285
+\MPscratchCnt=\count286
 \MPscratchDim=\dimen178
-\MPnumerator=\count286
-\makeMPintoPDFobject=\count287
+\MPnumerator=\count287
+\makeMPintoPDFobject=\count288
 \everyMPtoPDFconversion=\toks27
 ) ("C:\Program Files\MiKTeX 2.9\tex/latex/epstopdf-pkg\epstopdf-base.sty"
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
@@ -550,52 +553,53 @@ File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 <img/flowchart_overview.png, id=268, 2063.71pt x 949.5475pt>
 File: img/flowchart_overview.png Graphic file (type png)
 <use img/flowchart_overview.png>
-Package pdftex.def Info: img/flowchart_overview.png  used on input line 197.
+Package pdftex.def Info: img/flowchart_overview.png  used on input line 202.
 (pdftex.def)             Requested size: 469.73094pt x 216.13106pt.
 LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 2
-27.
+32.
 ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\t1lmtt.fd"
 File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 228.
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 233.
 [4 <./img/flowchart_overview.png>] [5]
-Overfull \hbox (34.24352pt too wide) in paragraph at lines 395--395
+Overfull \hbox (34.24352pt too wide) in paragraph at lines 400--400
 []\T1/lmtt/m/n/10 ##  $ NAME_INCOME_TYPE   : Factor w/ 5 levels "Commercial ass
 ociate",..: 5 5 5 1 1 1 1 2 2 2 ...[] 
  []
 
 
-Overfull \hbox (7.99359pt too wide) in paragraph at lines 395--395
+Overfull \hbox (7.99359pt too wide) in paragraph at lines 400--400
 []\T1/lmtt/m/n/10 ##  $ NAME_EDUCATION_TYPE: Factor w/ 5 levels "Academic degre
 e",..: 2 2 5 5 5 5 5 2 2 2 ...[] 
  []
 
 
-Overfull \hbox (2.7436pt too wide) in paragraph at lines 395--395
+Overfull \hbox (2.7436pt too wide) in paragraph at lines 400--400
 []\T1/lmtt/m/n/10 ##  $ NAME_FAMILY_STATUS : Factor w/ 5 levels "Civil marriage
 ",..: 1 1 2 4 4 4 4 3 3 3 ...[] 
  []
 
 
-Overfull \hbox (7.99359pt too wide) in paragraph at lines 395--395
+Overfull \hbox (7.99359pt too wide) in paragraph at lines 400--400
 []\T1/lmtt/m/n/10 ##  $ NAME_HOUSING_TYPE  : Factor w/ 6 levels "Co-op apartmen
 t",..: 5 5 2 2 2 2 2 2 2 2 ...[] 
  []
 
-[6]
-Overfull \hbox (44.74348pt too wide) in paragraph at lines 395--395
+
+Overfull \hbox (44.74348pt too wide) in paragraph at lines 400--400
 []\T1/lmtt/m/n/10 ##  $ OCCUPATION_TYPE    : Factor w/ 18 levels "Accountants",
 ..: NA NA 17 15 15 15 15 NA NA NA ...[] 
  []
 
+[6]
 LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 4
-70.
+75.
 ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\ts1lmr.fd"
 File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 ) [7] [8] [9]
 LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
-799.
+804.
 ("C:\Program Files\MiKTeX 2.9\tex/latex/lm\ts1lmtt.fd"
 File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
 ) [10]
@@ -605,20 +609,15 @@ File: ML_paper_files/figure-latex/unnamed-chunk-11-1.pdf Graphic file (type pdf
 )
 <use ML_paper_files/figure-latex/unnamed-chunk-11-1.pdf>
 Package pdftex.def Info: ML_paper_files/figure-latex/unnamed-chunk-11-1.pdf  us
-ed on input line 830.
+ed on input line 835.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-
-Overfull \hbox (14.99884pt too wide) in paragraph at lines 830--831
-[][] 
- []
-
 [11 <./ML_paper_files/figure-latex/unnamed-chunk-11-1.pdf>] [12] [13] [14]
-Underfull \hbox (badness 10000) in paragraph at lines 1064--1065
+Underfull \hbox (badness 10000) in paragraph at lines 1068--1069
 
  []
 
 [15]
-Underfull \hbox (badness 10000) in paragraph at lines 1167--1175
+Underfull \hbox (badness 10000) in paragraph at lines 1171--1179
 \T1/lmtt/m/n/10 NAME_FAMILY_STATUS\T1/lmr/m/n/10 (+20) , \T1/lmtt/m/n/10 NAME_H
 OUSING_TYPE\T1/lmr/m/n/10 (+20) , \T1/lmtt/m/n/10 OCCUPATION_TYPE\T1/lmr/m/n/10
  (+20) , only \T1/lmtt/m/n/10 CODE_GENDER\T1/lmr/m/n/10 (+20) , \T1/lmtt/m/n/10
@@ -632,387 +631,248 @@ File: ML_paper_files/figure-latex/unnamed-chunk-32-1.pdf Graphic file (type pdf
 )
 <use ML_paper_files/figure-latex/unnamed-chunk-32-1.pdf>
 Package pdftex.def Info: ML_paper_files/figure-latex/unnamed-chunk-32-1.pdf  us
-ed on input line 1645.
+ed on input line 1648.
 (pdftex.def)             Requested size: 469.75386pt x 289.07928pt.
-
-Overfull \hbox (14.99884pt too wide) in paragraph at lines 1645--1646
-[][] 
- []
-
-[22]
-<ML_paper_files/figure-latex/unnamed-chunk-33-1.pdf, id=407, 469.755pt x 216.81
+<ML_paper_files/figure-latex/unnamed-chunk-33-1.pdf, id=403, 469.755pt x 216.81
 pt>
 File: ML_paper_files/figure-latex/unnamed-chunk-33-1.pdf Graphic file (type pdf
 )
 <use ML_paper_files/figure-latex/unnamed-chunk-33-1.pdf>
 Package pdftex.def Info: ML_paper_files/figure-latex/unnamed-chunk-33-1.pdf  us
-ed on input line 1663.
+ed on input line 1666.
 (pdftex.def)             Requested size: 469.75386pt x 216.80946pt.
-
-Overfull \hbox (14.99884pt too wide) in paragraph at lines 1663--1664
-[][] 
- []
-
-[23 <./ML_paper_files/figure-latex/unnamed-chunk-32-1.pdf> <./ML_paper_files/fi
-gure-latex/unnamed-chunk-33-1.pdf>]
-<ML_paper_files/figure-latex/unnamed-chunk-34-1.pdf, id=422, 469.755pt x 216.81
+[22 <./ML_paper_files/figure-latex/unnamed-chunk-32-1.pdf>]
+<ML_paper_files/figure-latex/unnamed-chunk-34-1.pdf, id=413, 469.755pt x 216.81
 pt>
 File: ML_paper_files/figure-latex/unnamed-chunk-34-1.pdf Graphic file (type pdf
 )
 <use ML_paper_files/figure-latex/unnamed-chunk-34-1.pdf>
 Package pdftex.def Info: ML_paper_files/figure-latex/unnamed-chunk-34-1.pdf  us
-ed on input line 1683.
+ed on input line 1686.
 (pdftex.def)             Requested size: 469.75386pt x 216.80946pt.
-
-Overfull \hbox (14.99884pt too wide) in paragraph at lines 1683--1684
-[][] 
- []
-
-<ML_paper_files/figure-latex/unnamed-chunk-35-1.pdf, id=423, 469.755pt x 216.81
+<ML_paper_files/figure-latex/unnamed-chunk-35-1.pdf, id=414, 469.755pt x 216.81
 pt>
 File: ML_paper_files/figure-latex/unnamed-chunk-35-1.pdf Graphic file (type pdf
 )
 <use ML_paper_files/figure-latex/unnamed-chunk-35-1.pdf>
 Package pdftex.def Info: ML_paper_files/figure-latex/unnamed-chunk-35-1.pdf  us
-ed on input line 1701.
+ed on input line 1704.
 (pdftex.def)             Requested size: 469.75386pt x 216.80946pt.
-
-Overfull \hbox (14.99884pt too wide) in paragraph at lines 1701--1702
-[][] 
- []
-
-[24 <./ML_paper_files/figure-latex/unnamed-chunk-34-1.pdf> <./ML_paper_files/fi
-gure-latex/unnamed-chunk-35-1.pdf>]
-<ML_paper_files/figure-latex/unnamed-chunk-36-1.pdf, id=438, 469.755pt x 216.81
+[23 <./ML_paper_files/figure-latex/unnamed-chunk-33-1.pdf> <./ML_paper_files/fi
+gure-latex/unnamed-chunk-34-1.pdf>]
+<ML_paper_files/figure-latex/unnamed-chunk-36-1.pdf, id=429, 469.755pt x 216.81
 pt>
 File: ML_paper_files/figure-latex/unnamed-chunk-36-1.pdf Graphic file (type pdf
 )
 <use ML_paper_files/figure-latex/unnamed-chunk-36-1.pdf>
 Package pdftex.def Info: ML_paper_files/figure-latex/unnamed-chunk-36-1.pdf  us
-ed on input line 1721.
+ed on input line 1724.
 (pdftex.def)             Requested size: 469.75386pt x 216.80946pt.
-
-Overfull \hbox (14.99884pt too wide) in paragraph at lines 1721--1722
-[][] 
+[24 <./ML_paper_files/figure-latex/unnamed-chunk-35-1.pdf> <./ML_paper_files/fi
+gure-latex/unnamed-chunk-36-1.pdf>] [25] [26] [27] [28] [29] [30]
+Underfull \vbox (badness 7116) detected at line 2218
  []
 
-[25 <./ML_paper_files/figure-latex/unnamed-chunk-36-1.pdf>] [26] [27] [28] [29]
-[30] [31] [32]
-<img/logistic_all_task.png, id=495, 1405.25pt x 868.24374pt>
+[31]
+<img/logistic_all_task.png, id=491, 1405.25pt x 868.24374pt>
 File: img/logistic_all_task.png Graphic file (type png)
 <use img/logistic_all_task.png>
-Package pdftex.def Info: img/logistic_all_task.png  used on input line 2217.
+Package pdftex.def Info: img/logistic_all_task.png  used on input line 2220.
 (pdftex.def)             Requested size: 469.75925pt x 290.2441pt.
-
-Overfull \hbox (15.00423pt too wide) in paragraph at lines 2217--2218
-[][] 
- []
-
-[33 <./img/logistic_all_task.png>]
-<img/knn_all_task.png, id=503, 1405.25pt x 868.24374pt>
+[32 <./img/logistic_all_task.png>]
+<img/knn_all_task.png, id=499, 1405.25pt x 868.24374pt>
 File: img/knn_all_task.png Graphic file (type png)
 <use img/knn_all_task.png>
-Package pdftex.def Info: img/knn_all_task.png  used on input line 2254.
+Package pdftex.def Info: img/knn_all_task.png  used on input line 2257.
 (pdftex.def)             Requested size: 469.75925pt x 290.2441pt.
-
-Overfull \hbox (15.00423pt too wide) in paragraph at lines 2254--2261
-[][]
- []
-
-[34 <./img/knn_all_task.png>]
-<img/svm_all_task.png, id=510, 1405.25pt x 868.24374pt>
+[33 <./img/knn_all_task.png>]
+<img/svm_all_task.png, id=506, 1405.25pt x 868.24374pt>
 File: img/svm_all_task.png Graphic file (type png)
 <use img/svm_all_task.png>
-Package pdftex.def Info: img/svm_all_task.png  used on input line 2285.
+Package pdftex.def Info: img/svm_all_task.png  used on input line 2288.
 (pdftex.def)             Requested size: 469.75925pt x 290.2441pt.
-
-Overfull \hbox (15.00423pt too wide) in paragraph at lines 2285--2286
-[][] 
- []
-
-[35 <./img/svm_all_task.png>]
-<img/rf_all_task.png, id=517, 1405.25pt x 868.24374pt>
+<img/rf_all_task.png, id=507, 1405.25pt x 868.24374pt>
 File: img/rf_all_task.png Graphic file (type png)
 <use img/rf_all_task.png>
-Package pdftex.def Info: img/rf_all_task.png  used on input line 2312.
+Package pdftex.def Info: img/rf_all_task.png  used on input line 2315.
 (pdftex.def)             Requested size: 469.75925pt x 290.2441pt.
-
-Overfull \hbox (15.00423pt too wide) in paragraph at lines 2312--2314
-[][]
- []
-
-[36 <./img/rf_all_task.png>] [37] [38]
-<./img/lg_over.png, id=536, 1405.25pt x 868.24374pt>
+[34 <./img/svm_all_task.png>] [35 <./img/rf_all_task.png>] [36] [37]
+<./img/lg_over.png, id=534, 1405.25pt x 868.24374pt>
 File: ./img/lg_over.png Graphic file (type png)
 <use ./img/lg_over.png>
-Package pdftex.def Info: ./img/lg_over.png  used on input line 2507.
+Package pdftex.def Info: ./img/lg_over.png  used on input line 2511.
 (pdftex.def)             Requested size: 469.75925pt x 290.2441pt.
-
-Overfull \hbox (15.00423pt too wide) in paragraph at lines 2507--2508
-[][] 
+[38 <./img/lg_over.png>]
+Underfull \vbox (badness 10000) detected at line 2583
  []
 
-[39 <./img/lg_over.png>] [40]
-<./img/lg_over_2.png, id=546, 1405.25pt x 868.24374pt>
+[39]
+<./img/lg_over_2.png, id=544, 1405.25pt x 868.24374pt>
 File: ./img/lg_over_2.png Graphic file (type png)
 <use ./img/lg_over_2.png>
-Package pdftex.def Info: ./img/lg_over_2.png  used on input line 2581.
+Package pdftex.def Info: ./img/lg_over_2.png  used on input line 2585.
 (pdftex.def)             Requested size: 469.75925pt x 290.2441pt.
-
-Overfull \hbox (15.00423pt too wide) in paragraph at lines 2581--2582
-[][] 
+[40 <./img/lg_over_2.png>]
+Overfull \vbox (1.72604pt too high) detected at line 2698
  []
 
-[41 <./img/lg_over_2.png>] [42]
+[41]
 <img/lg_smote.png, id=556, 1405.25pt x 868.24374pt>
 File: img/lg_smote.png Graphic file (type png)
 <use img/lg_smote.png>
-Package pdftex.def Info: img/lg_smote.png  used on input line 2695.
+Package pdftex.def Info: img/lg_smote.png  used on input line 2700.
 (pdftex.def)             Requested size: 469.75925pt x 290.2441pt.
-
-Overfull \hbox (15.00423pt too wide) in paragraph at lines 2695--2696
-[][] 
- []
-
-
-Overfull \vbox (1.79352pt too high) detected at line 2730
- []
-
-[43 <./img/lg_smote.png>]
-<img/lg_smote_2.png, id=563, 1405.25pt x 868.24374pt>
+[42 <./img/lg_smote.png>]
+<img/lg_smote_2.png, id=562, 1405.25pt x 868.24374pt>
 File: img/lg_smote_2.png Graphic file (type png)
 <use img/lg_smote_2.png>
-Package pdftex.def Info: img/lg_smote_2.png  used on input line 2772.
+Package pdftex.def Info: img/lg_smote_2.png  used on input line 2777.
 (pdftex.def)             Requested size: 469.75925pt x 290.2441pt.
-
-Overfull \hbox (15.00423pt too wide) in paragraph at lines 2772--2773
-[][] 
- []
-
-[44] [45 <./img/lg_smote_2.png>]
-<img/2_1_knn_over_basic_auc.png, id=575, 1053.9375pt x 651.18282pt>
+[43] [44 <./img/lg_smote_2.png>]
+<img/2_1_knn_over_basic_auc.png, id=577, 1053.9375pt x 651.18282pt>
 File: img/2_1_knn_over_basic_auc.png Graphic file (type png)
 <use img/2_1_knn_over_basic_auc.png>
-Package pdftex.def Info: img/2_1_knn_over_basic_auc.png  used on input line 285
-4.
+Package pdftex.def Info: img/2_1_knn_over_basic_auc.png  used on input line 286
+0.
 (pdftex.def)             Requested size: 469.7646pt x 290.2474pt.
-
-Overfull \hbox (15.00958pt too wide) in paragraph at lines 2854--2855
-[][] 
- []
-
-[46]
-Overfull \vbox (1.23189pt too high) detected at line 2930
- []
-
-[47 <./img/2_1_knn_over_basic_auc.png>]
-<img/2_1_knn_smote_basic_auc.png, id=586, 1053.9375pt x 651.18282pt>
+[45] [46 <./img/2_1_knn_over_basic_auc.png>]
+<img/2_1_knn_smote_basic_auc.png, id=590, 1053.9375pt x 651.18282pt>
 File: img/2_1_knn_smote_basic_auc.png Graphic file (type png)
 <use img/2_1_knn_smote_basic_auc.png>
 Package pdftex.def Info: img/2_1_knn_smote_basic_auc.png  used on input line 29
-32.
+40.
 (pdftex.def)             Requested size: 469.7646pt x 290.2474pt.
-
-Overfull \hbox (15.00958pt too wide) in paragraph at lines 2932--2933
-[][] 
- []
-
-[48] [49 <./img/2_1_knn_smote_basic_auc.png>]
-<img/2_2_knn_over_dist.png, id=598, 1053.9375pt x 651.18282pt>
+[47] [48 <./img/2_1_knn_smote_basic_auc.png>]
+<img/2_2_knn_over_dist.png, id=603, 1053.9375pt x 651.18282pt>
 File: img/2_2_knn_over_dist.png Graphic file (type png)
 <use img/2_2_knn_over_dist.png>
-Package pdftex.def Info: img/2_2_knn_over_dist.png  used on input line 3007.
+Package pdftex.def Info: img/2_2_knn_over_dist.png  used on input line 3016.
 (pdftex.def)             Requested size: 469.7646pt x 290.2474pt.
-
-Overfull \hbox (15.00958pt too wide) in paragraph at lines 3007--3008
-[][] 
+[49]
+Overfull \vbox (2.03012pt too high) detected at line 3058
  []
 
-[50]
-Overfull \vbox (0.83011pt too high) detected at line 3049
- []
-
-[51 <./img/2_2_knn_over_dist.png>]
-<img/2_3_knn_over_kern.png, id=608, 1053.9375pt x 651.18282pt>
+[50 <./img/2_2_knn_over_dist.png>]
+<img/2_3_knn_over_kern.png, id=614, 1053.9375pt x 651.18282pt>
 File: img/2_3_knn_over_kern.png Graphic file (type png)
 <use img/2_3_knn_over_kern.png>
-Package pdftex.def Info: img/2_3_knn_over_kern.png  used on input line 3051.
+Package pdftex.def Info: img/2_3_knn_over_kern.png  used on input line 3060.
 (pdftex.def)             Requested size: 469.7646pt x 290.2474pt.
-
-Overfull \hbox (15.00958pt too wide) in paragraph at lines 3051--3052
-[][] 
- []
-
-[52 <./img/2_3_knn_over_kern.png>]
-<img/2_4_knn_over_k_kern.png, id=614, 1053.9375pt x 651.18282pt>
+[51 <./img/2_3_knn_over_kern.png>]
+<img/2_4_knn_over_k_kern.png, id=620, 1053.9375pt x 651.18282pt>
 File: img/2_4_knn_over_k_kern.png Graphic file (type png)
 <use img/2_4_knn_over_k_kern.png>
-Package pdftex.def Info: img/2_4_knn_over_k_kern.png  used on input line 3113.
+Package pdftex.def Info: img/2_4_knn_over_k_kern.png  used on input line 3122.
 (pdftex.def)             Requested size: 469.7646pt x 290.2474pt.
-
-Overfull \hbox (15.00958pt too wide) in paragraph at lines 3113--3114
-[][] 
- []
-
-[53 <./img/2_4_knn_over_k_kern.png>] [54]
-<img/2_2_knn_smote_dist.png, id=624, 1053.9375pt x 651.18282pt>
+[52 <./img/2_4_knn_over_k_kern.png>] [53]
+<img/2_2_knn_smote_dist.png, id=632, 1053.9375pt x 651.18282pt>
 File: img/2_2_knn_smote_dist.png Graphic file (type png)
 <use img/2_2_knn_smote_dist.png>
-Package pdftex.def Info: img/2_2_knn_smote_dist.png  used on input line 3185.
+Package pdftex.def Info: img/2_2_knn_smote_dist.png  used on input line 3195.
 (pdftex.def)             Requested size: 469.7646pt x 290.2474pt.
 
-Overfull \hbox (15.00958pt too wide) in paragraph at lines 3185--3186
-[][] 
+Underfull \vbox (badness 2065) detected at line 3247
  []
 
-
-Overfull \vbox (1.79683pt too high) detected at line 3237
- []
-
-[55 <./img/2_2_knn_smote_dist.png>]
-<img/2_3_knn_smote_kern.png, id=631, 1053.9375pt x 651.18282pt>
+[54 <./img/2_2_knn_smote_dist.png>]
+<img/2_3_knn_smote_kern.png, id=638, 1053.9375pt x 651.18282pt>
 File: img/2_3_knn_smote_kern.png Graphic file (type png)
 <use img/2_3_knn_smote_kern.png>
-Package pdftex.def Info: img/2_3_knn_smote_kern.png  used on input line 3239.
+Package pdftex.def Info: img/2_3_knn_smote_kern.png  used on input line 3249.
 (pdftex.def)             Requested size: 469.7646pt x 290.2474pt.
-
-Overfull \hbox (15.00958pt too wide) in paragraph at lines 3239--3240
-[][] 
- []
-
-
-Overfull \vbox (1.79683pt too high) detected at line 3295
- []
-
-[56 <./img/2_3_knn_smote_kern.png>]
-<img/2_4_knn_smote_k_kern.png, id=637, 1053.9375pt x 651.18282pt>
+[55 <./img/2_3_knn_smote_kern.png>]
+<img/2_4_knn_smote_k_kern.png, id=645, 1053.9375pt x 651.18282pt>
 File: img/2_4_knn_smote_k_kern.png Graphic file (type png)
 <use img/2_4_knn_smote_k_kern.png>
-Package pdftex.def Info: img/2_4_knn_smote_k_kern.png  used on input line 3297.
+Package pdftex.def Info: img/2_4_knn_smote_k_kern.png  used on input line 3307.
 
 (pdftex.def)             Requested size: 469.7646pt x 290.2474pt.
-
-Overfull \hbox (15.00958pt too wide) in paragraph at lines 3297--3298
-[][] 
- []
-
-[57] [58 <./img/2_4_knn_smote_k_kern.png>]
-<img/svm_smote.png, id=649, 903.375pt x 572.89032pt>
+[56] [57 <./img/2_4_knn_smote_k_kern.png>]
+<img/svm_smote.png, id=658, 903.375pt x 572.89032pt>
 File: img/svm_smote.png Graphic file (type png)
 <use img/svm_smote.png>
-Package pdftex.def Info: img/svm_smote.png  used on input line 3402.
+Package pdftex.def Info: img/svm_smote.png  used on input line 3415.
 (pdftex.def)             Requested size: 469.7577pt x 297.90468pt.
-
-Overfull \hbox (15.00269pt too wide) in paragraph at lines 3402--3403
-[][] 
- []
-
-[59] [60 <./img/svm_smote.png>]
-<img/svm_kernel.png, id=660, 526.96875pt x 325.215pt>
+[58] [59 <./img/svm_smote.png>]
+<img/svm_kernel.png, id=672, 526.96875pt x 325.215pt>
 File: img/svm_kernel.png Graphic file (type png)
 <use img/svm_kernel.png>
-Package pdftex.def Info: img/svm_kernel.png  used on input line 3458.
+Package pdftex.def Info: img/svm_kernel.png  used on input line 3472.
 (pdftex.def)             Requested size: 469.78067pt x 289.92178pt.
 
-Overfull \hbox (15.02565pt too wide) in paragraph at lines 3458--3459
-[][] 
+Underfull \vbox (badness 2521) detected at line 3504
  []
 
-[61 <./img/svm_kernel.png>] [62]
-Underfull \vbox (badness 10000) detected at line 3627
+[60 <./img/svm_kernel.png>] [61]
+Underfull \vbox (badness 10000) detected at line 3642
  []
 
 
-Underfull \vbox (badness 10000) detected at line 3627
+Underfull \vbox (badness 10000) detected at line 3642
  []
 
-[63]
-<img/rf_smote.png, id=677, 903.375pt x 572.89032pt>
+[62]
+<img/rf_smote.png, id=691, 903.375pt x 572.89032pt>
 File: img/rf_smote.png Graphic file (type png)
 <use img/rf_smote.png>
-Package pdftex.def Info: img/rf_smote.png  used on input line 3629.
+Package pdftex.def Info: img/rf_smote.png  used on input line 3644.
 (pdftex.def)             Requested size: 469.7577pt x 297.90468pt.
-
-Overfull \hbox (15.00269pt too wide) in paragraph at lines 3629--3630
-[][] 
- []
-
-<img/rf_smote_2.png, id=678, 903.375pt x 572.89032pt>
+[63 <./img/rf_smote.png>]
+<img/rf_smote_2.png, id=697, 903.375pt x 572.89032pt>
 File: img/rf_smote_2.png Graphic file (type png)
 <use img/rf_smote_2.png>
-Package pdftex.def Info: img/rf_smote_2.png  used on input line 3659.
+Package pdftex.def Info: img/rf_smote_2.png  used on input line 3674.
 (pdftex.def)             Requested size: 469.7577pt x 297.90468pt.
-
-Overfull \hbox (15.00269pt too wide) in paragraph at lines 3659--3660
-[][] 
+[64 <./img/rf_smote_2.png>]
+Underfull \vbox (badness 8113) detected at line 3779
  []
 
-[64 <./img/rf_smote.png>] [65 <./img/rf_smote_2.png>] [66]
-<./img/rf_over_1.png, id=693, 772.8875pt x 476.78125pt>
+[65]
+<./img/rf_over_1.png, id=709, 772.8875pt x 476.78125pt>
 File: ./img/rf_over_1.png Graphic file (type png)
 <use ./img/rf_over_1.png>
-Package pdftex.def Info: ./img/rf_over_1.png  used on input line 3765.
+Package pdftex.def Info: ./img/rf_over_1.png  used on input line 3781.
 (pdftex.def)             Requested size: 469.75066pt x 289.78123pt.
-
-Overfull \hbox (14.99564pt too wide) in paragraph at lines 3765--3766
-[][] 
- []
-
-<img/rf_smote_3.png, id=694, 903.375pt x 572.89032pt>
+[66 <./img/rf_over_1.png>]
+<img/rf_smote_3.png, id=716, 903.375pt x 572.89032pt>
 File: img/rf_smote_3.png Graphic file (type png)
 <use img/rf_smote_3.png>
-Package pdftex.def Info: img/rf_smote_3.png  used on input line 3804.
+Package pdftex.def Info: img/rf_smote_3.png  used on input line 3820.
 (pdftex.def)             Requested size: 469.7577pt x 297.90468pt.
-
-Overfull \hbox (15.00269pt too wide) in paragraph at lines 3804--3805
-[][] 
- []
-
-[67 <./img/rf_over_1.png>]
-<img/rf_smote_4.png, id=702, 903.375pt x 572.89032pt>
+<img/rf_smote_4.png, id=717, 903.375pt x 572.89032pt>
 File: img/rf_smote_4.png Graphic file (type png)
 <use img/rf_smote_4.png>
-Package pdftex.def Info: img/rf_smote_4.png  used on input line 3833.
+Package pdftex.def Info: img/rf_smote_4.png  used on input line 3849.
 (pdftex.def)             Requested size: 469.7577pt x 297.90468pt.
-
-Overfull \hbox (15.00269pt too wide) in paragraph at lines 3833--3834
-[][] 
- []
-
-[68 <./img/rf_smote_3.png>]
-<img/rf_smote_5.png, id=708, 903.375pt x 572.89032pt>
+[67 <./img/rf_smote_3.png>]
+<img/rf_smote_5.png, id=724, 903.375pt x 572.89032pt>
 File: img/rf_smote_5.png Graphic file (type png)
 <use img/rf_smote_5.png>
-Package pdftex.def Info: img/rf_smote_5.png  used on input line 3864.
+Package pdftex.def Info: img/rf_smote_5.png  used on input line 3880.
 (pdftex.def)             Requested size: 469.7577pt x 297.90468pt.
-
-Overfull \hbox (15.00269pt too wide) in paragraph at lines 3864--3865
-[][] 
- []
-
-[69 <./img/rf_smote_4.png>] [70 <./img/rf_smote_5.png>]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 3928.
-[71]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 3928.
+[68 <./img/rf_smote_4.png>] [69 <./img/rf_smote_5.png>]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 3944.
+[70]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 3944.
 (ML_paper.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 3928.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 3928.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 3944.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 3944.
 
 Package rerunfilecheck Info: File `ML_paper.out' has not changed.
 (rerunfilecheck)             Checksum: A37C1E364B432B97C59BFB688A5A5714;6997.
 
 LaTeX Warning: There were multiply-defined labels.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 3928.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 3944.
  ) 
 Here is how much of TeX's memory you used:
- 13295 strings out of 481556
- 199806 string characters out of 2923637
- 482445 words of memory out of 3000000
- 27928 multiletter control sequences out of 15000+200000
- 584037 words of font info for 133 fonts, out of 3000000 for 9000
+ 13652 strings out of 481556
+ 204144 string characters out of 2923637
+ 487192 words of memory out of 3000000
+ 28258 multiletter control sequences out of 15000+200000
+ 584344 words of font info for 135 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 34i,6n,42p,436b,470s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 34i,6n,42p,973b,463s stack positions out of 5000i,500n,10000p,200000b,50000s
 {C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-ts1.enc}{C:/Program Files/
 MiKTeX 2.9/fonts/enc/dvips/lm/lm-rm.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/
 dvips/lm/lm-mathit.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-maths
@@ -1031,9 +891,9 @@ rogram Files/MiKTeX 2.9/fonts/type1/public/lm/lmsy7.pfb><C:/Program Files/MiKTe
 X 2.9/fonts/type1/public/lm/lmtk10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1
 /public/lm/lmtt10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmtti1
 0.pfb>
-Output written on ML_paper.pdf (71 pages, 1676854 bytes).
+Output written on ML_paper.pdf (70 pages, 1677234 bytes).
 PDF statistics:
- 829 PDF objects out of 1000 (max. 8388607)
- 190 named destinations out of 1000 (max. 500000)
+ 848 PDF objects out of 1000 (max. 8388607)
+ 209 named destinations out of 1000 (max. 500000)
  10788 words of extra memory for PDF output out of 12000 (max. 10000000)
 

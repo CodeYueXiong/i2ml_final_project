@@ -1,14 +1,11 @@
 ---
 title: "Research on Prediction of Credit Card Approval Based on Machine Learning"
 author: "Bailan He, Yue Xiong, Rui Yang, Jan Alexander Jensen"
-header-includes:
-- \usepackage{indentfirst}
 output: 
   pdf_document:
     toc: true
-    toc_depth: 5
+    toc_depth: 3
     number_sections: true
-indent: true
 ---
 
 \newpage
@@ -23,12 +20,12 @@ The credit card business has entered a fast-rising development stage after an in
 
 The flowchart below (Figure 1) illustrates the process of our experiment. It is steps are as following:
 
-1. We prepare the data and define the target variable
-2. Try different methods to deal with missing values
-3. Encode nominal variable into a numeric variable
-4. train all datasets with multiple models
-5. select one dataset for fine-tuning
-6. Fine-tune all models with the selected dataset
+1. Preparing the data and defining the target variable;
+2. Dealing with missing values by using different methods;
+3. Transforming nominal variables into numeric variables;
+4. Training all datasets with multiple models;
+5. Selecting one dataset for fine-tuning;
+6. Fine-tuning all models with the selected dataset.
 
 
 ```{r figs,message=FALSE, echo=FALSE, fig.cap="\\label{fig:figs} Flowchart: process of experiment", fig.pos="h",out.width = '100%'}
@@ -37,7 +34,7 @@ knitr::include_graphics("img/flowchart_overview.png")
 
 # Data
 
-According to (Bishop, Christopher (2006))[1], In machine learning, a feature is an individual measurable property or characteristic of a phenomenon being observed, and the concept of "feature" is related to that of explanatory variables used in statistic application. Therefore, both concepts mentioned in this report are the same based upon the definition of feature and variable. In this study, all features are classified into three kinds of variables according to their data type: binary variables, categorical variables, and continuous variables. The description of all features and a self-defined response variable will be provided in this section.
+According to (Bishop, Christopher (2006)), in machine learning, a feature is an individual measurable property or characteristic of a phenomenon being observed, and the concept of "feature" is related to that of explanatory variables used in statistic application. Therefore, both concepts mentioned in this report are the same based upon the definition of feature and variable. In this study, all features are classified into three kinds of variables according to their data type: binary variables, categorical variables, and continuous variables. The description of all features and a self-defined response variable will be provided in this section.
 
 ## Reading data
 
@@ -79,8 +76,9 @@ opentime_data <- record %>%
 data_with_day <- left_join(application_data, opentime_data, by = "ID")
 ```
 
+[reference] https://www.bankingsupervision.europa.eu/ecb/pub/pdf/guidance_on_npl.en.pdf
 
-A payment default is in simple terms an overdue account. In short, in most cases it arises when a debt has become overdue, and based on the Basel Agreement(2007)[2] and Guidance to banks on non-performing loans from European Central Bank(ECB) <https://www.bankingsupervision.europa.eu/ecb/pub/pdf/guidance_on_npl.en.pdf>, the potential client, whose debt is not paid more than 60 days of the payment date printed on the invoice by the credit provider or the lender has reason to believe that the loan will not be repaid, will be classified as risk users.
+A payment default is in simple terms an overdue account. In short, in most cases it arises when a debt has become overdue, and based on the Basel Agreement (2007) and Guidance to banks on non-performing loans from European Central Bank (ECB), the potential client, whose debt is not paid more than 60 days of the payment date printed on the invoice by the credit provider or the lender has reason to believe that the loan will not be repaid, will be classified as risk users.
 
 ```{r}
 unique(record$STATUS)
@@ -274,7 +272,7 @@ In order to choose an appropriate method to deal with missing values, it is nece
 library(mice)
 
 # check the missing pattern by using md.pattern function
-mice::md.pattern(to_imp_data, plot = TRUE)
+mice::md.pattern(to_imp_data, plot = FALSE)
 ```
 
 The above figure and result illustrate that the corresponding missing pattern is **Univariate Nonresponse**, whereby a single variable `OCCUPATION_TYPE` has missing values, and therefore, the corresponding missing data mechanism could be **Missing Completely At Random (MCAR)**. a brief description of these three missing data mechanism is provided below:
@@ -290,7 +288,7 @@ The above figure and result illustrate that the corresponding missing pattern is
 
 In this section, we simply delete the missing values by using the **na.omit()** function. With this function, we would delete the whole row where the missing values appear.
 
-```{r, eval=FALSE}
+```{r}
 # remove rows with missing values
 completeData <- na.omit(final_data)
 
@@ -312,7 +310,7 @@ Regarding the application of MICE, two assumptions should be taken into consider
 When using the **MICE** function, there are 2 prime parameters that need to be configured. One parameter is **m**, intended for the number of imputed dataset that we would like to generate. As a result, 1 is enough. And the other is **meth**, designed for the methods we have chosen to undergo the regression. Here, we are using the "polyreg", Bayesian polytomous regression, due to reason that these missing values all belong to factor variables.
 
 
-```{r, eval=FALSE}
+```{r, message=FALSE, warning=FALSE}
 # imputed data with mice function
 tempData <- mice(to_imp_data, m = 1, meth = "polyreg", seed = 2020)
 
@@ -333,7 +331,7 @@ In MICE, parametric regression models are needed and assumptions about the distr
 
 Regarding the prime parameter selection, there are three parameters that need to be taken into consideration. Firstly, the dataset with missing values **xmins**. Then, **maxiter**, which helps decide the number of iterations that need to be done during the imputation. The last parameter is **ntree** which implies the number of random trees to grow in each forest. 
 
-```{r, eval=FALSE}
+```{r, message=FALSE, warning=FALSE}
 library(missForest)
 
 # Missing value imputation with missForest
@@ -350,6 +348,7 @@ finally we get three datasets based different imputation methods: **dl_na_data**
 
 # Feature Engineering
 ## WOE Encoding
+
 After running several model based on original features, we find that the positive 
 samples(y=1) are not able to be good classified. We suppose that our model are 
 overfitting to negative samples, because some features have too many categories,
@@ -362,23 +361,23 @@ It is widely used in credit scoring to measure the separation of good vs bad cus
 They help to explore data and screen variables. 
 It is also used in marketing analytics project such as customer attrition model, campaign response model etc.
 
-* the meaning of Weight of Evidence (WOE) 
+* The meaning of Weight of Evidence (WOE): \\
 WOE is a form of encoding the original independent variable and the purpose of encoding the original independent variables is generally used to improve the prediction effect of the model and improve the intelligibility of the model. In addition to this, The premise of WOE encoding is advance grouping of specific variables.
 
-* Steps of Calculating WOE  
+* Steps of Calculating WOE:
 1. For a continuous variable, split data into several parts.
 2. Calculate the number of events and non-events in each group. For example, a binary variable has two values(0,1),
 we calculate the number of positive sample and negative sample with different values of the variable.
 
-3. Calculate the %of events and %of non-events for each variable value. In the example above, %of events of binary variable 1(binary value is 1), represents the proportion of sample that both target(y) value and variable value are 1 to the sample that target value is 1. $$\%of\ events(a\ variable\ type) = \frac{\#sample(target=1,variable=1)}{\#sample(target=1)}$$
-and %of nonevents represents the proportion of sample that  target(y) value is 0 and variable value are 1 to the sample that target value is 0. $$\%of\ nonevents(a\ variable\ type) = \frac{\#sample(target=0,variable=1)}{\#sample(target=0)}$$.
-4. Calculate WOE for a variable type by taking natural log of division of % of non-events and % of events.  
+3. Calculate the percentage of events and percentage of non-events for each variable value. In the example above, percentage of events of binary variable 1(binary value is 1), represents the proportion of sample that both target(y) value and variable value are 1 to the sample that target value is 1. $$\%of\ events(a\ variable\ type) = \frac{\#sample(target=1,variable=1)}{\#sample(target=1)}$$
+and percentage of nonevents represents the proportion of sample that  target(y) value is 0 and variable value are 1 to the sample that target value is 0. $$\%of\ nonevents(a\ variable\ type) = \frac{\#sample(target=0,variable=1)}{\#sample(target=0)}$$.
+4. Calculate WOE for a variable type by taking natural log of division of percentage  of non-events and percentage of events.  
 
 $$
 WOE = ln \frac{\%of\ nonevents}{\%of\ events}
 $$
 
-* Benefits of WOE
+* Benefits of WOE: 
 1. It can treat outliers. Suppose you have a continuous variable such as annual
 salary and extreme values are more than 500 million dollars. These values would
 be grouped to a class of (let's say 250-500 million dollars). Later, instead of 
@@ -390,7 +389,7 @@ Otherwise it is not easy to accomplish linear relationship using other transform
 methods such as log, square-root etc. In short, if you would not use WOE transformation,
 you may have to try out several transformation methods to achieve this.
 
-* the meaning of Information Value (IV)
+* The meaning of Information Value (IV): \\
 Information value is one of the most useful technique to select important 
 variables in a predictive model. It helps to rank variables on the basis of their 
 importance.
@@ -398,7 +397,7 @@ importance.
 $$ IV = \sum_{}(\%of\ nonevents\ -\ \%of\ event)*WOE $$
 
 
-* Important Points  
+* Important Points: \\
 Information value is not an optimal feature (variable) selection method when 
 you are building a classification model other than binary logistic regression
 (for eg. random forest or SVM). So we only use IV to judge which categories should 
@@ -873,6 +872,7 @@ We all use **benchmark_grid** to create design, setting with *5 folds cv*, *pred
 ### Logistic Regression:  
 
 We will first evaluate how Logistic Regression performs between different data, including different encoding, and different missing value handling. As mentioned above, we pass arguments to **benchmark** function from **mlr3** to train logsitic regression. To train a logistic regression model, we set *lrn("classif.log_reg")* and use **aggregate** function from **mlr3** to extract the results.
+
 ```{r eval=FALSE, results='hide', warning=FALSE}
 library(mlr3learners)
 library(mlr3tuning)
@@ -902,7 +902,9 @@ run_benchmark <- function(design){
 lg_bmr <- run_benchmark(design)
 lg_results <- lg_bmr$aggregate(measures = all_measures)
 ```
+
 For better comparing with each task, we write **multiplot_roc** function with the help of **mlr3viz** package to plots results.
+
 ```{r eval =FALSE}
 library(mlr3viz)
 
@@ -976,11 +978,13 @@ multiplot_roc(knn_bmr)
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/knn_all_task.png")
 ```
+
 From the ROC plots above, we can see that KNN performs with no significant difference between different encoding and missing data handling methods. Moreover, To reduce our computation cost, we decided to take the task with the highest AUC value in this step, being **dl_iv_data**. Now, we will focus on the task **dl_iv_data**, and fine-tune the parameters.
 
 ### SVM 
 
 We set *lrn("classif.svm")* to train SVM model.
+
 ```{r eval=FALSE}
 # create a benchmark to train a list of tasks with default hyperparameter settings
 design <- benchmark_grid(
@@ -1053,11 +1057,12 @@ Ultimately, after all these step-to-step tuning procedures, we can grab the best
 
 ### Data balancing 
 
-**Oversampling**  
+#### Oversampling
 
 
 In mlr3pipelines, there is a **classbalancing** and a **smote** pipe operator that can be combined with any learner. 
 At first we use *oversampling* method to balance target variable. To do this, We define the classbalancing PipeOps by using the **po** function of **mlr3pipelines** package and set parameter as *classbalancing*. 
+
 ```{r}
 # load library
 library(mlr3learners)
@@ -1232,7 +1237,7 @@ We noticed that two of three plots reach the best AUC value when the value of *o
 Since there is no hyperparameter in *log_reg* method, we then use SMOTE method to balance target variable.
 We want to determine which method is suitable for our dataset.
 
-**SMOTE**
+#### SMOTE
 
 We define the smote PipeOps by using the **po** function of **mlr3pipelines** package and set parameter as *smote*.
 
@@ -1403,10 +1408,8 @@ we have managed to reach our best prediction performance with AUC value fixed at
 After using two different method to balance target variable, the prediction performance of logistic regression model does not obtain a significant improvement and it is noteworthy that *oversampling* even decreases the model performance, this suggests that *oversampling* method may not be suitable for our dataset.
 
 ## KNN  
-
 ### Data balancing  
-
-**Oversampling**
+#### Oversampling
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
 
@@ -1472,7 +1475,7 @@ knitr::include_graphics("img/2_1_knn_over_basic_auc.png")
 
 In the plots above, we see apart from the second plot, the other two plots have the highest AUC at the value at *oversample.ratio*=25. However, if we take a closer look at the y-axis, we notice that the scale is rather small. Thus, it is hard to say whether oversampling is improving the results or not. We will need to do further fine-tuning to find out. Here, we will fix *oversample.ratio* to 25 as it is slightly better, as shown in the plots.
 
-**SMOTE**
+#### SMOTE
 
 In this section, we will use the package **SMOTE** that is included in **mlr3**, to see whethere balancing the data with smote may improve the prediction of the model.
 
@@ -1484,8 +1487,9 @@ po_smote = po("smote", dup_size = 50)
 lrn_smote <- GraphLearner$new(po_smote %>>% knn_learner, predict_type = "prob")
 
 # setting smote parameters' tuning range
-knn_smote_param_set <- ParamSet$new(params = list(ParamInt$new("smote.dup_size", lower = 20, upper = 60),
-                                            ParamInt$new("smote.K", lower = 10, upper = 20)))
+knn_smote_param_set <- ParamSet$new(params = 
+                        list(ParamInt$new("smote.dup_size", lower = 20, upper = 60),
+                            ParamInt$new("smote.K", lower = 10, upper = 20)))
 
 # create autotuner, using the inner sampling and tuning parameter with random search
 inner_rsmp <- rsmp("cv",folds = 3L)
@@ -1545,7 +1549,7 @@ As we can see in the plot, we tried using **SMOTE** with different combinations 
 
 ### Model tuning
 
-**Fine-tuning (Oversampling)**
+#### Oversampling
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
 
@@ -1710,7 +1714,7 @@ knitr::include_graphics("img/2_4_knn_over_k_kern.png")
 
 Finally, we want to tune *k* with kernels we selected in the previous section. Beside *epanechnikov* being lowest in all plot, there is no straightforward winner between *triangular* and *biweight*. We can see that AUC is the highest in the range of 40 to 80. If we take a closer look in this range, we notice that *triangular* is slightly better. Based on the trend of the 3 plots above, it is reasonable to select *triangular* as our kernel, with *k* set to 80.
 
-**Fine-tuning (SMOTE)**
+#### SMOTE
 
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
 
@@ -1895,7 +1899,8 @@ The following model tuning steps are made up of two prime procedures: data balan
 
 Considering the extremely imbalanced target variable _y_ to process, we will firstly balance the present target. In order to improve the accuracy of the prediction performance, we will need to implement mainly two methods: **SMOTE** and **Oversampling** to get the relatively balanced target variable after processing and there are no biased preference with the two data balancing methods, which means that we need to both implement the two methods on our original target variable _y_ and choose the best one with the highest AUC score after the final model tuning process.
 
-**SMOTE function**
+#### SMOTE
+
 To implement the **SMOTE** function to balance the whole dataset, the first step is to determine the two crucial parameters _smote.dup_size_ and _smote.K_. _smote.dup_size_ means a vector of times of synthetic minority instances over original majority instances in the oversampling in each instances while _smote.K_ defines the value of parameter _K_ for nearest neighbor process used for generating data. To explain the _smote.dup_size_ further, the _dup_size_ parameter answers the question how many times the **SMOTE** function should loop through the existing, real minority instances. Therefore at _dup_size_ = 1 means only 4 new data points are synthesised (1 for each existing minority instance). At _dup_size_ = 200, 800 new data points get synthesised. However, as for _K_, at each loop iteration, one of the _K_ closest minority class neighbours is chosen and a new minority instance is synthesised somewhere between the minority instance and that neighbour. Thus, _K_ means how many of the closest neighbours are considered for synthesis. Considering the above explanations for _smote.dup_size_ and _smote.K_, we would firstly set the training ranges for _smote.dup_size_ and _smote.K_ as 10 to 60 and 10 to 25 simultaneously to adapt to the present target variable _y_, which we have where the number of 0s is almost 60 times the number of 1s.
 
 With _smote.dup_size_ defined from 10 to 60 and _smote.K_ from 10 to 25, it is better to implement a **grid_search** to figure out what is the optimal parameter settings for the 2 parameters based on the **svm** learner and the *dl_iv_data* training task.
@@ -1979,7 +1984,7 @@ As can be seen from the plots above, *smote.dup_size* is showing better predicti
 Then the next step would be to determine which *kernel* function type to use with fixed *smote.dup_size* value and *smote.K* value.
 
 
-**Oversampling**
+#### Oversampling
 
 We have decided not to use the **oversampling** method to balance the origianl target variable _y_ for two reasons. The first one is that it is computationally expensive to undergo the whole tuning process again with the **SVM** algorithm. Specifically, it almost took us two whole days to train the optimal parameter settings for the **SMOTE** function and the prediction performance measured by AUC after tuning is not as satisfactory as we have expected before. On the other hand, the best prediction performance given by the **SVM** algorithm with default parameter settings is inferior to the worst classification results shown by the **Random Forest** algorithm with no model tuning procedures.
 
@@ -2195,7 +2200,7 @@ Similarily, we would consider both the **SMOTE** function and the **Oversampling
 
 ### Data balancing 
 
-**SMOTE**
+#### SMOTE
 
 As mentioned in chapter 3, we fix the parameter *num.trees* with value 1000 as suggested by [reference] and set training range 30 to 60 for *smote.dup_size* and 10 to 20 for *smote.K* seperately in order to find the best training pairs with the two parameters, reaching the best prediction performance.
 
@@ -2341,7 +2346,7 @@ knitr::include_graphics("img/rf_smote_2.png")
 Shown on the plots above, we have discovered that the two parameters _smote.dup_size_ and _smote.k_ should be set to 45 and 15 seperately where the AUC distributions always tend to have a summit around _dup_size_ value 45 and _K_ with value 15 is much more stable with the prediction performance here at the same time. Then the next step we shall need to stay with the optimal smote parameter settings ( _smote.dup_size_ is set to 45 and _smote.k_ to 15) and take the mtry and the _num.trees_ parameters into consideration with parameters' tuning ranges set to 1-13 and 400-1700 as suggested by chapter 5.4 with the **tuneRanger** algorithm in order to get the best pair settings with the highest AUC value.
 
 
-**Oversampling**
+#### Oversampling
 
 When it comes to use the oversampling method to address the imbalance distribution probelm occurred with the target variable _y_, we need to train the parameter _oversample.ratio_, which ranges from 1 to infinity, indicating the desired ratio between the majority example marked with 0 and the minority example marked with 1. In our case, the number of potential customers who got approved with the credit card is nearly 60 times the number of those who got rejected. Thus, when first try tuning for parameter _oversample.ratio_, we would set the corresponding parameter to a range starting from 30 to 60.
 
