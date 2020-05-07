@@ -1,13 +1,21 @@
 ---
-title: "Research on Prediction of Credit Card Approval Based on Machine Learning"
-author: "Bailan He, Yue Xiong, Rui Yang, Jan Alexander Jensen"
+title: Research on Prediction of Credit Card Approval Based on Machine Learning
+author: Bailan He, Yue Xiong, Rui Yang, Jan Alexander Jensen
+header-includes:
+  - \usepackage{titling}
+  - \pretitle{\begin{center}
+    \includegraphics[width=3in,height=3in]{img/lmu.png}\LARGE\\\vspace{100pt}}
+  - \posttitle{\vspace{230pt}\end{center}}
 output: 
   pdf_document:
-    toc: true
-    toc_depth: 3
     number_sections: true
 ---
 
+\thispagestyle{empty}
+\centering
+\raggedright
+\newpage
+\tableofcontents
 \newpage
 
 # Introduction
@@ -123,7 +131,8 @@ data_target <- new_record %>%
   group_by(ID) %>%
   summarise(y = sum(target))
 
-# for each ID, if the target value >0, means there is at least one TRUE under the ID number,
+# for each ID, if the target value > 0, 
+# means there is at least one TRUE under the ID number,
 # if an ID has one TURE, means this person has been overdue at least 60 days.
 # then we mark this ID as 1,means we will not approve the application.
 data_target$y <- map_dbl(data_target$y, function(x) ifelse(x > 0, 1, 0))
@@ -295,6 +304,7 @@ completeData <- na.omit(final_data)
 # check the dataset after deleting
 str(completeData)
 ```
+
 After deleting, there are only 25,134 rows left for data analysis which means we have removed for more than 30 percent of the raw data. Therefore, a significant negative impact of listwise deletion is that it reduces the the sample size. However, the benifit of it is that it does not lead to the reduction of variability in the data, which implies that the standard deviations and variance estimates are likely to be the same, if the missing data mechanism is MCAR.
 
 An initial guess without comparison with these methods is that listwise deletion is probably better than the other two **Multiple Imputation (MI)** methods, the possible reason is that the missing data mechanism in this case is MCAR, based on which the potential distribution by the use of listwise deletion does not change very much. In addition to this, imputing the missing values could also introduce additional errors in the original data set. The comparison results will also be provided in the subsequent section. 
@@ -305,7 +315,7 @@ An initial guess without comparison with these methods is that listwise deletion
 In contrast to listwise deletion, MI considers statistical uncertainty when imputing missing values. One of the two powerful R-packages that handle missing data is multivariate imputation by chained equations (MICE), also called "sequential regression multiple imputation" or "fully conditional specification." This is one of the most important methods used to address and impute missing data. In consideration of the flexibility of chained equations, MICE can handle various types of variables in the data set, such as continuous variables, categorical variables, and mixed-type variables. If the distribution of each variable in the data set is already established, this method is more applicable. For example, if a variable fits the normal distribution then specific approaches can be defined in advance to impute the missing values of this variable by using the `mice()` function. Even if no appropriate multivariate distribution can be found, MICE remains an applicable option; this implies that MICE is suitable for data sets composed of mixed-type data. In conclusion, for the application of MICE the specific distribution of each variable in the data set should be defined in advance, which is based on a univariate distribution. The R-package MICE uses the FCS algorithm, which imputes each variable with missing values in the data set by conducting several repetitions.
 
 
-Regarding the application of MICE, two assumptions should be taken into consideration. The first assumption is that the missing data mechanism is MAR. If data are not MAR, biased results are likely to be obtained when applying MICE. However, in order to compare the performance of MICE under the circumstances of different missing data mechanisms, MICE is also implemented in the cases of MCAR and NMAR data. The second assumption concerns the size of the data set. In practice, data sets tend to be large in size, which implies that they include thou- sands of observations and hundreds of variables (He et al.(2009); Stuart et al.(2009)). Furthermore, in these large data sets a high variety of variables often exists. Based on the large size of data sets, a large joint model for all of the various types of variables should be fitted. With the help of the flex- ibility of MICE a series of regression models is run for each variable with missing data, which are based on the distribution of each variable. For the purposes of operability and objective comparison between different impu- tation methods, the data set in this simulation study is not large.
+Regarding the application of MICE, two assumptions should be taken into consideration. The first assumption is that the missing data mechanism is MAR. If data are not MAR, biased results are likely to be obtained when applying MICE. However, in order to compare the performance of MICE under the circumstances of different missing data mechanisms, MICE is also implemented in the cases of MCAR and NMAR data. The second assumption concerns the size of the data set. In practice, data sets tend to be large in size, which implies that they include thousands of observations and hundreds of variables (He et al.(2009); Stuart et al.(2009)). Furthermore, in these large data sets a high variety of variables often exists. Based on the large size of data sets, a large joint model for all of the various types of variables should be fitted. With the help of the flexibility of MICE a series of regression models is run for each variable with missing data, which are based on the distribution of each variable. For the purposes of operability and objective comparison between different impu- tation methods, the data set in this simulation study is not large.
 
 When using the **MICE** function, there are 2 prime parameters that need to be configured. One parameter is **m**, intended for the number of imputed dataset that we would like to generate. As a result, 1 is enough. And the other is **meth**, designed for the methods we have chosen to undergo the regression. Here, we are using the "polyreg", Bayesian polytomous regression, due to reason that these missing values all belong to factor variables.
 
@@ -315,7 +325,7 @@ When using the **MICE** function, there are 2 prime parameters that need to be c
 tempData <- mice(to_imp_data, m = 1, meth = "polyreg", seed = 2020)
 
 # to extract the imputed data with the assigned column name "OCCUPATION_TYPE"
-tempData$imp$OCCUPATION_TYPE
+summary(tempData$imp$OCCUPATION_TYPE)
 ```
 In order to get a whole dataset, we can complete the data frame with the imputed ones.
 
@@ -339,7 +349,7 @@ imputed_Data <- missForest(to_imp_data)
 
 # save data and check imputation with OCCUPATION_TYPE
 completeData <- imputed_Data$ximp
-completeData$OCCUPATION_TYPE
+summary(completeData$OCCUPATION_TYPE)
 ```
 
 finally we get three datasets based different imputation methods: **dl_na_data**, **mf_na_data** and **mice_na_data**.
@@ -495,6 +505,7 @@ glimpse(binary_data)
 
 As for binary factor variables, we write a function **convert_binary_variable** to  convert them into binary numeric type for next modelling. After converting, nominal values in the three variables `CODE_GENDER`, `FLAG_OWN_CAR`, `FLAG_OWN_REALTY`  are replaced by values `1` or `2`. 
 As for `CODE_GENDER`, value "`1`" represents the original type "`F`" and "`2`" represents the original type "`M`". As for `FLAG_OWN_CAR` and `FLAG_OWN_REALTY`, value "`1`" represents the original type "`N`" and value "`2`" represents the original type "`Y`".
+
 ```{r, message=FALSE, warning=FALSE}
 
 # function to convert binary variable into numeric.
@@ -519,6 +530,7 @@ glimpse(converted_binary_data)
 ### Categorical variables 
 After converting binary factor variables, five Categorical variables are remained, i.e.
 `NAME_INCOME_TYPE`, `NAME_EDUCATION_TYPE`, `NAME_FAMILY_STATUS`, `NAME_HOUSING_TYPE`, `OCCUPATION_TYPE`,
+
 ```{r, message=FALSE, warning=FALSE}
 
 # find which variables have several values
@@ -527,6 +539,7 @@ dif_variable
 ```
 
 As for `NAME_INCOME_TYPE`, we wrote the function **calc_iv** to inspect its WOE and IV.
+
 ```{r, message=FALSE, warning=FALSE}
 calc_iv(dif_variable[1])
 ```
@@ -535,6 +548,7 @@ We  noticed that factor type `Student` and `Pensioner` are remarkably useful to 
 Factor `Pensioner` can be regarded as  "refuse mark", as they doesn't work and have less resilient financial condition.
 On the other hand, `Student` can be regarded as "accept mark", perhaps because they can get finantial support from their parents.
 Although the two factor are relatively strange, we will not merge them into other types.
+
 ```{r, message=FALSE, warning=FALSE}
 # analyse the details of first multi-factors variable
 # found the variable "NAME_INCOME_TYPE" has 5 types of values
@@ -550,6 +564,7 @@ calc_iv(dif_variable[2])
 We noticed that factor `Academic degree` also can be regarded as "accept mark", 
 `Higher education` and `Incomplete higher` have the same distribution, so we merge them together.
 IV slightly decreases from **0.01043881** to **0.00935902**, which we can accpet.
+
 ```{r, message=FALSE, warning=FALSE}
 # analyse the details of second multi-factors variable
 # found the variable "NAME_EDUCSTION_TYPE" has 5 types of values. we integrate
@@ -563,6 +578,7 @@ calc_iv("less_factor_edu")
 ```
 
 We noticed `NAME_FAMILY_STATUS` feature is relatively balanced, no need to change.
+
 ```{r, message=FALSE, warning=FALSE}
 # analyse the details of third multi-factors variable
 calc_iv(dif_variable[3])
@@ -574,11 +590,13 @@ final_data["less_factor_status"] <- final_data %>% pull(dif_variable[3])
 
 We noticed the variable `NAME_HOUSING_TYPE` has 6 types of values. Factor `Co-op apartment` has 
 the same distribution with `Office apartment`. so we merge them into one factor.
+
 ```{r, message=FALSE, warning=FALSE}
 calc_iv(dif_variable[4])
 ```
 
 After merge `Co-op apartment` into `Office apartment`, IV slightly decreases from **0.007327503** to **0.007086979**,which we can accpet.
+
 ```{r, message=FALSE, warning=FALSE}
 # analyse the details of fourth multi-factors variable
 # found the variable "NAME_HOUSING_TYPE" has 6 types of values. we integrate
@@ -595,6 +613,7 @@ We found the variable `NAME_HOUSING_TYPE` has too manny categories.
 We integrate some of them with different working status. i.e. `Cleaning staff`, `Cooking staff`
 can be classified as `Labor`, `Accountants`, `Core staff` can be classified as `Office`,
 `IT staff`, `High skilltech staff` can be classified as `higher`,which means they earn a higher salary.
+
 ```{r, message=FALSE, warning=FALSE}
 calc_iv(dif_variable[5])
 ```
@@ -654,11 +673,13 @@ glimpse(oh_data)
 And we discretizate the continuous variables with the help of **woebin** function from **scorecard** package.
 When using the **woebin** function, there is one parameter **method** that need to be configured, desiged for which method will based on to discretizate variables. **method** has two options, **tree** and **chimerge**. We choose **chimerge** because we 
 noticed it brings better performance for modelling.
+
 ```{r, message=FALSE, warning=FALSE, results=FALSE}
 # Binning continuous variable to improve performance.
 dl_bin <- woebin(converted_data,
   y = "y",
-  x = c("CNT_CHILDREN", "AMT_INCOME_TOTAL", "DAYS_BIRTH", "DAYS_EMPLOYED", "CNT_FAM_MEMBERS"),
+  x = c("CNT_CHILDREN", "AMT_INCOME_TOTAL", "DAYS_BIRTH",
+        "DAYS_EMPLOYED", "CNT_FAM_MEMBERS"),
   method = "chimerge"
 )
 ```
@@ -676,6 +697,7 @@ plotlist[1]
   
 As for `AMT_INCOME_TOTAL` , we notice that it is discretizated into several categories,
 although the bad ratios for categories are not strictly linear, this binning has second highest IV 0.1368.
+
 ```{r, message=FALSE, warning=FALSE}
 # plot binning variable
 plotlist <- woebin_plot(dl_bin)
@@ -685,6 +707,7 @@ plotlist[2]
 As for `DAYS_BIRTH` , we notice that it is discretizated into 7 categories, i.e.
 `[-inf, -19000]`,`[-19000, -175000]` etc.  and the bad ratios for categories is linear, which means 
 this binnning is good.
+
 ```{r, message=FALSE, warning=FALSE}
 # plot binning variable
 plotlist <- woebin_plot(dl_bin)
@@ -693,6 +716,7 @@ plotlist[3]
   
 As for `DAYS_EMPLOYED` , we notice that it is discretizated into several categories,
 although the bad ratios for categories are not strictly linear, this binning has  highest IV 0.2815.
+
 ```{r, message=FALSE, warning=FALSE}
 # plot binning variable
 plotlist <- woebin_plot(dl_bin)
@@ -702,6 +726,7 @@ plotlist[4]
 As for `CNT_FAM_MEMBERS` , we notice that it is discretizated into 4 categories, i.e.
 `[-inf, 2)`,`[2, 3)`,`[3, 4)` and `[4, inf)`. and the bad ratios for categories is linear, which means 
 this binnning is good.
+
 ```{r, message=FALSE, warning=FALSE}
 # plot binning variable
 plotlist <- woebin_plot(dl_bin)
@@ -710,6 +735,7 @@ plotlist[5]
 
 Finally we combine binning variables, binary factor variables, and category variables with original data to produce
 `dl_iv_data` and For the consistency of features engineering we repeat the whole process for mf_data and mice_data to produce `mf_iv_data` and `mf_mice_data`.
+
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # cbind dl_bin with dl_iv_data
 dl_iv_data <- woebin_ply(converted_data, rbindlist(dl_bin))
@@ -724,6 +750,7 @@ As for **mf_na_data** and **mice_na_data**, we produce the same process to keep
 the consistency of data, therefor we will get three datasets: **dl_iv_data**, **mf_iv_data** and **mice_iv_data**.
 
 ## One-hot Encoding
+
 Having a look at the whole dataset after deleting or imputation, we can figure out there are 8 nominal variables. And since all the nominal variables are categorically arranged, we can use the *one-hot-encoding* to deal with different kinds of nominals. The general idea of using one-hot-encoding is to mark the nominals(categories) into vectors(0 and 1 composed), in which if this particular category exists then mark the element with 1. When the entire encoding is done, there would be newly generated columns with category marked with name in place for the nominal variables. For example, when dealing with categorical variables "OCCUPATION_TYPE" which includes different types of occupation (e.g. Core staff, Sales staff, High skill tech staff, etc.), one particular type would be extracted out as a single vector with only 0 and 1 entered in where element 1 is marked for potential users corresponding to the same job. Similarily, the data processing with binary variables such as "GENDER" would be much easier to address.
 
 ```{r, eval=FALSE}
@@ -742,7 +769,9 @@ encoding <- build_encoding(completeData,
 # Apply one hot encoding to turn the records of categories into 0,1 composed vectors
 completeData <- one_hot_encoder(completeData, encoding = encoding, drop = TRUE)
 ```
+
 And in order to generate the task for mlr3, we need to transform the target variable into factor type.
+
 ```{r, eval=FALSE}
 # convert all character y data into factor data type.
 completeData <- data %>%
@@ -826,6 +855,7 @@ As for the process concerning the general model tuning, we would firstly go with
 
 first we load all the datasets. As the requests of **mlr3**, all integer numeric should be converted as double numeric, and
 target **y** should be converted as type factor.
+
 ```{r}
 library(tidyverse)
 
@@ -1031,9 +1061,7 @@ knitr::include_graphics("img/rf_all_task.png")
 ```
 Similarly, we go with the **dl_iv_data** training task.
 
-
-## Conclusion
-according to the results above, **dl_iv_data** generally has the best prediction performance among all the six tasks with regards to 4 different models. Hence **dl_iv_data** is chosen as the final training dataset.
+According to the results above, **dl_iv_data** generally has the best prediction performance among all the six tasks with regards to 4 different models. Hence **dl_iv_data** is chosen as the final training dataset.
 
 \newpage
 
@@ -1058,7 +1086,6 @@ Ultimately, after all these step-to-step tuning procedures, we can grab the best
 ### Data balancing 
 
 #### Oversampling
-
 
 In mlr3pipelines, there is a **classbalancing** and a **smote** pipe operator that can be combined with any learner. 
 At first we use *oversampling* method to balance target variable. To do this, We define the classbalancing PipeOps by using the **po** function of **mlr3pipelines** package and set parameter as *classbalancing*. 
@@ -1087,7 +1114,8 @@ As for *classbalancing*, *oversample.ratio* is the hyperparamter we neet to conf
 
 ```{r}
 # define parameter
-lg_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", lower = 10, upper = 70)))
+lg_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", 
+                                                    lower = 10, upper = 70)))
 
 # set inner resampling
 inner_rsmp <- rsmp("cv", folds = 5L)
@@ -1167,7 +1195,8 @@ We can see from the plots above, logistic regression seems to get better perform
  
 ```{r}
 # set oversample.ratio tuning range
-lg_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", lower = 5, upper = 45)))
+lg_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", 
+                                                    lower = 5, upper = 45)))
 
 # create autotuner
 lg_over_auto <- AutoTuner$new(
@@ -1407,6 +1436,10 @@ we have managed to reach our best prediction performance with AUC value fixed at
 
 After using two different method to balance target variable, the prediction performance of logistic regression model does not obtain a significant improvement and it is noteworthy that *oversampling* even decreases the model performance, this suggests that *oversampling* method may not be suitable for our dataset.
 
+### Model tuning
+
+Since there is no parameter to tune in Logistic Regression, we will skip this section.
+
 ## KNN  
 ### Data balancing  
 #### Oversampling
@@ -1422,12 +1455,15 @@ po_over = po("classbalancing",
 lrn_over <- GraphLearner$new(po_over %>>% knn_learner, predict_type = "prob")
 
 # setting oversample.ratio tuning range
-knn_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", lower = 10, upper = 70)))
+knn_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", 
+                                                     lower = 10, upper = 70)))
 
 
 knn_over_auto <- AutoTuner$new(learner = lrn_over, resampling = inner_rsmp, 
-                               measures = msr("classif.auc"), tune_ps = knn_over_param_set,
-                               terminator = term("none"), tuner = tnr("grid_search", resolution = 5))
+                               measures = msr("classif.auc"), 
+                               tune_ps = knn_over_param_set,
+                               terminator = term("none"), 
+                               tuner = tnr("grid_search", resolution = 5))
 
 
 # set outer_resampling, and create a design with it
@@ -1494,8 +1530,10 @@ knn_smote_param_set <- ParamSet$new(params =
 # create autotuner, using the inner sampling and tuning parameter with random search
 inner_rsmp <- rsmp("cv",folds = 3L)
 knn_smote_auto <- AutoTuner$new(learner = lrn_smote, resampling = inner_rsmp, 
-                               measures = msr("classif.auc"), tune_ps = knn_smote_param_set,
-                               terminator = term("none"), tuner = tnr("grid_search", resolution = 5))
+                               measures = msr("classif.auc"), 
+                               tune_ps = knn_smote_param_set,
+                               terminator = term("none"), 
+                               tuner = tnr("grid_search", resolution = 5))
 
 # set outer_resampling, and create a design with it
 outer_rsmp <- rsmp("cv", folds = 3L)
@@ -1561,7 +1599,8 @@ knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn",
                           predict_type = "prob"), predict_type = "prob")
 
 # set distance range for tuning
-para_dist <- ParamSet$new(params = list(ParamInt$new("classif.kknn.distance", lower = 1, upper = 5)))
+para_dist <- ParamSet$new(params = list(ParamInt$new("classif.kknn.distance", 
+                                                     lower = 1, upper = 5)))
 
 
 knn_over_dist <- AutoTuner$new(
@@ -1600,7 +1639,8 @@ over_dist_gg3 = ggplot(over_dist_path3, aes(
   geom_line()
 
 # combine all plots into one
-ggarrange(over_dist_gg1, over_dist_gg2, over_dist_gg3, common.legend = TRUE, legend="bottom")
+ggarrange(over_dist_gg1, over_dist_gg2, over_dist_gg3, 
+          common.legend = TRUE, legend="bottom")
 
 
 # extract final tuned parameters
@@ -1621,8 +1661,11 @@ In this part, we first tune the parameter *distance* from KNN, and we can see th
 kernel_type <- c("rectangular", "triangular", "epanechnikov", "biweight"
                 , "triweight", "cos", "inv", "gaussian", "rank", "optimal")
 
-knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", predict_type = "prob", distance=1), predict_type = "prob")
-para_kernel <- ParamSet$new(params = list(ParamFct$new("classif.kknn.kernel", levels = kernel_type)))
+knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn",
+                                    predict_type = "prob", distance=1), 
+                                    predict_type = "prob")
+para_kernel <- ParamSet$new(params = list(ParamFct$new("classif.kknn.kernel",
+                                                       levels = kernel_type)))
 
 knn_over_kernel <- AutoTuner$new(
   learner = knn_over_lrn, resampling = inner_rsmp,
@@ -1663,8 +1706,10 @@ In this section, we explore the parameter *kernel* from KNN. From the plot shown
 # tune k with selected kernels
 knn_over_lrn <- GraphLearner$new(po_over_tuned %>>% lrn("classif.kknn", 
                       predict_type = "prob", distance=1), predict_type = "prob")
-para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 20, upper = 100), 
-                                     ParamFct$new("classif.kknn.kernel", levels = selected_kern)))
+para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", 
+                                                  lower = 20, upper = 100), 
+                                     ParamFct$new("classif.kknn.kernel",
+                                                  levels = selected_kern)))
 
 knn_over_k <- AutoTuner$new(
   learner = knn_over_lrn, resampling = inner_rsmp,
@@ -1706,8 +1751,6 @@ ggarrange(over_k_gg1, over_k_gg2, over_k_gg3, common.legend = TRUE, legend="bott
 
 ```
 
-
-
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/2_4_knn_over_k_kern.png")
 ```
@@ -1726,9 +1769,14 @@ kernel_type <- c("rectangular", "triangular", "epanechnikov", "biweight"
                 , "triweight", "cos", "inv", "gaussian", "rank", "optimal")
 
 # set parameter tuning for each parameter
-para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 20, upper = 100)))
-para_dist <- ParamSet$new(params = list(ParamInt$new("classif.kknn.distance", lower = 1, upper = 5)))
-para_kernel <- ParamSet$new(params = list(ParamFct$new("classif.kknn.kernel", levels = kernel_type)))
+para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", 
+                                                  lower = 20, upper = 100)))
+
+para_dist <- ParamSet$new(params = list(ParamInt$new("classif.kknn.distance", 
+                                                     lower = 1, upper = 5)))
+
+para_kernel <- ParamSet$new(params = list(ParamFct$new("classif.kknn.kernel", 
+                                                       levels = kernel_type)))
 
 # define smote, and combine it with knn learner
 po_smote_tuned <- po("smote", dup_size = 40, K = 15)
@@ -1771,7 +1819,8 @@ smote_dist_gg3 = ggplot(smote_dist_path3, aes(
   geom_point(size = 3) +
   geom_line()
 
-ggarrange(smote_dist_gg1, smote_dist_gg2, smote_dist_gg3, common.legend = TRUE, legend="bottom")
+ggarrange(smote_dist_gg1, smote_dist_gg2, smote_dist_gg3, 
+          common.legend = TRUE, legend="bottom")
 
 ```
 
@@ -1822,7 +1871,8 @@ smote_kern_gg3 = ggplot(smote_kern_path3, aes(
   geom_point(size = 3) +
   geom_line() + thm
 
-ggarrange(smote_kern_gg1, smote_kern_gg2, smote_kern_gg3, common.legend = TRUE, legend="bottom")
+ggarrange(smote_kern_gg1, smote_kern_gg2, smote_kern_gg3, 
+          common.legend = TRUE, legend="bottom")
 
 ```
 
@@ -1835,8 +1885,10 @@ Now with the *distance* fixed to 3, we compare how each kernel influences the AU
 ```{r, eval=FALSE ,results='hide', message=FALSE, warning=FALSE}
 # tune k with selected distance and kernel
 selected_kern <- c("rectangular", "triangular", "gaussian")
-para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", lower = 20, upper = 100), 
-                                     ParamFct$new("classif.kknn.kernel", levels = selected_kern)))
+para_k <- ParamSet$new(params = list(ParamInt$new("classif.kknn.k", 
+                                                  lower = 20, upper = 100), 
+                                     ParamFct$new("classif.kknn.kernel", 
+                                                  levels = selected_kern)))
 
 knn_smote_lrn <- GraphLearner$new(po_smote_tuned %>>% lrn("classif.kknn", 
                     predict_type = "prob", distance=3), predict_type = "prob")
@@ -1876,7 +1928,8 @@ smote_k_gg3 = ggplot(smote_k_path3, aes(
   geom_point(size = 3) +
   geom_line()
 
-ggarrange(smote_k_gg1, smote_k_gg2, smote_k_gg3, common.legend = TRUE, legend="bottom")
+ggarrange(smote_k_gg1, smote_k_gg2, smote_k_gg3, 
+          common.legend = TRUE, legend="bottom")
 
 ```
 
@@ -1994,7 +2047,8 @@ Regarding the choice of suitable kernel function with SVM, there are in total fo
 ```{r, eval=FALSE}
 # train with kernel type
 kernel_type <- c("linear", "polynomial", "radial", "sigmoid")
-param_kernel <- ParamSet$new(params = list(ParamFct$new("classif.svm.kernel", levels = kernel_type)))
+param_kernel <- ParamSet$new(params = list(ParamFct$new("classif.svm.kernel", 
+                                                        levels = kernel_type)))
 po_smote <- po("smote", dup_size = 45, K = 21)
 
 # create smote learner fixed in rf_trees_fixed_lrn
@@ -2054,10 +2108,12 @@ knitr::include_graphics("img/svm_kernel.png")
 As can seen from the plots which refer to the comparison with different *kernel* functions, the best performance is given by the *radial* function for the **dl_iv_data** task. Nevertheless, we still need to figure out the optimal choice with parameter *cost* and *gamma* and as for the tuning range for *cost*, the first try would be to set with 0.1, 1, 10 and 100 __reference__.
 
 ```{r, eval=FALSE}
-svm_lrn <- lrn("classif.svm", predict_type = "prob", kernel = "radial", type = "C-classification")
+svm_lrn <- lrn("classif.svm", predict_type = "prob",
+               kernel = "radial", type = "C-classification")
 
 # train with different set with parameter cost
-param_cost <- ParamSet$new(params = list(ParamDbl$new("classif.svm.cost", lower = 0, upper = 3)))
+param_cost <- ParamSet$new(params = list(ParamDbl$new("classif.svm.cost",
+                                                      lower = 0, upper = 3)))
 
 param_cost$trafo = function(x, param_set){
   x$classif.svm.cost = 10**(x$classif.svm.cost)/10
@@ -2122,10 +2178,12 @@ knitr::include_graphics("img/svm_cost.png")
 Shown on the three plots above, two of them are suggesting that by setting _classif.svm.cost_ to 0.1 will lead to the highest AUC score. Thus, it is better to choose *cost* with value 0.1. Hence, the last step would be to tune *gamma* for the **dl_iv_data** training task. Configuing the training set with [1, 0.1, 0.01, 0.001] for *gamma* as suggested by __[reference]__, we would like to see the changing trend of the tuning performance and determine for the ultimate *gamma* accordingly.
 
 ```{r eval=FALSE}
-svm_lrn <- lrn("classif.svm", predict_type = "prob", kernel = "radial", cost = 0.1, type = "C-classification")
+svm_lrn <- lrn("classif.svm", predict_type = "prob", kernel = "radial",
+               cost = 0.1, type = "C-classification")
 
 # train with gamm
-param_gamma <- ParamSet$new(params = list(ParamDbl$new("classif.svm.gamma", lower = 0, upper = 3)))
+param_gamma <- ParamSet$new(params = list(ParamDbl$new("classif.svm.gamma", 
+                                                       lower = 0, upper = 3)))
 
 param_cost$trafo = function(x, param_set){
   x$classif.svm.gamma = 10 ** (x$classif.svm.gamma) / 10**3
@@ -2364,7 +2422,8 @@ po_over <- po("classbalancing",
 rf_over_learner <- GraphLearner$new(po_over %>>% rf_learner, predict_type = "prob")
 
 # set oversampling parameter for rf
-rf_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio", lower = 30, upper = 60)))
+rf_over_param_set <- ParamSet$new(list(ParamDbl$new("oversample.ratio",
+                                                    lower = 30, upper = 60)))
 
 
 # set inner_rsmp
