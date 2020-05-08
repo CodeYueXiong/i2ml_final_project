@@ -1742,13 +1742,17 @@ over_k_gg3 = ggplot(over_k_path3, aes(
 # combine all plots into one
 ggarrange(over_k_gg1, over_k_gg2, over_k_gg3, common.legend = TRUE, legend="bottom")
 
+
+bmr_over_k$aggregate(measures = msr("classif.auc"))[[7]]
+
 ```
 
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/2_4_knn_over_k_kern.png")
+print(0.7594135)
 ```
 
-Finally, we want to tune *k* with kernels we selected in the previous section. Beside *epanechnikov* being lowest in all plot, there is no straightforward winner between *triangular* and *biweight*. We can see that AUC is the highest in the range of 40 to 80. If we take a closer look in this range, we notice that *triangular* is slightly better. Based on the trend of the 3 plots above, it is reasonable to select *triangular* as our kernel, with *k* set to 80.
+Finally, we want to tune *k* with kernels we selected in the previous section. Beside *epanechnikov* being lowest in all plot, there is no straightforward winner between *triangular* and *biweight*. We can see that AUC is the highest in the range of 40 to 80. If we take a closer look in this range, we notice that *triangular* is slightly better. Based on the trend of the 3 plots above, it is reasonable to select *triangular* as our kernel, with *k* set to 80. Finally, after balancing data with **Oversampling** we get a model with AUC 0.7594.
 
 #### SMOTE
 
@@ -1924,15 +1928,19 @@ smote_k_gg3 = ggplot(smote_k_path3, aes(
 ggarrange(smote_k_gg1, smote_k_gg2, smote_k_gg3, 
           common.legend = TRUE, legend="bottom")
 
+
+bmr_smote_k$aggregate(measures = msr("classif.auc"))[[7]]
+
 ```
 
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/2_4_knn_smote_k_kern.png")
+print(0.7730217)
 ```
 
 In the final step, we tuned *k* and *kernel* together. Here, we can see that *rectangular* falls behind both other kernels. Between *gaussian* and *triangular*, there is no obvious winner. The default value of *k* is 7, and here we selected our range 20-100 by experimenting with our data before tuning. In the previous plot (Default: *k*=7), we see there is no significant difference in the AUC between kernels. 
 
-Furthermore, the plot above shows as *k* increase the difference between kernels becomes larger. This suggests that it would be meaningful to tune all *kernel* among *k*. However, since there is no enormous improvement in AUC and the limitation of computation power, we only tuned 3 in our experiment.
+Furthermore, the plot above shows as *k* increase the difference between kernels becomes larger. This suggests that it would be meaningful to tune all *kernel* among *k*. However, since there is no enormous improvement in AUC and the limitation of computation power, we only tuned 3 in our experiment. Finally, after balancing data with **SMOTE** we get a model with AUC 0.7730.
 
 ## SVM
 
@@ -2723,25 +2731,25 @@ In general, we have implemented four different training models (**Logistic Regre
 The ultimate prediction performances are shown in the following table including training results with default parameter settings, model tuning prediction results after the **Oversampling Operator** and the **SMOTE algorithm**.
 
  
-+---------------+-----------------------+--------+---------------------+-------------------------+
-|     Models    |  Logistic Regerssion  |   KNN  |         SVM         |      Random Forest      |
-+===============+=======================+========+=====================+=========================+
-|  Default Auc  |         0.7248        | 0.7143 |        0.5218       |          0.7643         |
-+---------------+-----------------------+--------+---------------------+-------------------------+
-|   Over. Auc   |         0.7236        |        |       Unstable      |         Unstable        |
-+---------------+-----------------------+--------+---------------------+-------------------------+
-| Over.ratio    |         30            |        |        None         |          None           |
-+---------------+-----------------------+--------+---------------------+-------------------------+
-|   Smote Auc   |         0.7253        |        |        0.7839       |          0.8321         |
-+---------------+-----------------------+--------+---------------------+-------------------------+
-| Smote.K       |         15            |        |         21          |           15            |
-| Smote.dup_size|         31            |        |         40          |           45            |
-+---------------+-----------------------+--------+---------------------+-------------------------+
-| Model Para.   |         None          |        |     cost=0.1        |        mtry=7           |
-|               |                       |        |    gamma=0.75       |    num.trres=1000       |
-|               |                       |        |   kernel=radial     |    min.node.size=3      |
-|               |                       |        |                     | sample.fraction=0.575   |
-+---------------+-----------------------+--------+---------------------+-------------------------+
++---------------+-----------------------+--------------------+---------------------+-------------------------+
+|     Models    |  Logistic Regerssion  |        KNN         |         SVM         |      Random Forest      |
++===============+=======================+====================+=====================+=========================+
+|  Default Auc  |         0.7248        |       0.7143       |        0.5218       |          0.7643         |
++---------------+-----------------------+--------------------+---------------------+-------------------------+
+|   Over. Auc   |         0.7236        |       0.7594       |         N/A         |           N/A           |
++---------------+-----------------------+--------------------+---------------------+-------------------------+
+|  Over.ratio   |         30            |         25         |         N/A         |           N/A           |
++---------------+-----------------------+--------------------+---------------------+-------------------------+
+|   Smote Auc   |         0.7253        |       0.7730       |        0.7839       |          0.8321         |
++---------------+-----------------------+--------------------+---------------------+-------------------------+
+| Smote.K       |         15            |         15         |         21          |           15            |
+| Smote.dup_size|         31            |         40         |         40          |           45            |
++---------------+-----------------------+--------------------+---------------------+-------------------------+
+| Model Para.   |         None          |        k=40        |     cost=0.1        |        mtry=7           |
+|               |                       |     distance=3     |    gamma=0.75       |    num.trres=1000       |
+|               |                       |  kernel=triangular |   kernel=radial     |    min.node.size=3      |
+|               |                       |                    |                     | sample.fraction=0.575   |
++---------------+-----------------------+--------------------+---------------------+-------------------------+
 
 
 After determining for the related parameters which are used for data balancing and finishing the model tuning procedures with parameters accordingly, we have run into the  conclusion that the **Random Forest** algorithm has shown a considerably better prediction performance measured by the **AUC** value, with an average of 10% improvement among all other training models, in regards to the decision on whether or not to issue the credit card to the potential customer. As for our purpose to predict the ultimate decision concerning the credit card approval, we would choose the **Random Forest** algorithm and implement the classification afterwards with the data collected among various customers to predict for the approval of the credit card.
