@@ -70,8 +70,6 @@ The following code describes the process of defining the response variable with 
 ```{r warning=FALSE,message=FALSE}
 library(dplyr)
 
-
-
 # we first group all data from the credit record by "ID"
 # then extract the minimum snapshot date indictating when an account is opened
 opentime_data <- record %>%
@@ -83,8 +81,6 @@ opentime_data <- record %>%
 # merge two dataset based on the common variable "ID"
 data_with_day <- left_join(application_data, opentime_data, by = "ID")
 ```
-
-[reference] https://www.bankingsupervision.europa.eu/ecb/pub/pdf/guidance_on_npl.en.pdf
 
 A payment default is in simple terms an overdue account. In short, in most cases it arises when a debt has become overdue, and based on the Basel Agreement (2007) and Guidance to banks on non-performing loans from European Central Bank (ECB), the potential client, whose debt is not paid more than 60 days of the payment date printed on the invoice by the credit provider or the lender has reason to believe that the loan will not be repaid, will be classified as risk users.
 
@@ -250,7 +246,7 @@ A continuous variable is a type of numerical variables which may take on infinit
 |                               |                    | - "-21474"           |
 |                               |                    | ...                  |
 +-------------------------------+--------------------+----------------------+
-| "DAYS_EMPLOYED"               | Working Days      | - "-4542"            |     
+| "DAYS_EMPLOYED"               | Working Days       | - "-4542"            |     
 |                               |                    | - "-1134"            |
 |                               |                    | ...                  |
 +-------------------------------+--------------------+----------------------+
@@ -277,7 +273,7 @@ The above result shows that there are 11,323 missing values in the varibale `OCC
 
 In order to choose an appropriate method to deal with missing values, it is necessary to analyse the corresponding **missing pattern** and **missing data mechanism**, because these approach are based on different assumptions. It is easy to distinguish the missing pattern of this data set by the use of the function **md.pattern** from **MICE** package.
 
-```{r}
+```{r, eval=FALSE,echo=FALSE }
 library(mice)
 
 # check the missing pattern by using md.pattern function
@@ -320,17 +316,18 @@ Regarding the application of MICE, two assumptions should be taken into consider
 When using the **MICE** function, there are 2 prime parameters that need to be configured. One parameter is **m**, intended for the number of imputed dataset that we would like to generate. As a result, 1 is enough. And the other is **meth**, designed for the methods we have chosen to undergo the regression. Here, we are using the "polyreg", Bayesian polytomous regression, due to reason that these missing values all belong to factor variables.
 
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, echo=FALSE, eval=FALSE}
 # imputed data with mice function
 tempData <- mice(to_imp_data, m = 1, meth = "polyreg", seed = 2020)
 
-# to extract the imputed data with the assigned column name "OCCUPATION_TYPE"
+#to extract the imputed data with the assigned column name "OCCUPATION_TYPE"
 summary(tempData$imp$OCCUPATION_TYPE)
 ```
+ 
 In order to get a whole dataset, we can complete the data frame with the imputed ones.
 
-```{r, eval=FALSE}
-# complete the whole dataset with the imputed variable
+```{r, eval=FALSE, echo=FALSE}
+#complete the whole dataset with the imputed variable
 completeData <- complete(tempData)
 ```
 
@@ -341,7 +338,7 @@ In MICE, parametric regression models are needed and assumptions about the distr
 
 Regarding the prime parameter selection, there are three parameters that need to be taken into consideration. Firstly, the dataset with missing values **xmins**. Then, **maxiter**, which helps decide the number of iterations that need to be done during the imputation. The last parameter is **ntree** which implies the number of random trees to grow in each forest. 
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, eval=FALSE,echo=FALSE}
 library(missForest)
 
 # Missing value imputation with missForest
@@ -808,7 +805,7 @@ With regards to the purpose of classification, SVM would construct a hyperplane 
 
 Correspondingly, we will use the SVM algorithm embedded in the mlr3 learner and analyze the prediction performances with AUC (Area under the ROC Curve) values regarding the approval decision about the issuance of credit card to make. 
 
-Besides the basic model training with SVM with default parameter settings, we still need to tune the model further in order to get a better prediction performance, which is corresponeded to the AUC value, with the approval decision. When it comes to model tuning for SVM, we generally onsider the kernel function, cost (also known as C- Regularization parameter) and gamma to tune. (**reference**)
+Besides the basic model training with SVM with default parameter settings, we still need to tune the model further in order to get a better prediction performance, which is corresponeded to the AUC value, with the approval decision. When it comes to model tuning for SVM, we generally onsider the kernel function, cost (also known as C- Regularization parameter) and gamma to tune.
 
 *Kernels*: A kernel is playing a role in transforming an input data space into the required form. SVM uses a technique called the kernel trick to take a low-dimensional input space and transforms it into a higher dimensional space. In other words, you can say that it converts nonseparable problem to separable problems by adding more dimension to it. It is most useful in non-linear separation problem. Kernel trick helps you to build a more accurate classifier and therefore can reduce the classification error.
 
@@ -818,8 +815,6 @@ Besides the basic model training with SVM with default parameter settings, we st
 *Gamma*: Gamma is a parameter, which ranges from 0 to 1. A higher value of gamma will perfectly fit the training dataset, which causes over-fitting. Gamma=0.1 is considered to be a good default value. The value of gamma needs to be manually specified in the learning algorithm.
 
 ## Random Forest  
-
-[reference] https://www.datacamp.com/community/tutorials/random-forests-classifier-python#algorithm
 
 Random Forest, also known as Random Decision Forest, is an algorithm mainly used for dealing with classification problems which exactly corresponds with our project purpose of the decision made regarding the approval of the credit card. It consists of multiple decision trees and utilizes bagging and feature randomness in order to create an uncorrelated forest of trees whose prediction performance is more accurate than of any individual tree. The random tree algorithm works in four steps. First of all, it will select the random samples from the given dataset which means the general information collected with the potential customers in our case. Then, the algorithm would correspondingly construct a decision tree for each sample drawn from the whole dataset and generate the prediction classification result from each decision tree. The next step would be to perform a vote for each predicted result, which has been given by each decision tree. After all these steps, the algorithm would choose the prediction of the classification result with the most votes as the final prediction outcome, referred to be the final decision made concerning whether or not to approve the issuance of the credit card to the potential customer.
 
@@ -843,7 +838,7 @@ is also known as probability of false alarm and can be calculated as (1 - specif
 power as fa cuntion of the Type I Error of the decision rule. Auc stands for "Area under the Roc Curve", it measures the entire two-dimensional area underneath the entire ROC curve form (0,0) to (1,1). It tells how much model is capable of distinguishing between classes. Higher the AUC, better the model is at predicting 0s as 0s and 1s as 1s.
 
 In our experiment, we looked at several different measures to evaluate our result, 
-including fbeta, ce, acc and AUC. Ingeneral, using fbeta would be ideal when facing imbalanced data[recite]. However, our data is highly imbalanced, and the fbeta performs in favour of predicting all as the majority category. It outputs, in most cases with a very similar value close to 0.99. Thus, we decided to stick with AUC. By comparing the AUC value, we can better distinguish the improvement in models.
+including fbeta, ce, acc and AUC. Ingeneral, using fbeta would be ideal when facing imbalanced data. However, our data is highly imbalanced, and the fbeta performs in favour of predicting all as the majority category. It outputs, in most cases with a very similar value close to 0.99. Thus, we decided to stick with AUC. By comparing the AUC value, we can better distinguish the improvement in models.
 
 \newpage
 
@@ -1153,7 +1148,6 @@ lg_over_results <- lg_over_bmr$aggregate(measures = msr("classif.auc"))
 
 # inspect auc value.
 lg_over_results$classif.auc
-# lg_over_results = 0.7159998
 
 
 # plot oversample ratio vs AUC
@@ -1224,7 +1218,6 @@ lg_over_results <- lg_over_bmr$aggregate(measures = msr("classif.auc"))
 
 # inspect auc value.
 lg_over_results$classif.auc
-# lg_over_results = 0.7212002
 
 # plot oversample.ratio v.s. AUC
 library(ggplot2)
@@ -1261,7 +1254,7 @@ ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("./img/lg_over_2.png")
 ```
 
-We noticed that two of three plots reach the best AUC value when the value of *oversample.ratio* is 30. Thus we choose the hyperparameter as 30. In conclusion, simple logistic regression achieves the best performance with AUC value 0.7236 when the value of *oversample.ratio* is 30. What is unexpected is that the AUC value of logistic regression does not increase but even slightly decreases after balancing target variable, from 0.7248 to 0.7212. It suggests that *oversampling* method may not be suitable for our dataset.
+We noticed that two of three plots reach the best AUC value when the value of *oversample.ratio* is 30. Thus we choose the hyperparameter as 30. In conclusion, simple logistic regression achieves the best performance with AUC value 0.7236 when the value of *oversample.ratio* is 30. What is unexpected is that the AUC value of logistic regression does not increase but even slightly decreases after balancing target variable, from 0.7248 to 0.7236. It suggests that *oversampling* method may not be suitable for our dataset.
 
 Since there is no hyperparameter in *log_reg* method, we then use SMOTE method to balance target variable.
 We want to determine which method is suitable for our dataset.
@@ -2105,7 +2098,7 @@ ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("img/svm_kernel.png")
 ```
 
-As can seen from the plots which refer to the comparison with different *kernel* functions, the best performance is given by the *radial* function for the **dl_iv_data** task. Nevertheless, we still need to figure out the optimal choice with parameter *cost* and *gamma* and as for the tuning range for *cost*, the first try would be to set with 0.1, 1, 10 and 100 __reference__.
+As can seen from the plots which refer to the comparison with different *kernel* functions, the best performance is given by the *radial* function for the **dl_iv_data** task. Nevertheless, we still need to figure out the optimal choice with parameter *cost* and *gamma* and as for the tuning range for *cost*, the first try would be to set with 0.1, 1, 10 and 100.
 
 ```{r, eval=FALSE}
 svm_lrn <- lrn("classif.svm", predict_type = "prob",
@@ -2175,7 +2168,7 @@ ggarrange(svm_ggp1, svm_ggp2, svm_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("img/svm_cost.png")
 ```
 
-Shown on the three plots above, two of them are suggesting that by setting _classif.svm.cost_ to 0.1 will lead to the highest AUC score. Thus, it is better to choose *cost* with value 0.1. Hence, the last step would be to tune *gamma* for the **dl_iv_data** training task. Configuing the training set with [1, 0.1, 0.01, 0.001] for *gamma* as suggested by __[reference]__, we would like to see the changing trend of the tuning performance and determine for the ultimate *gamma* accordingly.
+Shown on the three plots above, two of them are suggesting that by setting _classif.svm.cost_ to 0.1 will lead to the highest AUC score. Thus, it is better to choose *cost* with value 0.1. Hence, the last step would be to tune *gamma* for the **dl_iv_data** training task. Configuing the training set with [1, 0.1, 0.01, 0.001] for *gamma* as suggested by, we would like to see the changing trend of the tuning performance and determine for the ultimate *gamma* accordingly.
 
 ```{r eval=FALSE}
 svm_lrn <- lrn("classif.svm", predict_type = "prob", kernel = "radial",
@@ -2248,7 +2241,7 @@ knitr::include_graphics("img/svm_gamma.png")
 
 As suggested by the three plots simultaneously, _classif.auc_ will always reach the summit when _classif.svm.gamma_ is chosen with value 0.75.
 
-In conclusion, it is better to go with _radial_ kernel function, _cost_ being set to 0.1 and _gamma_ being set to 0.75 on the condition that _smote.dup_size_ is set to 40 and _smote.K_ to 21. And the ultimate prediction performance measured by AUC is therefore 0.7839 with an increase of 0.0x in regards to the previous svm model with default parameter settings.
+In conclusion, it is better to go with _radial_ kernel function, _cost_ being set to 0.1 and _gamma_ being set to 0.75 on the condition that _smote.dup_size_ is set to 40 and _smote.K_ to 21. And the ultimate prediction performance measured by AUC is therefore 0.7839 with an increase of 0.2621 in regards to the previous svm model with default parameter settings.
 
 
 
@@ -2260,7 +2253,7 @@ Similarily, we would consider both the **SMOTE** function and the **Oversampling
 
 #### SMOTE
 
-As mentioned in chapter 3, we fix the parameter *num.trees* with value 1000 as suggested by [reference] and set training range 30 to 60 for *smote.dup_size* and 10 to 20 for *smote.K* seperately in order to find the best training pairs with the two parameters, reaching the best prediction performance.
+As mentioned in chapter 3, we fix the parameter *num.trees* with value 1000 and set training range 30 to 60 for *smote.dup_size* and 10 to 20 for *smote.K* seperately in order to find the best training pairs with the two parameters, reaching the best prediction performance.
 
 ```{r eval=FALSE}
 library(ranger)
@@ -2723,11 +2716,66 @@ After the step-by-step hyperparameter tuning, we have finally managed to reach o
 \newpage
 
 # Conclusion and Discussion
+
 ## Conclusion
-In general, we have implemented four different training models (Logistic Regression, KNN, SVM and Random Forest) on the same training task (dl_iv_data). Besides the basic training process with default parameter settings with different models, we have also discovered the necessary methods (SMOTE algorithm and Oversampling Operator) to tackle with the imbalanced target data distribution and tune the models with corresponding parameters afterwards. By plotting the changing trend of different parameters separately, we shall be able to determine the best parameter setting combinations and achieve the highest AUC score with the ultimate chosen model. After determining for the related parameters which are used for data balancing and finishing the model tuning procedures with parameters accordingly, we have run into the  conclusion that Random Forest has shown a considerably better prediction performance, with an average of 10% improvement among all other training models, in regard to the decision on whether or not to issue the credit card to the potential customer. As for our mission to predict the ultimate decision concerning credit card approval, we would definitely choose Random Forest algorithm and implement the prediction afterwards with various customers.
+In general, we have implemented four different training models (**Logistic Regression**, **KNN**, **SVM** and **Random Forest**) on the same training task (**dl_iv_data**) to decide whether or not to approve the issuance of the credit card to potential customers. Besides the basic training process with default parameter settings with the above four models, we have also discovered the necessary methods (the **SMOTE Operator** and the **Oversampling Operator**) to tackle with the imbalanced target variable _y_ and tune the models with the corresponding parameters belonging to each model afterwards. By plotting the changing trend of specified parameters with the corresponding prediction performances measured by the **AUC** score separately, we shall be able to determine for the best parameter setting combinations and achieve the highest AUC score with the ultimate chosen model. 
+
+The ultimate prediction performances are shown in the following table including training results with default parameter settings, model tuning prediction results after the **Oversampling Operator** and the **SMOTE algorithm**.
+
+ 
++---------------+-----------------------+--------+---------------------+-------------------------+
+|     Models    |  Logistic Regerssion  |   KNN  |         SVM         |      Random Forest      |
++===============+=======================+========+=====================+=========================+
+|  Default Auc  |         0.7248        | 0.7143 |        0.5218       |          0.7643         |
++---------------+-----------------------+--------+---------------------+-------------------------+
+|   Over. Auc   |         0.7236        |        |       Unstable      |         Unstable        |
++---------------+-----------------------+--------+---------------------+-------------------------+
+| Over.ratio    |         30            |        |        None         |          None           |
++---------------+-----------------------+--------+---------------------+-------------------------+
+|   Smote Auc   |         0.7253        |        |        0.7839       |          0.8321         |
++---------------+-----------------------+--------+---------------------+-------------------------+
+| Smote.K       |         15            |        |         21          |           15            |
+| Smote.dup_size|         31            |        |         40          |           45            |
++---------------+-----------------------+--------+---------------------+-------------------------+
+| Model Para.   |         None          |        |     cost=0.1        |        mtry=7           |
+|               |                       |        |    gamma=0.75       |    num.trres=1000       |
+|               |                       |        |   kernel=radial     |    min.node.size=3      |
+|               |                       |        |                     | sample.fraction=0.575   |
++---------------+-----------------------+--------+---------------------+-------------------------+
+
+
+After determining for the related parameters which are used for data balancing and finishing the model tuning procedures with parameters accordingly, we have run into the  conclusion that the **Random Forest** algorithm has shown a considerably better prediction performance measured by the **AUC** value, with an average of 10% improvement among all other training models, in regards to the decision on whether or not to issue the credit card to the potential customer. As for our purpose to predict the ultimate decision concerning the credit card approval, we would choose the **Random Forest** algorithm and implement the classification afterwards with the data collected among various customers to predict for the approval of the credit card.
 
 ## Discussion
-Based on our previous work, there are still many aspects can be improved in our article. First of all, more powerful models that we can use to solve some problems that we met. For example, it's computationally expensive to train the SVM model, a 3*3 nested resampling of SVM model takes 5 hours. Secondly, we have tried xgboost and we found it extremly fast to excute but with the worst prediction performance of all (AUC=0.5 and not improved after any kinds of model tuning).
-On the other hand, there are still a lot of cutting-edge models we haven't used,
-e.g. lightGBM(not included in mlr3 yet), Deep learning method(require high computational power).
-Last but not least, there are still areas to explore in our feature engineering procedure. For example, dimension reduction methods such as PCA, MDS and Factor analysis (included in mlr3 filters) can also be used.
+
+Based on our previous work, there are still many aspects can be improved in our article. First of all, more powerful models that we can use to solve some problems that we met. For example, it's computationally expensive to train the SVM model, a 3*3 nested resampling of SVM model takes 5 hours. Secondly, we have tried xgboost and we found it extremly fast to excute but with the worst prediction performance of all (AUC values are less than 0.5 and did not improve after any kinds of model tuning).
+On the other hand, there are still a lot of cutting-edge models we haven't used, e.g. lightGBM(not included in mlr3 yet), Deep learning method(require high computational power). Last but not least, there are still areas to explore in our feature engineering procedure. For example, dimension reduction methods such as PCA, MDS and Factor analysis (included in mlr3 filters) can also be used.
+
+
+
+\newpage 
+
+**Reference**  
+
+[1] Bishop, C. M. (2006). Pattern recognition and machine learning. springer.  
+
+[2] Basel Agreement(2007) Basel III: international regulatory framework for banks.  
+
+[3] Guidance to banks on non-performing loans.
+
+[4] He, Y., Zaslavsky, A. M., Landrum, M. B., Harrington, D. P., & Catalano, P. (2010). Multiple imputation in a large-scale complex survey: a practical guide. Statistical methods in medical research, 19(6), 653-670.
+
+[5] Stuart, E. A., Azur, M., Frangakis, C., & Leaf, P. (2009). Multiple imputation with large data sets: a case study of the Children's Mental Health Initiative. American journal of epidemiology, 169(9), 1133-1139.
+
+[6] Kerber, R. (1992, July). Chimerge: Discretization of numeric attributes. In Proceedings of the tenth national conference on Artificial intelligence (pp. 123-128).
+
+[7] Jeni, L. A., Cohn, J. F., & De La Torre, F. (2013, September). Facing imbalanced data--recommendations for the use of performance metrics. In 2013 Humaine association conference on affective computing and intelligent interaction (pp. 245-251). IEEE.
+
+[8] Probst, P., Wright, M. N., & Boulesteix, A. L. (2019). Hyperparameters and tuning strategies for random forest. Wiley Interdisciplinary Reviews: Data Mining and Knowledge Discovery, 9(3), e1301.
+
+[9] SVM Hyperparameter Tuning using GridSearchCV. https://towardsdatascience.com/svm-hyper-parameter-tuning-using-gridsearchcv-49c0bc55ce29 Jan 2018.
+
+[10] Understanding Random Forests Classifiers in Python. https://www.datacamp.com/community/tutorials/random-forests-classifier-python%23algorithm May 2018.
+
+
+
