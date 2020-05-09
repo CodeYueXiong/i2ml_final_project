@@ -273,7 +273,7 @@ The above result shows that there are 11,323 missing values in the varibale `OCC
 
 In order to choose an appropriate method to deal with missing values, it is necessary to analyse the corresponding **missing pattern** and **missing data mechanism**, because these approach are based on different assumptions. It is easy to distinguish the missing pattern of this data set by the use of the function **md.pattern** from **MICE** package.
 
-```{r, eval=FALSE,echo=FALSE }
+```{r, eval=FALSE,echo=FALSE}
 library(mice)
 
 # check the missing pattern by using md.pattern function
@@ -368,7 +368,8 @@ It is widely used in credit scoring to measure the separation of good vs bad cus
 They help to explore data and screen variables. 
 It is also used in marketing analytics project such as customer attrition model, campaign response model etc.
 
-* The meaning of Weight of Evidence (WOE): \\
+* The meaning of Weight of Evidence (WOE):
+
 WOE is a form of encoding the original independent variable and the purpose of encoding the original independent variables is generally used to improve the prediction effect of the model and improve the intelligibility of the model. In addition to this, The premise of WOE encoding is advance grouping of specific variables.
 
 * Steps of Calculating WOE:
@@ -396,7 +397,8 @@ Otherwise it is not easy to accomplish linear relationship using other transform
 methods such as log, square-root etc. In short, if you would not use WOE transformation,
 you may have to try out several transformation methods to achieve this.
 
-* The meaning of Information Value (IV): \\
+* The meaning of Information Value (IV):
+
 Information value is one of the most useful technique to select important 
 variables in a predictive model. It helps to rank variables on the basis of their 
 importance.
@@ -404,7 +406,8 @@ importance.
 $$ IV = \sum_{}(\%of\ nonevents\ -\ \%of\ event)*WOE $$
 
 
-* Important Points: \\
+* Important Points:
+
 Information value is not an optimal feature (variable) selection method when 
 you are building a classification model other than binary logistic regression
 (for eg. random forest or SVM). So we only use IV to judge which categories should 
@@ -793,6 +796,7 @@ $$ P=(y=1|x,\beta) = \frac{1}{1+e^{-\beta^Tx}} $$
 ## KNN  
 
 KNN (k-nearest neighbors) is a method used for classification. In simple words, to classify one specific data point, it takes k neighbors with the shortest distance. Furthermore, based on how the neighbors are classified, we will assign the new input to the most popular category in the k neighbors.  
+
 The **KNN** package included in **mlr3** has the following parameters: *k* (the number of neighbors considered), *distance* (Parameter of Minkowski distance), *kernel* (kernel functions used to weight the neighbors). Here the number of k and the method of calculating the distances between data points are crucial. We will first evaluate how KNN performs between different data, including different encoding, and different missing value handling. Then we will explore different methods to get better results. First, we investigate them separately and then combine the knowledge to perform further fine-tuning to improve the model.  
 
 ## SVM
@@ -977,12 +981,12 @@ multiplot_roc(lg_bmr)
 knitr::include_graphics("img/logistic_all_task.png")
 ```
 
-From the ROC plots above, we can see that as for different encoding methods, tasks tackled with WOE encoding generally perform 0.05 better with the AUC score than the corresponding counterpart binary encoding group, as for different missing data handling methods, Logistic Regression has better prediction performance on datasets by deleting missing values with whole row, i.e. **dl_iv_data**, **dl_oh_data**. Above all, we choose **dl_iv_data** as final datasets.  
+From the ROC plots above, we can see that as for different encoding methods, tasks tackled with WOE encoding generally perform 0.05 better with the AUC score than the corresponding counterpart binary encoding group, as for different missing data handling methods, Logistic Regression has better prediction performance on datasets by deleting missing values with whole row, i.e. **dl_iv_data**, **dl_oh_data**. 
 
 
 ### KNN  
 
-We will first evaluate how KNN performs between different data, including different encoding, and different missing value handling. Then we will explore different methods to get better results. We set *lr("classif.kknn")* to train KNN model.
+We set *lr("classif.kknn")* to train KNN model.
 
 ```{r eval=FALSE, results='hide', warning=FALSE}
 # create a benchmark
@@ -1003,8 +1007,6 @@ multiplot_roc(knn_bmr)
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/knn_all_task.png")
 ```
-
-From the ROC plots above, we can see that KNN performs with no significant difference between different encoding and missing data handling methods. Moreover, To reduce our computation cost, we decided to take the task with the highest AUC value in this step, being **dl_iv_data**. Now, we will focus on the task **dl_iv_data**, and fine-tune the parameters.
 
 ### SVM 
 
@@ -1030,11 +1032,10 @@ multiplot_roc(svm_bmr)
 knitr::include_graphics("img/svm_all_task.png")
 ```
 
-Similarly, we go with the **dl_iv_data** training task.
-
 ### Random Forest  
 
 We set *lrn("classif.ranger")* to train Random Forest model.
+
 ```{r eval=FALSE}
 # create a benchmark to train a list of tasks with default hyperparameter settings
 design <- benchmark_grid(
@@ -1054,9 +1055,20 @@ multiplot_roc(rf_bmr)
 ```{r echo=FALSE,out.width = "100%", fig.pos="h"}
 knitr::include_graphics("img/rf_all_task.png")
 ```
-Similarly, we go with the **dl_iv_data** training task.
 
-According to the results above, **dl_iv_data** generally has the best prediction performance among all the six tasks with regards to 4 different models. Hence **dl_iv_data** is chosen as the final training dataset.
++-----------------+---------------+---------------+-----------------+---------------+---------------+-----------------+
+|                 |     dl_iv     |    mf_iv      |     mice_iv     |    dl_oh      |    mf_oh      |     mice_oh     |
++=================+===============+===============+=================+===============+===============+=================+
+|     Logistic    |  **0.7248**   |    0.7201     |     0.7170      |    0.6755     |    0.6688     |     0.6650      |
++-----------------+---------------+---------------+-----------------+---------------+---------------+-----------------+
+|       KNN       |    0.7143     |    0.6988     |     0.6944      |  **0.7216**   |    0.6813     |     0.6776      |
++-----------------+---------------+---------------+-----------------+---------------+---------------+-----------------+
+|       SVM       |  **0.5218**   |    0.5170     |     0.4770      |    0.4851     |    0.4920     |     0.5079      |
++-----------------+---------------+---------------+-----------------+---------------+---------------+-----------------+
+|        RF       |  **0.7643**   |    0.7581     |     0.7569      |    0.7433     |    0.7280     |     0.7239      |
++-----------------+---------------+---------------+-----------------+---------------+---------------+-----------------+
+
+To reduce our computation cost, we decided to take the task, which generally has the best prediction performance among all the six tasks with regards to 4 different models, being **dl_iv_data**. Now, we will focus on the task **dl_iv_data**, and fine-tune the parameters.
 
 \newpage
 
