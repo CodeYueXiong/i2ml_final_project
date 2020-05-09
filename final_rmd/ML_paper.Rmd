@@ -2348,7 +2348,7 @@ ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("img/rf_smote.png")
 ```
 
-We can see from the three plots above, two plots is showing that *smote.dup_size* ranging from 37 to 53 together with *smote.k* from 15 to 20 tends to have better AUC values. So we would go with the corresponding parameter range with 37 to 53 for **smote.dup_size**, which will have the relatively high score with the prediction performance. However, we cannot decide the optimal range of parameter setting for **smote.k** since the changing trend for **K** is not so clear with different colors. Then we need to fix the *smote.dup_size* to 37 to 53 and reset the *smote.k* with 5 to 25, repeating the *grid_search* again to explore the two parameters further.
+We can see from the three plots above, two plots are showing that *smote.dup_size* ranging from 37 to 53 together with *smote.k* from 15 to 20 tends to have better AUC values. So we would go with the corresponding parameter range with 37 to 53 for **smote.dup_size**, which will have the relatively high score with the prediction performance. However, we cannot decide the optimal range of parameter setting for **smote.k** since the changing trend for **K** is not so clear with different colors. Then we need to fix the *smote.dup_size* to 37 to 53 and reset the *smote.k* with 5 to 25, repeating the *grid_search* again to explore the two parameters further.
 
 ```{r}
 # learner with fixed number of trees: 1000
@@ -2414,7 +2414,7 @@ ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("img/rf_smote_2.png")
 ```
 
-Shown on the plots above, we have discovered that the two parameters _smote.dup_size_ and _smote.k_ should be set to 45 and 15 seperately where the AUC distributions always tend to have a summit around _dup_size_ value 45 and _K_ with value 15 is much more stable with the prediction performance here at the same time. Then the next step we shall need to stay with the optimal smote parameter settings ( _smote.dup_size_ is set to 45 and _smote.k_ to 15) and take the mtry and the _num.trees_ parameters into consideration with parameters' tuning ranges set to 1-13 and 400-1700 as suggested by chapter 5.4 with the **tuneRanger** algorithm in order to get the best pair settings with the highest AUC value.
+Shown on the plots above, we have discovered that the two parameters _smote.dup_size_ and _smote.k_ should be set to 45 and 15 seperately where the AUC distributions always tend to have a summit around _dup_size_ value 45 and _K_ with value 15 is much more stable with the prediction performance here at the same time. Then the next step we shall need to stay with the optimal smote parameter settings ( _smote.dup_size_ is set to 45 and _smote.k_ to 15) and take the _mtry_ and the _num.trees_ parameters into consideration with parameters' tuning ranges set to 1-13 and 400-1700 as suggested by chapter 5.4 with the **tuneRanger** algorithm in order to get the best pair settings with the highest AUC value.
 
 
 #### Oversampling
@@ -2500,7 +2500,7 @@ ggarrange(over_gg1, over_gg2, over_gg3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("./img/rf_over_1.png")
 ```
 
-We can clearly see from all the three plots above, the **oversampling** method is not showing a stable changing trend with the corresponding _oversample.ratio_. The overall prediction performances given by the AUC value of the three figures is quite fluctuated and there are no fixed parameter range to choose with the best prediction score. Therefore, it is not suitable to use the **oversampling** method to resolve the imbalanced variables _y_. 
+We can clearly see from all the three plots above, the **oversampling** method is not showing a stable changing trend with the corresponding _oversample.ratio_. The overall prediction performances given by the AUC value of the three figures are quite fluctuated and there are no fixed parameter range to choose with the best prediction score. Therefore, it is not suitable to use the **oversampling** method to resolve the imbalanced variables _y_. 
 
 Thence, we will focus on using the already tuned parameter settings for the **SMOTE** function to  undergo the further model tuning procedures with different parameters _num.trees_, _mtry_, _min.node.size_ and _sample.fraction_ for random forest. The following is the detailed model tuning process. 
 
@@ -2653,7 +2653,7 @@ ggarrange(rf_ggp1, rf_ggp2, rf_ggp3, common.legend = TRUE, legend = "bottom")
 knitr::include_graphics("img/rf_smote_4.png")
 ```
 
-We would go with *min.node.size* = 3 as we can see the AUC value tends to reach the best performance when we set it to 3. However, it is still not clear the approximated defined range for parameter *sample.fraction* Next, we need to retrain the model with a wider range with parameter *sample.fraction* from 0.45 to 0.95.
+We would go with *min.node.size* = 3 as we can see the AUC value tends to reach the best performance when we set it to 3. However, it is still not clear the approximated defined range for parameter *sample.fraction*. Next, we need to retrain the model with a wider range with parameter *sample.fraction* from 0.45 to 0.95.
 
 ```{r}
 # RF with 4 different paramSets, to analysis how to do further tuning
@@ -2742,27 +2742,25 @@ In general, we have implemented four different training models (**Logistic Regre
 
 The ultimate prediction performances are shown in the following table including training results with default parameter settings, model tuning prediction results after the **Oversampling Operator** and the **SMOTE algorithm**.
 
- 
-+---------------+-----------------------+--------------------+---------------------+-------------------------+
-|     Models    |  Logistic Regerssion  |        KNN         |         SVM         |      Random Forest      |
-+===============+=======================+====================+=====================+=========================+
-|  Default Auc  |         0.7248        |       0.7143       |        0.5218       |          0.7643         |
-+---------------+-----------------------+--------------------+---------------------+-------------------------+
-|   Over. Auc   |         0.7236        |       0.7594       |         N/A         |           N/A           |
-+---------------+-----------------------+--------------------+---------------------+-------------------------+
-|  Over.ratio   |         30            |         25         |         N/A         |           N/A           |
-+---------------+-----------------------+--------------------+---------------------+-------------------------+
-|   Smote Auc   |         0.7253        |       0.7730       |        0.7839       |          0.8321         |
-+---------------+-----------------------+--------------------+---------------------+-------------------------+
-| Smote.K       |         15            |         15         |         21          |           15            |
-| Smote.dup_size|         31            |         40         |         40          |           45            |
-+---------------+-----------------------+--------------------+---------------------+-------------------------+
-| Model Para.   |         None          |        k=40        |     cost=0.1        |        mtry=7           |
-|               |                       |     distance=3     |    gamma=0.75       |    num.trres=1000       |
-|               |                       |  kernel=triangular |   kernel=radial     |    min.node.size=3      |
-|               |                       |                    |                     | sample.fraction=0.575   |
-+---------------+-----------------------+--------------------+---------------------+-------------------------+
 
+```{r, echo=FALSE}
+library(kableExtra) # load required package for the data table with performance output shown
+library(tidyverse)
+
+# load the required columns and rows
+dt <- tibble(
+   Items = linebreak(c("Default AUC", "Over.AUC", "Over.ratio", "Smote.AUC", "smote.k\nsmote.dupsize", "Model Para.")),
+   Text_1 = linebreak(c("0.7248", "0.7236", "30", "0.7253", "15\n31", "None")),
+   Text_2 = linebreak(c("0.7143", "0.7594", "25", "0.7730", "15\n40", "k=40\ndistance=3\nkernel=triangular")),
+   Text_3 = linebreak(c("0.5218", "N/A", "N/A", "0.7839", "21\n40", "cost=0.1\ngamma=0.75\nkernel=radial")),
+   Text_4 = linebreak(c("0.7643", "N/A", "N/A", "0.8321", "15\n45", "mtry=7\nnum.trees=1000\nmin.node.size=3\nsample.fraction=0.575"))
+)
+# show the table
+dt %>%
+   mutate_all(linebreak) %>%
+   kable("latex", booktabs = T, escape = F,
+      col.names = linebreak(c("Models", "Logistic Regression", "KNN", "SVM", "Random Forest"), align = "c"))
+```
 
 After determining for the related parameters which are used for data balancing and finishing the model tuning procedures with parameters accordingly, we have run into the  conclusion that the **Random Forest** algorithm has shown a considerably better prediction performance measured by the **AUC** value, with an average of 10% improvement among all other training models, in regards to the decision on whether or not to issue the credit card to the potential customer. As for our purpose to predict the ultimate decision concerning the credit card approval, we would choose the **Random Forest** algorithm and implement the classification afterwards with the data collected among various customers to predict for the approval of the credit card.
 
