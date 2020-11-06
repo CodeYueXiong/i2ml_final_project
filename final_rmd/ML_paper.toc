@@ -1,0 +1,59 @@
+\contentsline {section}{\numberline {1}Introduction}{5}{section.1}%
+\contentsline {section}{\numberline {2}Data}{6}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Reading data}{6}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Defining response variable}{7}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Data types}{9}{subsection.2.3}%
+\contentsline {subsubsection}{\numberline {2.3.1}Binary variable}{9}{subsubsection.2.3.1}%
+\contentsline {subsubsection}{\numberline {2.3.2}Categorical variable}{10}{subsubsection.2.3.2}%
+\contentsline {subsubsection}{\numberline {2.3.3}Continuous variable}{11}{subsubsection.2.3.3}%
+\contentsline {section}{\numberline {3}Missing values processing}{12}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Missing pattern and missing data mechanism}{13}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Methods}{13}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}Listwise Deletion}{13}{subsubsection.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.2.2}Multiple imputation with MICE package}{14}{subsubsection.3.2.2}%
+\contentsline {subsubsection}{\numberline {3.2.3}Multiple imputation with missForest package}{15}{subsubsection.3.2.3}%
+\contentsline {section}{\numberline {4}Feature Engineering}{16}{section.4}%
+\contentsline {subsection}{\numberline {4.1}WOE Encoding}{16}{subsection.4.1}%
+\contentsline {subsubsection}{\numberline {4.1.1}Implementation}{17}{subsubsection.4.1.1}%
+\contentsline {subsubsection}{\numberline {4.1.2}Binary variables}{17}{subsubsection.4.1.2}%
+\contentsline {subsubsection}{\numberline {4.1.3}Categorical variables}{18}{subsubsection.4.1.3}%
+\contentsline {subsection}{\numberline {4.2}One-hot Encoding}{27}{subsection.4.2}%
+\contentsline {section}{\numberline {5}Introduction to methods and metrices}{29}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Logistic regression}{29}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}KNN}{29}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}SVM}{29}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Random Forest}{30}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Metrics}{31}{subsection.5.5}%
+\contentsline {subsubsection}{\numberline {5.5.1}ROC curve and AUC score}{31}{subsubsection.5.5.1}%
+\contentsline {section}{\numberline {6}Choice with training task}{32}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Basic model training results}{32}{subsection.6.1}%
+\contentsline {subsubsection}{\numberline {6.1.1}Logistic Regression:}{33}{subsubsection.6.1.1}%
+\contentsline {subsubsection}{\numberline {6.1.2}KNN}{35}{subsubsection.6.1.2}%
+\contentsline {subsubsection}{\numberline {6.1.3}SVM}{35}{subsubsection.6.1.3}%
+\contentsline {subsubsection}{\numberline {6.1.4}Random Forest}{36}{subsubsection.6.1.4}%
+\contentsline {section}{\numberline {7}Fine-tuning}{38}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Logistic Regression}{38}{subsection.7.1}%
+\contentsline {subsubsection}{\numberline {7.1.1}Data balancing}{38}{subsubsection.7.1.1}%
+\contentsline {paragraph}{\numberline {7.1.1.1}Oversampling}{38}{paragraph.7.1.1.1}%
+\contentsline {paragraph}{\numberline {7.1.1.2}SMOTE}{43}{paragraph.7.1.1.2}%
+\contentsline {subsubsection}{\numberline {7.1.2}Model tuning}{47}{subsubsection.7.1.2}%
+\contentsline {subsection}{\numberline {7.2}KNN}{47}{subsection.7.2}%
+\contentsline {subsubsection}{\numberline {7.2.1}Data balancing}{47}{subsubsection.7.2.1}%
+\contentsline {paragraph}{\numberline {7.2.1.1}Oversampling}{47}{paragraph.7.2.1.1}%
+\contentsline {paragraph}{\numberline {7.2.1.2}SMOTE}{49}{paragraph.7.2.1.2}%
+\contentsline {subsubsection}{\numberline {7.2.2}Model tuning}{51}{subsubsection.7.2.2}%
+\contentsline {paragraph}{\numberline {7.2.2.1}Oversampling}{51}{paragraph.7.2.2.1}%
+\contentsline {paragraph}{\numberline {7.2.2.2}SMOTE}{56}{paragraph.7.2.2.2}%
+\contentsline {subsection}{\numberline {7.3}SVM}{61}{subsection.7.3}%
+\contentsline {subsubsection}{\numberline {7.3.1}Data balancing}{61}{subsubsection.7.3.1}%
+\contentsline {paragraph}{\numberline {7.3.1.1}SMOTE}{62}{paragraph.7.3.1.1}%
+\contentsline {paragraph}{\numberline {7.3.1.2}Oversampling}{63}{paragraph.7.3.1.2}%
+\contentsline {subsubsection}{\numberline {7.3.2}Model tuning}{63}{subsubsection.7.3.2}%
+\contentsline {subsection}{\numberline {7.4}Random Forest}{65}{subsection.7.4}%
+\contentsline {subsubsection}{\numberline {7.4.1}Data balancing}{66}{subsubsection.7.4.1}%
+\contentsline {paragraph}{\numberline {7.4.1.1}SMOTE}{66}{paragraph.7.4.1.1}%
+\contentsline {paragraph}{\numberline {7.4.1.2}Oversampling}{68}{paragraph.7.4.1.2}%
+\contentsline {subsubsection}{\numberline {7.4.2}Model tuning}{71}{subsubsection.7.4.2}%
+\contentsline {section}{\numberline {8}Conclusion and Discussion}{74}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Conclusion}{74}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Discussion}{74}{subsection.8.2}%
